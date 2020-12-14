@@ -1,0 +1,14 @@
+.home-wrapper {
+  background-image: url("beddybackground.png");
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: auto center;
+  top: auto;
+  width: 100vw;
+  height: 100vh;
+  @media (max-width: 768px) {
+    background-position: right;
+    background-size: cover;
+    background-attachment: fixed;
+  }
+}

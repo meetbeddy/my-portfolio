@@ -1,0 +1,25 @@
+.card {
+  width: auto;
+  height: 200px;
+  background-color: indianred;
+  margin-left: 0;
+}
+.social-icons {
+  margin: auto;
+  padding: 10px;
+  width: 100%;
+  text-align: center;
+}
+.btn-primary {
+  background-color: transparent;
+  border-color: white;
+  margin: 0 2px 0;
+  color: black;
+}
+
+@media only screen and (max-width: 768) {
+  .card {
+    width: auto;
+    margin-left: 0;
+  }
+}
