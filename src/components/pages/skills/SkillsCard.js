@@ -83,6 +83,10 @@ class SkillsCard extends Component {
         text: "some text about my git skills",
       },
       {
+        id: "redux",
+        text: "some text about my git skills",
+      },
+      {
         id: "bootstrap",
         text: "some text about my bootstrap skills",
       },
@@ -91,7 +95,6 @@ class SkillsCard extends Component {
 
   handleClick = (e) => {
     e.preventDefault();
-    console.log(e.currentTarget.id);
     const id = e.currentTarget.id;
     this.handleShowDescription(id);
     this.setState({ isShown: "true" });
@@ -159,10 +162,11 @@ class SkillsCard extends Component {
             <li>
               <button id="bootstrap" onClick={this.handleClick}>
                 Bootstrap
-                <motion.i
-                  className="fab fa-bootstrap"
-                  whileHover={{ scale: 1.5 }}
-                ></motion.i>
+              </button>
+            </li>
+            <li>
+              <button id="redux" onClick={this.handleClick}>
+                Redux
               </button>
             </li>
             <li>

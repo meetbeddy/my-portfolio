@@ -8,8 +8,8 @@ class WorkCards extends Component {
     this.state = {
       projects: [
         {
-          projectTitle: "Ant hills",
-          imgUrl: "https://placedog.net/640/480?random",
+          projectTitle: "YouTube Video Downloader",
+          imgUrl: "/image/youtube.png",
           description:
             "Lorem ipsum dolor sit amet consectetur adipiscing elite",
           infoLink: "/projects/anthills",
@@ -17,19 +17,28 @@ class WorkCards extends Component {
         },
         {
           projectTitle: "My Portfolio",
-          imgUrl: "https://placedog.net/640/480?random",
+          imgUrl: "/image/my_portfolio.png",
           description:
             "Lorem ipsum dolor sit amet consectetur adipiscing elite",
           infoLink: "/projects/myportfolio",
           key: 2,
         },
         {
-          projectTitle: "Just Cakes",
-          imgUrl: "https://placedog.net/500/280",
+          projectTitle: "3reen Shop Admin Panel",
+          imgUrl: "/image/3reen.png",
           description:
             "Lorem ipsum dolor sit amet consectetur adipiscing elite",
           infoLink: "/projects/justcakes",
           key: 3,
+        },
+        {
+          projectTitle: "Technical Oath Aluminium Portfolio Site",
+          imgUrl: "/image/technical_oath.png",
+
+          description:
+            "Lorem ipsum dolor sit amet consectetur adipiscing elite",
+          infoLink: "/projects/shoppinglist",
+          key: 4,
         },
         {
           projectTitle: "shopping list",

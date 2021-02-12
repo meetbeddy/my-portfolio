@@ -64,7 +64,8 @@ class Contact extends Component {
         <TextSpan variants={TextAreaVariants}>
           <p>
             I am available for work and opportunities to collaborate with
-            individuals, agencies, and companies. Feel free to contact me.
+            individuals, agencies, and companies. Feel free to send me an email
+            or connect with me on social media.
           </p>
           <ContactForm />
         </TextSpan>

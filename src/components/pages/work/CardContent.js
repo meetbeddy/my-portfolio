@@ -32,10 +32,11 @@ const CardContent = (props) => {
             overflow: " hidden",
           }}
         >
-          <img
+          <motion.img
             src={props.imageUrl}
             alt=""
             style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            whileHover={{ scale: 1.5 }}
           />
         </div>
 

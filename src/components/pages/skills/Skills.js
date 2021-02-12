@@ -53,10 +53,10 @@ export default function Skils() {
           about user experience, visualization, and animations. I build web apps
           using HTML, CSS, and Javascript as well Js Framework like React js. I
           have backend experience with Node js and have built simple CRUD
-          applications using Express Js. I'm currently learning to create and
-          display animated 3D computer graphics in web browsers with Three Js.
-          In the future, I'd like to dabble in mobile app development and
-          desktop app development.
+          applications using Express Js and Node Js. I'm currently learning to
+          create and display animated 3D computer graphics in web browsers with
+          Three Js. Im also an Electron and React Native enthusiast and always
+          seeking to improve my skills in those areas.
         </p>
       </TextSpan>
       <RightBox variants={RightBoxVariants}>

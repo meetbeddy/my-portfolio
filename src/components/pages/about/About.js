@@ -50,14 +50,20 @@ export default function About({ className }) {
           individuals, small businesses, or large corporations. I specialize in
           semantic markups, CSS, Javascript, and all aspects of frontend
           development. I'm currently open to remote opportunities and working on
-          ambitious projects.
+          enterprising projects.
           <br />
           When I'm not coding and listening to indie-pop songs, I enjoy
           connecting with people and sharing experiences. I'm a huge football
           fan, and occasionally, you could find me pulling my not so significant
           bulk around in the football field with friends.
         </p>
-        <Button>My Resume</Button>
+        <a
+          href="https://drive.google.com/file/d/16bTHrgAtYr9oH8M_dJ_bNZDdti4832MI/view?usp=sharing"
+          rel="noreferrer"
+          target="_blank"
+        >
+          <Button>My Resume</Button>
+        </a>
       </TextSpan>
     </FlexWrapper>
   );

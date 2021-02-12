@@ -1,5 +1,6 @@
 import React from "react";
 import { FlexWrapper, Frame } from "../../layouts/StyledContainers";
+import { Link } from "react-router-dom";
 import { Button } from "../../button/Button";
 import { motion } from "framer-motion";
 import styled from "styled-components";
@@ -121,24 +122,26 @@ const HomePage = () => {
             transition={{ delay: 6 }}
             style={{ color: "#e04848" }}
           >
-            Front-end Developer / wordpress expert
+            Front-end Developer / JavaScript Developer
           </motion.p>
         </WelcomeText>
 
         <motion.span>
-          <Button
-            initial={{ opacity: 0, y: "40vh" }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{
-              delay: 7,
-              type: "spring",
-              stiffness: 300,
-            }}
-            style={{ color: "#e04848" }}
-          >
-            Contact Me
-          </Button>
+          <Link to="/contact">
+            <Button
+              initial={{ opacity: 0, y: "40vh" }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                delay: 7,
+                type: "spring",
+                stiffness: 300,
+              }}
+              style={{ color: "#e04848" }}
+            >
+              Contact Me
+            </Button>
+          </Link>
         </motion.span>
       </motion.div>
     </FlexWrapper>
