@@ -103,7 +103,7 @@ display: inline-block;
  box-shadow:inset 0 0.6em 2em -0.3em rgba(0,0,0,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
 }
 @media all and (max-width:30em){
- a.button7{
+ a.button{
   display:block;
   margin:0.4em auto;
  }

@@ -4,11 +4,15 @@
   background-position: center top;
   background-size: auto center;
   top: auto;
-  width: 100vw;
+  width: 80vw;
   height: 100vh;
-  @media (max-width: 768px) {
-    background-position: right;
-    background-size: cover;
+}
+@media (max-width: 768px) {
+  .home-wrapper {
+    width: 100vw;
+    background-position: 20% 90%;
+    background-size: auto;
     background-attachment: fixed;
+    background-origin: content-box;
   }
 }

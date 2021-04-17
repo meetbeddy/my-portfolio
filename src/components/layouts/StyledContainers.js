@@ -22,9 +22,11 @@ export const FlexContainer = styled(motion.div)`
     margin-top: 90px;
   }
   @media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+    display: block;
     margin-top: 100px;
   }
   @media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+    display: block;
     margin-top: 110px;
   }
 `;
@@ -39,12 +41,11 @@ export const FlexWrapper = styled(motion.div)`
   top: 2vh;
   left: 76px;
   width: auto;
-  height: 100vh;
+  // height: 100vh;
   margin-top: 8vh;
   margin-left: 4px;
   margin-right: 4px;
   cursor: auto;
-
   h1,
   h2 {
     font-size: 3.3em;
@@ -81,7 +82,6 @@ export const FlexWrapper = styled(motion.div)`
 
   @media (max-width: 768px) {
     display: block;
-    width: auto;
     left: 0;
     h1,
     h2 {
@@ -150,12 +150,24 @@ export const FlexWrapper = styled(motion.div)`
   and (min-device-width: 768px) 
   and (max-device-width: 1024px) 
   and (-webkit-min-device-pixel-ratio: 1) {
+    width:80vw;
     .top,
     .bottom {
-     
-     
       width: 60vw;
       height: 70px;
+    }
+  }
+  @media only screen 
+  and (min-device-width: 1024px) 
+  and (max-device-width: 1366px) 
+  and (-webkit-min-device-pixel-ratio: 1.5) {
+  display:block;
+    .top,
+    .bottom {
+      width: 40vw;
+      height: 70px;
+      top: 0;
+      left: 2vw;
     }
   }
 }

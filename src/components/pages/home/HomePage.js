@@ -16,7 +16,7 @@ const ContainerVariants = {
     },
   },
   exit: {
-    x: "-100vw",
+    x: "-50vw",
     transition: {
       ease: "easeInOut",
     },
@@ -45,38 +45,36 @@ const textVariants = {
       damping: 16,
       stiffness: 200,
     },
-    whileHover: { scale: 2.5 },
   },
 };
 
 const WelcomeText = styled(motion.div)`
-  width: 100vw;
+  width: 100%;
   height: auto;
-  margin: 2vh 2px 2px;
-  background-color: rgba(225,225,225,0.95)
-  border-radius:5px;
- 
+  margin: 2vh auto 2px;
+  padding: 10px;
+  background-color: rgba(225, 225, 225, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  border-radius: 5px;
+
   h1,
   h2 {
     font-size: 3.3em;
     letter-spacing: -4px;
     font-weight: 700;
-    margin-top: 0;
-    margin-bottom: 0;
+    margin: 0;
     color: white;
   }
   @media (max-width: 768px) {
+    width: 90vw;
     font-size: 0.8em;
-    margin-top: 10vh;
-    
-    width:100vw;
+    margin: 10vh auto 5vh;
   }
   @media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
     margin-top: 29vh;
-    
-    
   }
-  
 `;
 
 const HomePage = () => {
@@ -89,7 +87,7 @@ const HomePage = () => {
       animate="visible"
       exit="exit"
     >
-      <motion.div style={{ marginLeft: "2vw" }}>
+      <motion.div>
         <WelcomeText>
           <h1> Hello, </h1>
 

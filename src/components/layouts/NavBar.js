@@ -13,7 +13,7 @@ const Styles = styled.div`
     @media (max-width: 768px) {
       width: 100%;
       height: 70px;
-      padding: 30px;
+      padding: 22px;
       align-items: center;
       position: fixed;
       z-index: 10;

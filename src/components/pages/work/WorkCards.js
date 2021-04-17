@@ -41,12 +41,12 @@ class WorkCards extends Component {
           key: 4,
         },
         {
-          projectTitle: "shopping list",
-          imgUrl: "https://via.placeholder.com/150",
+          projectTitle: "Weather App",
+          imgUrl: "/image/weather_app.png",
           description:
             "Lorem ipsum dolor sit amet consectetur adipiscing elite",
           infoLink: "/projects/shoppinglist",
-          key: 4,
+          key: 5,
         },
       ],
     };

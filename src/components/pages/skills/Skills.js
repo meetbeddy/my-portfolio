@@ -12,12 +12,12 @@ const ContainerVariants = {
     opacity: 1,
     x: 0,
     transition: {
-      delay: 1,
+      delay: 0.5,
       duration: 1.5,
     },
   },
   exit: {
-    x: "-100vw",
+    x: "-50vw",
     transition: {
       ease: "easeInOut",
     },

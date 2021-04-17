@@ -1,6 +1,11 @@
-import React from "react";
-import { FlexWrapper, TextSpan } from "../../layouts/StyledContainers";
+import React, { useState, useEffect } from "react";
+import {
+  FlexWrapper,
+  TextSpan,
+  RightBox,
+} from "../../layouts/StyledContainers";
 import { Button } from "../../button/Button";
+import "./about.css";
 
 const ContainerVariants = {
   initial: { opacity: 0, x: "100vw" },
@@ -8,7 +13,7 @@ const ContainerVariants = {
     opacity: 1,
     x: 0,
     transition: {
-      delay: 1,
+      delay: 0.5,
       duration: 1.5,
     },
   },
@@ -24,7 +29,26 @@ const TextAreaVariants = {
   visible: { x: 0, transition: { type: "tween", duration: 1, delay: 1 } },
 };
 
-export default function About({ className }) {
+export default function About() {
+  const [isMobile, setIsmobile] = useState(false);
+
+  useEffect(() => {
+    let isMounted = false;
+    const detect = () => {
+      if (!isMounted) {
+        setIsmobile(
+          !!navigator.maxTouchPoints && window.PointerEvent ? true : false
+        );
+      }
+    };
+
+    window.addEventListener("resize", detect);
+
+    return () => {
+      isMounted = true;
+    };
+  });
+
   return (
     <FlexWrapper
       variants={ContainerVariants}
@@ -38,7 +62,11 @@ export default function About({ className }) {
       <div className="bottom">
         <h1>About me</h1>
       </div>
-
+      {isMobile ? (
+        <div className="mobile-frame">
+          <img src="image/slazzer-edit-image.png" alt="obed okpala_picture" />
+        </div>
+      ) : null}
       <TextSpan variants={TextAreaVariants}>
         <h5 style={{ fontSize: "1.4em", color: "#f5b7b3" }}>
           I'm a Web Developer currently based in Abuja, Nigeria.
@@ -58,13 +86,20 @@ export default function About({ className }) {
           bulk around in the football field with friends.
         </p>
         <a
-          href="https://drive.google.com/file/d/16bTHrgAtYr9oH8M_dJ_bNZDdti4832MI/view?usp=sharing"
+          href="https://drive.google.com/file/d/1GG_Q7PrssF2dtY8D5zc4ThWdwDBXun5H/view?usp=sharing"
           rel="noreferrer"
           target="_blank"
         >
           <Button>My Resume</Button>
         </a>
       </TextSpan>
+      {!isMobile ? (
+        <RightBox>
+          <div className="frame">
+            <img src="image/slazzer-edit-image.png" alt="obed okpala_picture" />
+          </div>
+        </RightBox>
+      ) : null}
     </FlexWrapper>
   );
 }

@@ -1,83 +1,87 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 
-class NavItem extends Component {
-  state = {
-    isShown: "false",
-    isMobile: "false",
-  };
-  componentDidMount() {
-    this.detectListener = window.addEventListener("resize", this.detect);
+const StyledNavItem = styled.div`
+  height: 70px;
+  width: 75px;
+  text-align: center;
+  margin-bottom: 0;
+  a {
+    font-size: 1.1em;
+    color: ${(props) => (props.active ? "white" : "#e04848")};
+    text-decoration: none;
+
+    :hover {
+      text-decoration: none;
+      transition: all 0.5s ease-out;
+    }
+    button {
+      border: 0;
+      background-color: transparent;
+      color: ${(props) => (props.active ? "white" : "#e04848")};
+      :active {
+        outline: none;
+      }
+    }
   }
-  detect = () => {
-    this.setState({
-      isMobile:
-        !!navigator.maxTouchPoints && window.PointerEvent ? "true" : "false",
-    });
+  @media (max-width: 768px) {
+    height: auto;
+    width: auto;
+  }
+`;
+
+const NavItem = (props) => {
+  const [isMobile, setIsmobile] = useState(false);
+  const [isShown, setIshown] = useState(false);
+
+  useEffect(() => {
+    let isMounted = false;
+    const detect = () => {
+      if (!isMounted) {
+        setIsmobile(
+          !!navigator.maxTouchPoints && window.PointerEvent ? true : false
+        );
+      }
+    };
+
+    window.addEventListener("resize", detect);
+
+    return () => {
+      isMounted = true;
+    };
+  });
+  const handleShown = () => {
+    setIshown(true);
   };
-  handleShown = () => {
-    this.setState({
-      isShown: "true",
-    });
+  const handleNotShown = () => {
+    setIshown(false);
   };
-  handleNotShown = () => {
-    this.setState({
-      isShown: "false",
-    });
-  };
-  handleClick = () => {
-    const { path, onItemClick } = this.props;
+  const handleClick = () => {
+    const { path, onItemClick } = props;
     onItemClick(path);
   };
-  render() {
-    const StyledNavItem = styled.div`
-      height: 70px;
-      width: 75px;
-      text-align: center;
-      margin-bottom: 0;
-      a {
-        font-size: 1.1em;
-        color: ${(props) => (props.active ? "white" : "#e04848")};
-        text-decoration: none;
 
-        :hover {
-          text-decoration: none;
-          transition: all 0.5s ease-out;
-        }
-        button {
-          border: 0;
-          background-color: transparent;
-          color: ${(props) => (props.active ? "white" : "#e04848")};
-        }
-      }
-      @media (max-width: 768px) {
-        height: auto;
-        width: auto;
-      }
-    `;
+  const { active, icon, path, name } = props;
 
-    const { active, icon, path, name } = this.props;
-    const { isShown, isMobile } = this.state;
+  return (
+    <div>
+      <StyledNavItem active={active}>
+        <Link
+          to={path}
+          onClick={handleClick}
+          onMouseEnter={handleShown}
+          onMouseLeave={handleNotShown}
+        >
+          {isShown === "true" && isMobile === "false" ? (
+            <button>{name}</button>
+          ) : (
+            <i className={icon}></i>
+          )}
+        </Link>
+      </StyledNavItem>
+    </div>
+  );
+};
 
-    return (
-      <div>
-        <StyledNavItem active={active}>
-          <Link
-            to={path}
-            onClick={this.handleClick}
-            onMouseEnter={this.handleShown}
-            onMouseLeave={this.handleNotShown}
-          >
-            {isShown === "true" && isMobile === "false" ? (
-              <button>{name}</button>
-            ) : (
-              <i className={icon}></i>
-            )}
-          </Link>
-        </StyledNavItem>
-      </div>
-    );
-  }
-}
 export default NavItem;
