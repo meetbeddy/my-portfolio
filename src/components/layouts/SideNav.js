@@ -1,7 +1,40 @@
 import React, { Component } from "react";
 import NavItem from "./NavItem";
 import styled from "styled-components";
+import { motion } from "framer-motion";
 
+const framevariants = {
+  before: {},
+  after: { transition: { staggerChildren: 0.3 } },
+};
+const iconVariants = {
+  before: {
+    opacity: 0,
+    y: 40,
+    x: -70,
+    transition: {
+      type: "spring",
+      damping: 16,
+      stiffness: 200,
+    },
+  },
+  after: {
+    opacity: 1,
+    y: 0,
+    x: 0,
+    transition: {
+      type: "spring",
+      damping: 16,
+      stiffness: 200,
+    },
+  },
+  exit: {
+    x: "-10vw",
+    transition: {
+      ease: "easeInOut",
+    },
+  },
+};
 class SideNav extends Component {
   constructor(props) {
     super(props);
@@ -11,31 +44,31 @@ class SideNav extends Component {
         {
           path: "/",
           name: "home",
-          icon: "fa fa-home fa-lg",
+          icon: "fa fa-home fa-2x",
           key: 1,
         },
         {
           path: "/about",
           name: "about",
-          icon: "fa fa-user fa-lg",
+          icon: "fa fa-user fa-2x",
           key: 2,
         },
         {
           path: "/skills",
           name: "skills",
-          icon: "fa fa-cogs fa-lg",
+          icon: "fa fa-cogs fa-2x",
           key: 3,
         },
         {
           path: "/works",
           name: "works",
-          icon: "fa fa-briefcase fa-lg",
+          icon: "fa fa-briefcase fa-2x",
           key: 4,
         },
         {
           path: "/contact",
           name: "contact",
-          icon: "fas fa-address-book fa-lg",
+          icon: "fas fa-address-book fa-2x",
           key: 5,
         },
       ],
@@ -47,13 +80,13 @@ class SideNav extends Component {
     });
   };
   render() {
-    const StyledSideNav = styled.div`
+    const StyledSideNav = styled(motion.div)`
       position: fixed;
       height: 100%;
       width: 75px;
       z-index: 1;
-      top: 3.4em;
-      background-color: #222;
+      top: 5em;
+      background-color: transparent;
       overflow-x: hidden;
       padding-top: 10px;
       @media (max-width: 768px) {
@@ -63,7 +96,11 @@ class SideNav extends Component {
     const { items, activePath } = this.state;
     return (
       <div>
-        <StyledSideNav>
+        <StyledSideNav
+          variants={framevariants}
+          initial="before"
+          animate="after"
+        >
           {items.map((item) => {
             return (
               <NavItem
@@ -73,6 +110,7 @@ class SideNav extends Component {
                 onItemClick={this.onItemClick}
                 active={item.path === activePath}
                 key={item.key}
+                variants={iconVariants}
               />
             );
           })}

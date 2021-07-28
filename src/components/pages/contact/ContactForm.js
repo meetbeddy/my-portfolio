@@ -139,7 +139,7 @@ export default class ContactForm extends Component {
   render() {
     const { formErrors } = this.state;
     return (
-      <div className="ContactForm">
+      <div className="contact-form">
         <form id="contact-form" onSubmit={this.handleSubmit} noValidate>
           <div className="row">
             <div className="col-6">

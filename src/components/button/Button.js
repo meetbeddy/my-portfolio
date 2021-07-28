@@ -59,7 +59,7 @@ export const BouncyButton = styled.button`
 
    padding: 0.35em 1.2em;
    border: 0.1em solid #ffffff;
-  background-color: transparent;
+  background-color: white;
    margin: 0 0.3em 0.3em 0;
    border-radius: 0.25rem;
    box-sizing: border-box;

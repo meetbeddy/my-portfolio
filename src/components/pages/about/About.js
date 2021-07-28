@@ -1,11 +1,5 @@
-import React, { useState, useEffect } from "react";
-import {
-  FlexWrapper,
-  TextSpan,
-  RightBox,
-} from "../../layouts/StyledContainers";
+import { FlexWrapper, TextSpan } from "../../layouts/StyledContainers";
 import { Button } from "../../button/Button";
-import "./about.css";
 
 const ContainerVariants = {
   initial: { opacity: 0, x: "100vw" },
@@ -30,25 +24,6 @@ const TextAreaVariants = {
 };
 
 export default function About() {
-  const [isMobile, setIsmobile] = useState(false);
-
-  useEffect(() => {
-    let isMounted = false;
-    const detect = () => {
-      if (!isMounted) {
-        setIsmobile(
-          !!navigator.maxTouchPoints && window.PointerEvent ? true : false
-        );
-      }
-    };
-
-    window.addEventListener("resize", detect);
-
-    return () => {
-      isMounted = true;
-    };
-  });
-
   return (
     <FlexWrapper
       variants={ContainerVariants}
@@ -62,11 +37,7 @@ export default function About() {
       <div className="bottom">
         <h1>About me</h1>
       </div>
-      {isMobile ? (
-        <div className="mobile-frame">
-          <img src="image/slazzer-edit-image.png" alt="obed okpala_picture" />
-        </div>
-      ) : null}
+
       <TextSpan variants={TextAreaVariants}>
         <h5 style={{ fontSize: "1.4em", color: "#f5b7b3" }}>
           I'm a Web Developer currently based in Abuja, Nigeria.
@@ -93,13 +64,6 @@ export default function About() {
           <Button>My Resume</Button>
         </a>
       </TextSpan>
-      {!isMobile ? (
-        <RightBox>
-          <div className="frame">
-            <img src="image/slazzer-edit-image.png" alt="obed okpala_picture" />
-          </div>
-        </RightBox>
-      ) : null}
     </FlexWrapper>
   );
 }

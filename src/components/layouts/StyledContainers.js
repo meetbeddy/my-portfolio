@@ -10,11 +10,12 @@ const circleMove = keyframes`
     clip-path: circle(10% at 15% 50%);
   }
 `;
+
 export const FlexContainer = styled(motion.div)`
   display: inline-flex;
   flex-wrap: wrap;
   justify-content: center;
-  width: 90vw;
+  width: 95vw;
   height: auto;
   margin-top: 80px;
   padding: 2px 0 2px;
@@ -24,15 +25,18 @@ export const FlexContainer = styled(motion.div)`
   @media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
     display: block;
     margin-top: 100px;
+    width: auto;
   }
   @media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
     display: block;
     margin-top: 110px;
+    width: auto;
   }
 `;
 export const Frame = styled(motion.div)`
   width: auto;
-  display: inline-flex;
+  display: flex;
+  margin: auto;
 `;
 export const FlexWrapper = styled(motion.div)`
   display: flex;
@@ -83,6 +87,7 @@ export const FlexWrapper = styled(motion.div)`
   @media (max-width: 768px) {
     display: block;
     left: 0;
+    right: 0;
     h1,
     h2 {
       font-size: 2.2em;
@@ -190,58 +195,34 @@ export const Boxes = styled(motion.div)`
 
 export const RightBox = styled(motion.div)`
   
-width:50% ;
+  width:50% ;
+  margin: 10px;
   padding:10px;
-  .map-area {
-    background-color: var(--white);
-    width: auto;
-    --offset-height: -250px;
-    --offset-width: -400px
-    height: 270px;
-    top: var(--offset-height);
-    left: 0;
-    margin-left: 
-    margin-bottom: var(--offset-height);
-    margin-top: 5px;
-    position: inherit;
-    border-radius: 5px;
-  
-    box-shadow: 0 1px 5px 1px rgba(0, 0, 0, 0.15);
-    
-  }
-  .card-area {
-    width:auto;
-    position:relative;
-    margin-left: 0vw;
-    margin-bottom:0.5vw;
-    justify-self: center;
-   
+  box-sizing:border-box;
+  box-shadow: 0 1px 5px 1px rgba(250, 250, 250, 0.25);
+  text-align:center;
   }
   @media (max-width:768px){
-    width:100vw;
+    width:auto;
   
-    .map-area{
-      width:auto;
-      margin-left: 0;
-      margin-top:0
-      --offset-height: -200px;
-      position:inherit;
-    }
-  }
-  .card-area{
-    postion:relative;
-    margin-left:0;
+    // .map-area{
+    //   width:auto;
+    //   margin-left: 0;
+    //   margin-top:0
+    //   --offset-height: -200px;
+    //   position:inherit;
+    // }
   }
 `;
 
 export const TextSpan = styled(motion.div)`
-  width: 50%;
+  width: 100%;
   position: relative;
   text-align: left;
 
   overflow: hidden;
   padding: 2px 10px 2px;
-  margin-top: 70px;
+  margin: 70px auto 0;
 
   @media (max-width: 768px) {
     width: auto;

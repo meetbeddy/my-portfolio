@@ -69,14 +69,13 @@ class Contact extends Component {
           </p>
           <ContactForm />
         </TextSpan>
-        <RightBox variants={RightBoxVariants}>
-          <div className="card-area">
-            <Card location={location} />
-          </div>
 
-          <div className="map-area">
+        <RightBox variants={RightBoxVariants}>
+          <Card location={location} />
+
+          {/* <div className="map-area">
             <Map location={location} zoomLevel={17} />
-          </div>
+          </div> */}
         </RightBox>
       </FlexWrapper>
     );

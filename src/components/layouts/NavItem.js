@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { motion } from "framer-motion";
 
 const StyledNavItem = styled.div`
   height: 70px;
-  width: 75px;
+  width: auto;
   text-align: center;
-  margin-bottom: 0;
+  margin: auto;
+
   a {
     font-size: 1.1em;
     color: ${(props) => (props.active ? "white" : "#e04848")};
@@ -19,6 +21,8 @@ const StyledNavItem = styled.div`
     button {
       border: 0;
       background-color: transparent;
+
+      font-size: 1ems;
       color: ${(props) => (props.active ? "white" : "#e04848")};
       :active {
         outline: none;
@@ -37,6 +41,7 @@ const NavItem = (props) => {
 
   useEffect(() => {
     let isMounted = false;
+
     const detect = () => {
       if (!isMounted) {
         setIsmobile(
@@ -51,6 +56,7 @@ const NavItem = (props) => {
       isMounted = true;
     };
   });
+
   const handleShown = () => {
     setIshown(true);
   };
@@ -62,7 +68,7 @@ const NavItem = (props) => {
     onItemClick(path);
   };
 
-  const { active, icon, path, name } = props;
+  const { active, icon, path, name, variants } = props;
 
   return (
     <div>
@@ -73,10 +79,10 @@ const NavItem = (props) => {
           onMouseEnter={handleShown}
           onMouseLeave={handleNotShown}
         >
-          {isShown === "true" && isMobile === "false" ? (
+          {isShown && !isMobile ? (
             <button>{name}</button>
           ) : (
-            <i className={icon}></i>
+            <motion.i variants={variants} className={icon}></motion.i>
           )}
         </Link>
       </StyledNavItem>

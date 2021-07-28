@@ -40,9 +40,8 @@ function App() {
     // //  const normalTexture = textureLoader.load(NormalMap1);
     // //  const particleStar = textureLoader.load(star);
 
-    const box = new THREE.BoxBufferGeometry(2, 3, 65);
     const geometry = new THREE.SphereBufferGeometry(0.5, 64, 64);
-    const boxMaterial = new THREE.MeshBasicMaterial();
+
     const material = new THREE.MeshStandardMaterial();
     material.metalness = 0.7;
     material.roughness = 0.2;

@@ -27,7 +27,7 @@ const CardContent = (props) => {
           style={{
             border: "1px solid silver",
             height: "220px",
-            width: "220px",
+            width: "300px",
             marginBottom: "20px",
             overflow: " hidden",
           }}
@@ -68,7 +68,7 @@ const CardContent = (props) => {
           style={{
             border: "1px solid silver",
             height: "220px",
-            width: "220px",
+            width: "300px",
             marginBottom: "28px",
             textAlign: "center",
             overflow: " hidden",

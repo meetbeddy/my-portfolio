@@ -190,7 +190,7 @@ class SkillsCard extends Component {
             margin: "0 12px 0",
           }}
         >
-          {isShown && displayText ? <p>{displayText[0].text}</p> : null}
+          {/* {isShown && displayText ? <p>{displayText[0].text}</p> : null} */}
         </span>
       </motion.div>
     );

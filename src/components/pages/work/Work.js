@@ -3,13 +3,12 @@ import WorkCards from "./WorkCards";
 import { FlexWrapper, FlexContainer } from "../../layouts/StyledContainers";
 
 const ContainerVariants = {
-  initial: { x: "100vw", opacity: 0 },
+  initial: { opacity: 0 },
   visible: {
-    x: 0,
     opacity: 1,
 
     transition: {
-      delay: 1,
+      delay: 0.5,
       duration: 1.5,
     },
   },

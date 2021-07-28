@@ -7,11 +7,11 @@ const Styles = styled.div`
   .navbar {
     background-color: #222;
     height: auto;
-    width: 75px;
+    width: auto;
     position: fixed;
 
     @media (max-width: 768px) {
-      width: 100%;
+      width: 100vw;
       height: 70px;
       padding: 22px;
       align-items: center;
@@ -36,7 +36,7 @@ const Styles = styled.div`
   .nav-item-container {
     @media (max-width: 768px) {
       height: auto;
-      width: 95vw;
+      width: 100%;
       display: flex;
       flex: wrap;
       justify-content: space-between;
@@ -98,7 +98,7 @@ export default class NavBar extends Component {
     const { items, activePath } = this.state;
     return (
       <Styles>
-        <Navbar expand="lg">
+        <Navbar>
           <Navbar.Brand href="/">MB</Navbar.Brand>
           <div className="nav-item-container">
             {items.map((item) => {

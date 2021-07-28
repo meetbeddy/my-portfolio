@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import WorkCard from "./WorkCard";
-import { Boxes, Frame } from "../../layouts/StyledContainers";
+import { Boxes } from "../../layouts/StyledContainers";
 
 class WorkCards extends Component {
   constructor() {
@@ -59,7 +59,7 @@ class WorkCards extends Component {
       before: { opacity: 0 },
       after: {
         opacity: 1,
-        transition: { staggerChildren: 1.5 },
+        transition: { staggerChildren: 1.3 },
       },
     };
 
@@ -87,17 +87,12 @@ class WorkCards extends Component {
       <Boxes variants={frameVariants} initial="before" animate="after">
         {projects.map((project) => {
           return (
-            <Frame
-              style={{ position: "relative" }}
+            <WorkCard
+              title={project.projectTitle}
+              imageUrl={project.imgUrl}
+              description={project.description}
               variants={cardVariants}
-              key={project.key}
-            >
-              <WorkCard
-                title={project.projectTitle}
-                imageUrl={project.imgUrl}
-                description={project.description}
-              />
-            </Frame>
+            />
           );
         })}
       </Boxes>

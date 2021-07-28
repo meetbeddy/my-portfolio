@@ -1,4 +1,6 @@
 .App {
-  /* display: grid; */
-  /* background-color: black; */
+}
+canvas {
+  width: auto;
+  mix-blend-mode: exclusion;
 }

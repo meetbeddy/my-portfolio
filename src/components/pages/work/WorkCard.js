@@ -1,9 +1,10 @@
 import React from "react";
 import CardContent from "./CardContent";
 import Flippy from "react-flippy";
+import {motion} from "framer-motion"
 
 const FlippyStyle = {
-  width: "250px",
+  width: "350px",
   height: "250px",
   textAlign: "center",
   color: "black",
@@ -20,12 +21,15 @@ function WorkCard(props) {
       isFlipped={isFlipped}
       flipDirection="horizontal"
       style={FlippyStyle}
+      variants={props.variants}
+     
     >
       <CardContent
         imageUrl={props.imageUrl}
         title={props.title}
         handleFlip={handleFlip}
         description={props.description}
+        
       />
     </Flippy>
   );
