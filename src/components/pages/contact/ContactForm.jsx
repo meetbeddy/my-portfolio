@@ -4,6 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import "./contact-form.css";
 import { ButtonSmall } from "../../button/Button";
+import { StyledButton } from "../../shared/StyledComponents";
 
 // Email validation
 const emailRegex = RegExp(
@@ -204,7 +205,7 @@ const ContactForm = () => {
             )}
           </div>
         </div>
-        <ButtonSmall onClick={handleSubmit}>Submit</ButtonSmall>
+        <StyledButton onClick={handleSubmit}>Submit</StyledButton>
         <ToastContainer />
       </form>
     </div>

@@ -9,20 +9,21 @@ import Skills from "./components/pages/skills/Skills";
 import * as THREE from "three";
 
 function App() {
-  const [isMobile, setIsmobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
     const threeRef = ref.current;
-    let isMounted = false;
-    const detect = () => {
-      if (!isMounted) {
-        setIsmobile(
-          !!navigator.maxTouchPoints && window.PointerEvent ? true : false
-        );
-      }
+    if (!threeRef) return;
+
+    // Detect mobile devices
+    const detectMobile = () => {
+      setIsMobile(!!navigator.maxTouchPoints && window.PointerEvent);
     };
-    // window.addEventListener("resize", detect);
+    detectMobile();
+    window.addEventListener("resize", detectMobile);
+
+    // THREE.js Scene Setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -30,87 +31,82 @@ function App() {
       0.1,
       1000
     );
-    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    camera.position.set(0, 0, 2); // Better initial position
 
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(new THREE.Color("gray"), 0.01);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     ref.current.appendChild(renderer.domElement);
 
-    const geometry = new THREE.SphereBufferGeometry(0.5, 64, 64);
-    const material = new THREE.MeshStandardMaterial();
-    material.metalness = 0.7;
-    material.roughness = 0.2;
-    material.color = new THREE.Color(0x292929);
+    // Create Sphere
+    const geometry = new THREE.SphereGeometry(0.5, 64, 64);
+    const material = new THREE.MeshStandardMaterial({
+      metalness: 0.7,
+      roughness: 0.2,
+      color: new THREE.Color(0x292929),
+    });
 
     const sphere = new THREE.Mesh(geometry, material);
     scene.add(sphere);
 
-    camera.position.x = -1;
-    camera.position.y = 0;
-    camera.position.z = 2;
-    scene.add(camera);
-
-    const pointLight = new THREE.PointLight(0xffffff, 0.7);
-    pointLight.position.x = 2;
-    pointLight.position.y = 3;
-    pointLight.position.z = 4;
+    // Lighting
+    const pointLight = new THREE.PointLight(0xffffff, 1);
+    pointLight.position.set(2, 3, 4);
     scene.add(pointLight);
 
-    const pointLight2 = new THREE.PointLight(0xff0000, 5);
-    pointLight2.position.x = -1.86;
-    pointLight2.position.y = 1;
-    pointLight2.position.z = -1.65;
-    scene.add(pointLight2);
+    const redLight = new THREE.PointLight(0xff0000, 1);
+    redLight.position.set(-1.86, 1, -1.65);
+    scene.add(redLight);
 
-    const pointLight3 = new THREE.PointLight(0xe1fff, 1);
-    pointLight3.position.x = 2.13;
-    pointLight3.position.y = 1;
-    pointLight3.position.z = 0.65;
-    scene.add(pointLight3);
+    const softLight = new THREE.PointLight(0xe1fff, 1);
+    softLight.position.set(2.13, 1, 0.65);
+    scene.add(softLight);
 
+    // Handle Window Resize
     window.addEventListener("resize", () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
-
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      detect();
     });
 
-    document.addEventListener("mousemove", onDocumentMouseMove);
+    // Mouse Interaction Variables
     let mouseX = 0;
     let mouseY = 0;
     let targetX = 0;
     let targetY = 0;
-    const windowhalfx = window.innerWidth / 2;
-    const windowhalfy = window.innerHeight / 2;
+    const windowHalfX = window.innerWidth / 2;
+    const windowHalfY = window.innerHeight / 2;
 
-    function onDocumentMouseMove(e) {
-      mouseX = e.clientX - windowhalfx;
-      mouseY = e.clientY - windowhalfy;
-    }
+    const onMouseMove = (event) => {
+      mouseX = (event.clientX - windowHalfX) / 50; // Reduce sensitivity
+      mouseY = (event.clientY - windowHalfY) / 50;
+    };
+    document.addEventListener("mousemove", onMouseMove);
 
+    // Animation Loop
     const clock = new THREE.Clock();
-    var animate = function () {
-      targetX = mouseX * 0.01;
-      targetY = mouseY * 0.01;
-
+    const animate = () => {
       const elapsedTime = clock.getElapsedTime();
 
-      sphere.rotation.x = 0.5 * (targetY - sphere.rotation.x);
-      sphere.rotation.y = 0.5 * (targetX - sphere.rotation.y);
-      sphere.rotation.z += -0.5 * (targetY - sphere.rotation.x);
-      sphere.rotation.z = 0.5 * elapsedTime;
+      // Smoothly interpolate rotation
+      targetX += (mouseX - targetX) * 0.1;
+      targetY += (mouseY - targetY) * 0.1;
+
+      sphere.rotation.y = targetX; // Left/Right movement
+      sphere.rotation.x = targetY; // Up/Down movement
+      sphere.rotation.z = 0.5 * elapsedTime; // Continuous spin effect
 
       renderer.render(scene, camera);
-      window.requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
     };
-
     animate();
 
+    // Cleanup Function
     return () => {
+      window.removeEventListener("resize", detectMobile);
+      document.removeEventListener("mousemove", onMouseMove);
       threeRef.removeChild(renderer.domElement);
-      isMounted = true;
+      renderer.dispose();
     };
   }, []);
 
