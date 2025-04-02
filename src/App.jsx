@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Route, Switch } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import NavBar from "./components/layouts/NavBar";
 import SideNav from "./components/layouts/SideNav";
 import HomePage from "./components/pages/home/HomePage";
 import Contact from "./components/pages/contact/Contact";
 import About from "./components/pages/about/About";
-import Work from "./components/pages/work/Work";
 import Skills from "./components/pages/skills/Skills";
 import * as THREE from "three";
 
 function App() {
   const [isMobile, setIsmobile] = useState(false);
   const ref = useRef(null);
+
   useEffect(() => {
     const threeRef = ref.current;
     let isMounted = false;
@@ -36,20 +36,13 @@ function App() {
     renderer.setClearColor(new THREE.Color("gray"), 0.01);
     ref.current.appendChild(renderer.domElement);
 
-    // const textureLoader = new THREE.TextureLoader();
-    // //  const normalTexture = textureLoader.load(NormalMap1);
-    // //  const particleStar = textureLoader.load(star);
-
     const geometry = new THREE.SphereBufferGeometry(0.5, 64, 64);
-
     const material = new THREE.MeshStandardMaterial();
     material.metalness = 0.7;
     material.roughness = 0.2;
-    // material.normalMap = normalTexture;
     material.color = new THREE.Color(0x292929);
 
     const sphere = new THREE.Mesh(geometry, material);
-
     scene.add(sphere);
 
     camera.position.x = -1;
@@ -57,29 +50,24 @@ function App() {
     camera.position.z = 2;
     scene.add(camera);
 
-    //lights
     const pointLight = new THREE.PointLight(0xffffff, 0.7);
     pointLight.position.x = 2;
     pointLight.position.y = 3;
     pointLight.position.z = 4;
-    // pointLight.intensity = 2;
     scene.add(pointLight);
 
     const pointLight2 = new THREE.PointLight(0xff0000, 5);
     pointLight2.position.x = -1.86;
     pointLight2.position.y = 1;
     pointLight2.position.z = -1.65;
-    // pointLight2.intensity = 5;
     scene.add(pointLight2);
 
     const pointLight3 = new THREE.PointLight(0xe1fff, 1);
     pointLight3.position.x = 2.13;
     pointLight3.position.y = 1;
     pointLight3.position.z = 0.65;
-    // pointLight3.intensity = 1;
     scene.add(pointLight3);
 
-    //resize
     window.addEventListener("resize", () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -92,19 +80,16 @@ function App() {
     document.addEventListener("mousemove", onDocumentMouseMove);
     let mouseX = 0;
     let mouseY = 0;
-
     let targetX = 0;
     let targetY = 0;
-
     const windowhalfx = window.innerWidth / 2;
     const windowhalfy = window.innerHeight / 2;
 
     function onDocumentMouseMove(e) {
       mouseX = e.clientX - windowhalfx;
-      mouseY = e.clientX - windowhalfy;
+      mouseY = e.clientY - windowhalfy;
     }
 
-    //animate
     const clock = new THREE.Clock();
     var animate = function () {
       targetX = mouseX * 0.01;
@@ -130,22 +115,19 @@ function App() {
   }, []);
 
   return (
-    <div ref={ref} className="App">
-      {isMobile ? <NavBar /> : <SideNav />}
+    <Router>
+      <div ref={ref} className="App">
+        {isMobile ? <NavBar /> : <SideNav />}
 
-      <Switch>
-        <Route exact path="/" component={HomePage} />
-        <Route exact path="/about" component={About} />
-        <Route
-          exact
-          path="/contact"
-          component={Contact}
-          exit={{ opacity: 0 }}
-        />
-        <Route exact path="/skills" component={Skills} />
-        <Route exact path="/works" component={Work} />
-      </Switch>
-    </div>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/skills" element={<Skills />} />
+          {/* <Route path="/works" element={<Work />} /> */}
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

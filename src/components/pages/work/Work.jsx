@@ -40,7 +40,7 @@ export default function Work() {
         <h1>Projects</h1>
       </div>
       <FlexContainer variants={projectVariants}>
-        <WorkCards />
+        {/* <WorkCards /> */}
       </FlexContainer>
     </FlexWrapper>
   );
