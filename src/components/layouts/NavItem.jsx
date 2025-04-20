@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const StyledNavItem = styled(motion.div)`
   position: relative;
@@ -18,7 +18,7 @@ const IconContainer = styled(motion.div)`
   align-items: center;
   justify-content: center;
   background: ${props => props.active ?
-    'linear-gradient(135deg, #e04848 0%, #e04848 100%)' :
+    'linear-gradient(135deg, #e04848 0%, #c04040 100%)' :
     'rgba(255, 255, 255, 0.1)'};
   box-shadow: ${props => props.active ?
     '0 5px 15px rgba(224, 72, 72, 0.4)' :
@@ -55,6 +55,7 @@ const NavLabel = styled(motion.div)`
   white-space: nowrap;
   pointer-events: none;
   border-left: 3px solid #e04848;
+  z-index: 10;
   
   @media (max-width: 768px) {
     left: 50%;
@@ -85,12 +86,21 @@ const NavLink = styled(Link)`
   text-decoration: none;
 `;
 
-const NavItem = ({ active, icon, path, name, variants, onItemClick, isMobile }) => {
-  const [showLabel, setShowLabel] = useState(false);
+// Animation to indicate active state
+const activeIndicator = {
+  hidden: { scale: 0 },
+  visible: {
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 20
+    }
+  }
+};
 
-  const handleClick = () => {
-    onItemClick(path);
-  };
+const NavItem = ({ active, icon, path, name, variants, isMobile }) => {
+  const [showLabel, setShowLabel] = useState(false);
 
   // Mobile-friendly label variants
   const mobileLabelVariants = isMobile ? {
@@ -113,26 +123,33 @@ const NavItem = ({ active, icon, path, name, variants, onItemClick, isMobile }) 
     >
       <NavLink
         to={path}
-        onClick={handleClick}
         onMouseEnter={() => setShowLabel(true)}
         onMouseLeave={() => setShowLabel(false)}
         aria-label={name}
       >
-        <IconContainer active={active}>
+        <IconContainer
+          active={active}
+          whileHover={{
+            boxShadow: "0 8px 20px rgba(224, 72, 72, 0.5)"
+          }}
+          animate={active ? activeIndicator : {}}
+        >
           <motion.i className={icon}></motion.i>
         </IconContainer>
       </NavLink>
 
-      {showLabel && (
-        <NavLabel
-          variants={mobileLabelVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-        >
-          {name}
-        </NavLabel>
-      )}
+      <AnimatePresence>
+        {showLabel && (
+          <NavLabel
+            variants={mobileLabelVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            {name}
+          </NavLabel>
+        )}
+      </AnimatePresence>
     </StyledNavItem>
   );
 };

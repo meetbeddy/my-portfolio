@@ -15,7 +15,7 @@ export default function Contact() {
   };
 
   return (
-    <PageLayout title="Let's get in touch">
+    <PageLayout title="Let's get in touch" maxWidth="800px">
       <TwoColumnLayout>
         <LeftColumn variants={TextAreaVariants} flex={1.5}>
           <PageParagraph

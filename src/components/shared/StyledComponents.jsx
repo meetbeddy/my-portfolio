@@ -5,7 +5,7 @@ import { circleMove } from "../animations";
 export const ContentContainer = styled(motion.div)`
   max-width: ${props => props.maxWidth || "1000px"};
   width: 90%;
-  margin: 80px auto 0;
+  margin: 10px auto 0;
   padding: 2rem;
   background: rgba(30, 30, 30, 0.6);
   backdrop-filter: blur(10px);
@@ -17,9 +17,8 @@ export const ContentContainer = styled(motion.div)`
   z-index: 2;
   
   @media (max-width: 768px) {
-    width: 85%;
-    padding: 1.5rem;
-    margin-top: 100px;
+    padding: 1rem;
+    margin-top: 0.5px;
   }
 `;
 
@@ -63,7 +62,7 @@ export const PageHeader = styled.div`
 `;
 
 export const PageParagraph = styled(motion.p)`
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 1.8;
   margin-bottom: 2rem;
   color: rgba(255, 255, 255, 0.9);

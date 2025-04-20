@@ -7,7 +7,7 @@ import { RightBoxVariants, TextAreaVariants } from "../../animations";
 
 export default function Skills() {
   return (
-    <PageLayout title="Skills / Experience">
+    <PageLayout title="Skills / Experience" maxWidth="800px">
       <TwoColumnLayout>
         <LeftColumn variants={TextAreaVariants}>
           <PageParagraph

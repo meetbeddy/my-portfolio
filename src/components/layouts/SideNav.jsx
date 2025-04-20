@@ -2,16 +2,61 @@ import React, { useState, useEffect } from "react";
 import NavItem from "./NavItem";
 import styled from "styled-components";
 import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
+import useIsMobile from "../../hook/useIsMobile";
 
 // Enhanced animation variants for the overall sidebar
 const sidebarVariants = {
-  hidden: {},
+  hidden: {
+    opacity: 0,
+    x: -80,
+  },
   visible: {
+    opacity: 1,
+    x: 0,
     transition: {
+      type: "spring",
+      damping: 20,
+      stiffness: 100,
+      staggerChildren: 0.1,
+      delayChildren: 0.3
+    }
+  },
+  exit: {
+    opacity: 0,
+    x: -80,
+    transition: {
+      ease: "easeInOut",
+      duration: 0.3,
+    }
+  }
+};
+
+// Mobile sidebar variants
+const mobileSidebarVariants = {
+  hidden: {
+    opacity: 0,
+    y: 80,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      damping: 20,
+      stiffness: 100,
       staggerChildren: 0.1,
       delayChildren: 0.2
     }
   },
+  exit: {
+    opacity: 0,
+    y: 80,
+    transition: {
+      ease: "easeInOut",
+      duration: 0.3,
+    }
+  }
 };
 
 // Enhanced animation variants for icons
@@ -45,12 +90,35 @@ const iconVariants = {
       stiffness: 300,
     },
   },
-  exit: {
-    x: -100,
+};
+
+// Mobile icon variants
+const mobileIconVariants = {
+  hidden: {
     opacity: 0,
+    y: 50,
     transition: {
-      ease: "easeInOut",
-      duration: 0.3,
+      type: "spring",
+      damping: 12,
+      stiffness: 100,
+    },
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      damping: 10,
+      stiffness: 80,
+      duration: 0.4,
+    },
+  },
+  hover: {
+    scale: 1.2,
+    transition: {
+      type: "spring",
+      damping: 10,
+      stiffness: 300,
     },
   },
 };
@@ -114,21 +182,51 @@ const NavContainer = styled(motion.div)`
   }
 `;
 
+// Animated logo component
+const Logo = styled(motion.div)`
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const SocialContainer = styled(motion.div)`
+  position: absolute;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  
+  a {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.2rem;
+    transition: color 0.3s ease, transform 0.3s ease;
+    
+    &:hover {
+      color: #e04848;
+      transform: scale(1.2);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
 const SideNav = () => {
-  const [activePath, setActivePath] = useState("/");
-  const [isMobile, setIsMobile] = useState(false);
+  const location = useLocation();
 
-  // Check for mobile viewport
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const isMobile = useIsMobile()
 
   const navigationItems = [
     {
@@ -163,31 +261,62 @@ const SideNav = () => {
     },
   ];
 
-  const handleItemClick = (path) => {
-    setActivePath(path);
-  };
+  const socialLinks = [
+    { icon: "fab fa-github", url: "https://github.com/yourusername", key: 1 },
+    { icon: "fab fa-linkedin", url: "https://linkedin.com/in/yourusername", key: 2 },
+    { icon: "fab fa-twitter", url: "https://twitter.com/yourusername", key: 3 }
+  ];
 
   return (
     <StyledSideNav
-      variants={sidebarVariants}
+      variants={isMobile ? mobileSidebarVariants : sidebarVariants}
       initial="hidden"
       animate="visible"
       exit="exit"
     >
+      {!isMobile && (
+        <Logo
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <span style={{ fontSize: "24px", color: "#e04848", fontWeight: "bold" }}>O</span>
+        </Logo>
+      )}
+
       <NavContainer>
         {navigationItems.map((item) => (
           <NavItem
             path={item.path}
             name={item.name}
             icon={item.icon}
-            onItemClick={handleItemClick}
-            active={item.path === activePath}
+            active={item.path === location.pathname}
             key={item.key}
-            variants={iconVariants}
+            variants={isMobile ? mobileIconVariants : iconVariants}
             isMobile={isMobile}
           />
         ))}
       </NavContainer>
+
+      {!isMobile && (
+        <SocialContainer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+        >
+          {socialLinks.map((link) => (
+            <motion.a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              key={link.key}
+              whileHover={{ scale: 1.2 }}
+            >
+              <i className={link.icon}></i>
+            </motion.a>
+          ))}
+        </SocialContainer>
+      )}
     </StyledSideNav>
   );
 };

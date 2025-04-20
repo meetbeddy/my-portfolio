@@ -1,27 +1,84 @@
 import React, { useState, useEffect, useRef } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import NavBar from "./components/layouts/NavBar";
+import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import SideNav from "./components/layouts/SideNav";
 import HomePage from "./components/pages/home/HomePage";
 import Contact from "./components/pages/contact/Contact";
 import About from "./components/pages/about/About";
 import Skills from "./components/pages/skills/Skills";
 import * as THREE from "three";
+import { AnimatePresence } from "framer-motion";
+import styled from "styled-components";
+
+// Loading indicator
+const LoadingScreen = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #121212;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  transition: opacity 0.5s ease;
+  opacity: ${props => props.isLoading ? 1 : 0};
+  pointer-events: ${props => props.isLoading ? 'all' : 'none'};
+`;
+
+const LoadingContent = styled.div`
+  text-align: center;
+  color: white;
+  
+  h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    letter-spacing: 2px;
+  }
+  
+  .spinner {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #e04848;
+    animation: spin 1s ease-in-out infinite;
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  }
+`;
+
+// Animation wrapper
+const AnimationRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/skills" element={<Skills />} />
+        {/* <Route path="/works" element={<Work />} /> */}
+      </Routes>
+    </AnimatePresence>
+  );
+}
 
 function App() {
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const ref = useRef(null);
 
   useEffect(() => {
+    // Show loading screen
+    setIsLoading(true);
+
     const threeRef = ref.current;
     if (!threeRef) return;
-
-    // Detect mobile devices
-    const detectMobile = () => {
-      setIsMobile(!!navigator.maxTouchPoints && window.PointerEvent);
-    };
-    detectMobile();
-    window.addEventListener("resize", detectMobile);
 
     // THREE.js Scene Setup
     const scene = new THREE.Scene();
@@ -63,11 +120,13 @@ function App() {
     scene.add(softLight);
 
     // Handle Window Resize
-    window.addEventListener("resize", () => {
+    const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    };
+
+    window.addEventListener("resize", handleResize);
 
     // Mouse Interaction Variables
     let mouseX = 0;
@@ -101,9 +160,14 @@ function App() {
     };
     animate();
 
+    // Hide loading after everything is set up
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
     // Cleanup Function
     return () => {
-      window.removeEventListener("resize", detectMobile);
+      window.removeEventListener("resize", handleResize);
       document.removeEventListener("mousemove", onMouseMove);
       threeRef.removeChild(renderer.domElement);
       renderer.dispose();
@@ -112,16 +176,16 @@ function App() {
 
   return (
     <Router>
-      <div ref={ref} className="App">
-        {isMobile ? <NavBar /> : <SideNav />}
+      <LoadingScreen isLoading={isLoading}>
+        <LoadingContent>
+          <h2>Loading Experience</h2>
+          <div className="spinner"></div>
+        </LoadingContent>
+      </LoadingScreen>
 
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/skills" element={<Skills />} />
-          {/* <Route path="/works" element={<Work />} /> */}
-        </Routes>
+      <div ref={ref} className="App">
+        <SideNav />
+        <AnimationRoutes />
       </div>
     </Router>
   );
