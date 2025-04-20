@@ -9,14 +9,13 @@ import * as THREE from "three";
 import { AnimatePresence } from "framer-motion";
 import styled from "styled-components";
 
-// Loading indicator
 const LoadingScreen = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: #121212;
+  background: ${props => props.theme.colors.background};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -28,11 +27,11 @@ const LoadingScreen = styled.div`
 
 const LoadingContent = styled.div`
   text-align: center;
-  color: white;
+  color: ${props => props.theme.colors.text};
   
   h2 {
-    margin-bottom: 20px;
-    font-size: 24px;
+    margin-bottom: ${props => props.theme.spacing.xl};
+    font-size: ${props => props.theme.typography.fontSizes.xl};
     letter-spacing: 2px;
   }
   
@@ -42,7 +41,7 @@ const LoadingContent = styled.div`
     margin: 0 auto;
     border: 3px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    border-top-color: #e04848;
+    border-top-color: ${props => props.theme.colors.primary};
     animation: spin 1s ease-in-out infinite;
     
     @keyframes spin {
@@ -51,7 +50,6 @@ const LoadingContent = styled.div`
   }
 `;
 
-// Animation wrapper
 const AnimationRoutes = () => {
   const location = useLocation();
 
@@ -69,7 +67,6 @@ const AnimationRoutes = () => {
 }
 
 function App() {
-  const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const ref = useRef(null);
 

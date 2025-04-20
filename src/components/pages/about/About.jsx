@@ -1,60 +1,59 @@
 import React, { useState, useEffect } from "react";
-import styled from "styled-components";
 import { motion } from "framer-motion";
 import PageLayout from "../../layouts/PageLayout";
-import { PageParagraph, StyledButton, SubTitle } from "../../shared/StyledComponents";
+import { PageParagraph, StyledButton, SubTitle, Card, Grid, Badge, RevealContainer } from "../../shared/StyledComponents";
 import { Clock, Headphones, Code, Coffee, Volleyball, Globe } from "lucide-react";
+import styled from "styled-components";
 
-// Styled Components - Updated to use the correct color variables
 const TabButton = styled(motion.button)`
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  transition: all 0.3s ease;
-  margin: 0.25rem;
-  background-color: ${props => props.active ? "var(--primary)" : "rgba(255, 255, 255, 0.1)"};
-  color: ${props => props.active ? "white" : "var(--text)"};
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+  border-radius: ${props => props.theme.borders.radius.full};
+  ${props => props.theme.mixins.smoothTransition('all')}
+  margin: ${props => props.theme.spacing.xs};
+  background-color: ${props => props.active ? props.theme.colors.primary : props.theme.colors.surface};
+  color: ${props => props.active ? props.theme.colors.text : props.theme.colors.text};
   border: none;
   cursor: pointer;
   
   &:hover {
-    background-color: ${props => props.active ? "var(--primary-dark)" : "var(--surface-hover)"};
+    background-color: ${props => props.active ? props.theme.colors.primaryDark : props.theme.colors.surfaceHover};
   }
 `;
 
 const TabContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: ${props => props.theme.spacing.sm};
   justify-content: center;
-  margin-bottom: 2rem;
+  margin-bottom: ${props => props.theme.spacing.xl};
   role: "tablist";
 `;
 
 const Section = styled(motion.div)`
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  margin-top: ${props => props.theme.spacing.xl};
+  margin-bottom: ${props => props.theme.spacing.xl};
 `;
 
 const GradientCard = styled.div`
-  background: linear-gradient(to right, var(--primary), #ff8a8a);
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  color: white;
-  margin-bottom: 1.5rem;
+  background: linear-gradient(to right, ${props => props.theme.colors.primary}, ${props => props.theme.colors.primaryLight});
+  padding: ${props => props.theme.spacing.lg};
+  border-radius: ${props => props.theme.borders.radius.lg};
+  box-shadow: ${props => props.theme.shadows.md};
+  color: ${props => props.theme.colors.text};
+  margin-bottom: ${props => props.theme.spacing.lg};
 `;
 
 const CardTitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
+  font-size: ${props => props.theme.typography.fontSizes.xl};
+  font-weight: ${props => props.theme.typography.fontWeight.bold};
+  margin-bottom: ${props => props.theme.spacing.md};
   display: flex;
   align-items: center;
 `;
 
 const TypewriterContainer = styled.div`
   height: 2rem;
-  margin-bottom: 1rem;
+  margin-bottom: ${props => props.theme.spacing.md};
 `;
 
 const Cursor = styled.span`
@@ -69,73 +68,61 @@ const Cursor = styled.span`
 const TagContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1rem;
-`;
-
-const Tag = styled.span`
-  background-color: rgba(255, 255, 255, 0.2);
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-`;
-
-const CardGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  gap: ${props => props.theme.spacing.sm};
+  margin-top: ${props => props.theme.spacing.md};
 `;
 
 const InfoCard = styled(motion.div)`
-  background-color: ${props => props.color || "var(--surface)"};
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  background-color: ${props => props.color || props.theme.colors.surface};
+  padding: ${props => props.theme.spacing.lg};
+  border-radius: ${props => props.theme.borders.radius.lg};
+  box-shadow: ${props => props.theme.shadows.sm};
+  transition: ${props => props.theme.animation.durations.medium} ${props => props.theme.animation.easings.easeInOut};
   
   &:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: ${props => props.theme.shadows.md};
+    transform: translateY(-5px);
   }
 `;
 
 const SkillContainer = styled.div`
-  margin-bottom: 1rem;
+  margin-bottom: ${props => props.theme.spacing.md};
 `;
 
 const SkillHeader = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.25rem;
+  margin-bottom: ${props => props.theme.spacing.xs};
 `;
 
 const SkillName = styled.span`
-  font-weight: 500;
+  font-weight: ${props => props.theme.typography.fontWeight.medium};
 `;
 
 const SkillBarBackground = styled.div`
   width: 100%;
-  background-color: var(--surface);
-  border-radius: 9999px;
+  background-color: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borders.radius.full};
   height: 0.625rem;
 `;
 
 const SkillBarFill = styled(motion.div)`
-  background-color: var(--primary);
+  background-color: ${props => props.theme.colors.primary};
   height: 0.625rem;
-  border-radius: 9999px;
+  border-radius: ${props => props.theme.borders.radius.full};
 `;
 
 const Quote = styled.div`
-  background-color: var(--surface);
-  border-left: 4px solid var(--primary);
-  padding: 1rem;
+  background-color: ${props => props.theme.colors.surface};
+  border-left: 4px solid ${props => props.theme.colors.primary};
+  padding: ${props => props.theme.spacing.md};
   font-style: italic;
-  margin: 1.5rem 0;
+  margin: ${props => props.theme.spacing.lg} 0;
 `;
 
 const Timeline = styled.div`
   position: relative;
-  padding-left: 2rem;
+  padding-left: ${props => props.theme.spacing.xl};
   
   &:before {
     content: "";
@@ -144,13 +131,13 @@ const Timeline = styled.div`
     top: 0;
     bottom: 0;
     width: 2px;
-    background-color: var(--surface);
+    background-color: ${props => props.theme.colors.surface};
   }
 `;
 
 const TimelineItem = styled.div`
   position: relative;
-  padding-bottom: 2rem;
+  padding-bottom: ${props => props.theme.spacing.xl};
   
   &:last-child {
     padding-bottom: 0;
@@ -159,57 +146,57 @@ const TimelineItem = styled.div`
   &:before {
     content: "";
     position: absolute;
-    left: -2rem;
+    left: -${props => props.theme.spacing.xl};
     top: 0;
     width: 1rem;
     height: 1rem;
     border-radius: 50%;
-    background-color: var(--primary);
+    background-color: ${props => props.theme.colors.primary};
     transform: translateX(-0.25rem);
   }
 `;
 
 const TimelineTitle = styled.h3`
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
+  font-size: ${props => props.theme.typography.fontSizes.lg};
+  font-weight: ${props => props.theme.typography.fontWeight.bold};
+  margin-bottom: ${props => props.theme.spacing.sm};
 `;
 
 const InterestCard = styled(motion.div)`
-  background: ${props => props.bgColor || "var(--surface)"};
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  background: ${props => props.bgColor || props.theme.colors.surface};
+  padding: ${props => props.theme.spacing.lg};
+  border-radius: ${props => props.theme.borders.radius.lg};
+  box-shadow: ${props => props.theme.shadows.sm};
+  transition: ${props => props.theme.animation.durations.medium} ${props => props.theme.animation.easings.easeInOut};
   
   &:hover {
     transform: translateY(-0.25rem);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: ${props => props.theme.shadows.md};
   }
 `;
 
 const InterestTitle = styled.h3`
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
+  font-size: ${props => props.theme.typography.fontSizes.lg};
+  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  margin-bottom: ${props => props.theme.spacing.sm};
   display: flex;
   align-items: center;
 `;
 
 const SocialButtonContainer = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: ${props => props.theme.spacing.md};
   justify-content: center;
-  margin-top: 1.5rem;
+  margin-top: ${props => props.theme.spacing.lg};
 `;
 
 const SocialButton = styled.button`
-  background-color: ${props => props.bgColor || "var(--primary)"};
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  background-color: ${props => props.bgColor || props.theme.colors.primary};
+  color: ${props => props.theme.colors.text};
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+  border-radius: ${props => props.theme.borders.radius.md};
   border: none;
-  transition: all 0.3s ease;
+  transition: ${props => props.theme.animation.durations.medium} ${props => props.theme.animation.easings.easeInOut};
   cursor: pointer;
   
   &:hover {
@@ -217,15 +204,28 @@ const SocialButton = styled.button`
   }
 `;
 
-const resumeButtonVariants = {
-  hover: {
-    scale: 1.05,
-    transition: { duration: 0.3 }
-  },
-  tap: {
-    scale: 0.95
-  }
-};
+const CardGrid = styled(Grid)`
+  gap: ${props => props.theme.spacing.lg};
+`;
+
+// Additional styled components for inline styles
+const SectionHeader = styled.h3`
+  font-size: ${props => props.theme.typography.fontSizes.lg};
+  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  margin-bottom: ${props => props.theme.spacing.md};
+`;
+
+const FactListItem = styled.li`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
+`;
+
+const CoffeeNote = styled.p`
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+  font-style: italic;
+  margin-top: ${props => props.theme.spacing.sm};
+`;
 
 export default function About() {
   const [activeSection, setActiveSection] = useState("intro");
@@ -301,7 +301,7 @@ export default function About() {
     }
   };
 
-  // Updated interest cards to use the dark theme color scheme
+  // Interest cards with theme colors
   const interestCardColors = {
     music: "rgba(255, 255, 255, 0.05)",
     football: "rgba(255, 255, 255, 0.08)",
@@ -346,7 +346,7 @@ export default function About() {
         >
           <GradientCard>
             <CardTitle>
-              <Code size={24} style={{ marginRight: "0.5rem" }} /> Developer Profile
+              <Code size={24} style={{ marginRight: props => props.theme.spacing.sm }} /> Developer Profile
             </CardTitle>
             <TypewriterContainer>
               {displayText}<Cursor>|</Cursor>
@@ -356,7 +356,7 @@ export default function About() {
             </p>
             <TagContainer>
               {["JavaScript", "React", "Node.js", "NestJS", "UI/UX", "Problem Solver"].map(tag => (
-                <Tag key={tag}>{tag}</Tag>
+                <Badge key={tag}>{tag}</Badge>
               ))}
             </TagContainer>
           </GradientCard>
@@ -366,7 +366,7 @@ export default function About() {
               whileHover={{ y: -5 }}
               transition={{ duration: 0.3 }}
             >
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.75rem" }}>My Approach</h3>
+              <SectionHeader>My Approach</SectionHeader>
               <p>
                 I've got a thing for clean code, fast load times, and responsive designs that make you feel
                 like you're using something special. At the end of the day, it's all about solving problems.
@@ -377,20 +377,24 @@ export default function About() {
               whileHover={{ y: -5 }}
               transition={{ duration: 0.3 }}
             >
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.75rem" }}>Quick Facts</h3>
-              <ul style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <SectionHeader>Quick Facts</SectionHeader>
+              <ul style={{ display: "flex", flexDirection: "column", gap: props => props.theme.spacing.sm }}>
                 {funFacts.map((fact, i) => (
-                  <li key={i} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <FactListItem key={i}>
                     {fact.icon}
                     <span>{fact.text}</span>
-                  </li>
+                  </FactListItem>
                 ))}
               </ul>
             </InfoCard>
           </CardGrid>
 
-          <motion.div
-            style={{ display: "flex", justifyContent: "center", marginTop: "2rem" }}
+          <RevealContainer
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: props => props.theme.spacing.xl
+            }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
@@ -402,14 +406,13 @@ export default function About() {
             >
               <StyledButton
                 as={motion.a}
-                variants={resumeButtonVariants}
-                whileHover="hover"
-                whileTap="tap"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 Check Out My Resume
               </StyledButton>
             </a>
-          </motion.div>
+          </RevealContainer>
         </Section>
       )}
 
@@ -423,9 +426,12 @@ export default function About() {
           id={`panel-skills`}
           aria-labelledby={`tab-skills`}
         >
-          <SubTitle style={{ textAlign: "center", marginBottom: "2rem" }}>Technical Toolkit</SubTitle>
+          <SubTitle style={{
+            textAlign: "center",
+            marginBottom: props => props.theme.spacing.xl
+          }}>Technical Toolkit</SubTitle>
 
-          <div style={{ marginBottom: "2rem" }}>
+          <div style={{ marginBottom: props => props.theme.spacing.xl }}>
             {skills.map((skill) => (
               <SkillContainer key={skill.name}>
                 <SkillHeader>
@@ -444,23 +450,23 @@ export default function About() {
           </div>
 
           <CardGrid>
-            <InfoCard>
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.75rem" }}>Frontend</h3>
+            <Card>
+              <h3>Frontend</h3>
               <TagContainer>
                 {["React", "JavaScript", "TypeScript", "HTML/CSS", "Responsive Design", "State Management"].map(skill => (
-                  <Tag key={skill} style={{ backgroundColor: "rgba(255, 255, 255, 0.08)", color: "var(--text)" }}>{skill}</Tag>
+                  <Badge key={skill} variant="primary">{skill}</Badge>
                 ))}
               </TagContainer>
-            </InfoCard>
+            </Card>
 
-            <InfoCard>
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.75rem" }}>Backend</h3>
+            <Card>
+              <h3>Backend</h3>
               <TagContainer>
                 {["Node.js", "NestJS", "Express", "APIs", "Database Design", "Authentication"].map(skill => (
-                  <Tag key={skill} style={{ backgroundColor: "rgba(255, 255, 255, 0.08)", color: "var(--text)" }}>{skill}</Tag>
+                  <Badge key={skill} variant="secondary">{skill}</Badge>
                 ))}
               </TagContainer>
-            </InfoCard>
+            </Card>
           </CardGrid>
         </Section>
       )}
@@ -501,9 +507,10 @@ export default function About() {
             <TimelineItem>
               <TimelineTitle>Where I'm Going</TimelineTitle>
               <p>
-                Always learning, always growing  I’m continuously exploring new technologies while mastering my current stack to craft better digital experiences. Lately, I’ve been diving into the world of 3D computer graphics with Three.js, creating immersive web environments that push the boundaries of what the browser can do.
-
-                At the same time, I’m an enthusiastic builder with Electron and React Native, constantly sharpening my skills in cross-platform development to deliver seamless, responsive experiences across all kinds of devices. Whether it’s on he web, desktop, or mobile  I’m all about creating solutions that feel intuitive, polished, and purposeful.
+                Always learning, always growing. I'm continuously exploring new technologies while mastering my current stack to craft better digital experiences. Lately, I've been diving into the world of 3D computer graphics with Three.js, creating immersive web environments that push the boundaries of what the browser can do.
+              </p>
+              <p>
+                At the same time, I'm an enthusiastic builder with Electron and React Native, constantly sharpening my skills in cross-platform development to deliver seamless, responsive experiences across all kinds of devices. Whether it's on the web, desktop, or mobile, I'm all about creating solutions that feel intuitive, polished, and purposeful.
               </p>
             </TimelineItem>
           </Timeline>
@@ -520,19 +527,28 @@ export default function About() {
           id={`panel-interests`}
           aria-labelledby={`tab-interests`}
         >
-          <SubTitle style={{ textAlign: "center", marginBottom: "2rem" }}>Beyond The Code</SubTitle>
+          <SubTitle style={{
+            textAlign: "center",
+            marginBottom: props => props.theme.spacing.xl
+          }}>Beyond The Code</SubTitle>
 
           <CardGrid>
             <InterestCard bgColor={interestCardColors.music}>
               <InterestTitle>
-                <Headphones style={{ marginRight: "0.5rem", color: "var(--primary)" }} size={20} /> Music
+                <Headphones style={{
+                  marginRight: props => props.theme.spacing.sm,
+                  color: props => props.theme.colors.primary
+                }} size={20} /> Music
               </InterestTitle>
               <p>Indie-pop is my coding soundtrack. Nothing beats finding the perfect song to match the problem I'm solving.</p>
             </InterestCard>
 
             <InterestCard bgColor={interestCardColors.football}>
               <InterestTitle>
-                <Volleyball style={{ marginRight: "0.5rem", color: "var(--primary)" }} size={20} /> Football
+                <Volleyball style={{
+                  marginRight: props => props.theme.spacing.sm,
+                  color: props => props.theme.colors.primary
+                }} size={20} /> Football
               </InterestTitle>
               <p>Don't judge the "bulk" though — I'm more about the hustle on the field. Football keeps me balanced when I'm not coding.</p>
             </InterestCard>
@@ -540,7 +556,11 @@ export default function About() {
             <InterestCard bgColor={interestCardColors.coffee}>
               <InterestTitle>
                 <Coffee
-                  style={{ marginRight: "0.5rem", cursor: "pointer", color: "var(--primary)" }}
+                  style={{
+                    marginRight: props => props.theme.spacing.sm,
+                    cursor: "pointer",
+                    color: props => props.theme.colors.primary
+                  }}
                   size={20}
                   onClick={() => setCoffeeCount(count => count + 1)}
                 /> Coffee
@@ -549,24 +569,24 @@ export default function About() {
                 Essential fuel for coding sessions. You've clicked my coffee cup {coffeeCount} times!
               </p>
               {coffeeCount > 5 && (
-                <p style={{ fontSize: "0.875rem", fontStyle: "italic", marginTop: "0.5rem" }}>
+                <CoffeeNote>
                   Wow, you really like coffee too! We'd get along well.
-                </p>
+                </CoffeeNote>
               )}
             </InterestCard>
           </CardGrid>
 
-          <InfoCard style={{ marginTop: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.75rem" }}>Let's Connect</h3>
+          <Card style={{ marginTop: props => props.theme.spacing.lg }}>
+            <h3>Let's Connect</h3>
             <p>
               When I'm not deep in the code, you'll probably catch me listening to indie-pop, playing football, or just chatting with people about cool projects. I'm always interested in hearing about new ideas or potential collaborations.
             </p>
             <SocialButtonContainer>
               <SocialButton bgColor="#0077b5">LinkedIn</SocialButton>
               <SocialButton bgColor="#111111">GitHub</SocialButton>
-              <SocialButton bgColor="var(--primary)">Twitter</SocialButton>
+              <SocialButton bgColor={props => props.theme.colors.primary}>Twitter</SocialButton>
             </SocialButtonContainer>
-          </InfoCard>
+          </Card>
         </Section>
       )}
     </PageLayout>

@@ -1,27 +1,7 @@
 import styled from "styled-components";
 import { motion } from "framer-motion";
 
-// Define breakpoints as constants for reuse
-const BREAKPOINTS = {
-  mobileS: '320px',
-  mobileM: '375px',
-  mobileL: '414px',
-  tablet: '768px',
-  laptop: '1024px',
-  laptopL: '1366px'
-};
-
-// Create media query helpers
-const mediaQueries = {
-  mobileS: `@media (max-width: ${BREAKPOINTS.mobileS})`,
-  mobileM: `@media (max-width: ${BREAKPOINTS.mobileM})`,
-  mobileL: `@media (max-width: ${BREAKPOINTS.mobileL})`,
-  tablet: `@media (max-width: ${BREAKPOINTS.tablet})`,
-  laptop: `@media (max-width: ${BREAKPOINTS.laptop})`,
-  laptopL: `@media (max-width: ${BREAKPOINTS.laptopL})`,
-  mobileLandscape: '@media (orientation: landscape) and (max-height: 500px)'
-};
-
+// Using theme breakpoints directly instead of defining constants
 export const FlexWrapper = styled(motion.div)`
   display: flex;
   flex-wrap: wrap;
@@ -30,17 +10,17 @@ export const FlexWrapper = styled(motion.div)`
   left: 76px;
   width: auto;
   margin-top: 8vh;
-  margin-left: 4px;
-  margin-right: 4px;
+  margin-left: ${props => props.theme.spacing.xs};
+  margin-right: ${props => props.theme.spacing.xs};
   cursor: auto;
   
-  ${mediaQueries.tablet} {
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     display: block;
     left: 0;
     right: 0;
     
     h1, h2 {
-      font-size: 2.2em;
+      font-size: ${props => props.theme.typography.fontSizes['2xl']};
       letter-spacing: -2px;
     }
     
@@ -53,7 +33,9 @@ export const FlexWrapper = styled(motion.div)`
   }
   
   // iPhone landscape modes
-  @media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (orientation: landscape) {
+  ${props => props.theme.mixins.smoothTransition('all')}
+  
+  ${props => `@media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (orientation: landscape)`} {
     top: 9vh;
     
     .top, .bottom {
@@ -64,7 +46,7 @@ export const FlexWrapper = styled(motion.div)`
     }
   }
   
-  @media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (orientation: landscape) {
+  ${props => `@media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (orientation: landscape)`} {
     .top, .bottom {
       top: 15vh;
       left: 2vw;
@@ -73,28 +55,28 @@ export const FlexWrapper = styled(motion.div)`
     }
   }
   
-  @media only screen and (min-device-width: 414px) and (max-device-width: 736px) and (orientation: landscape) {
+  ${props => `@media only screen and (min-device-width: 414px) and (max-device-width: 736px) and (orientation: landscape)`} {
     .top, .bottom {
       top: 10vh;
     }
   }
   
   // iPhone X/newer iPhones
-  @media only screen and (min-device-width: 375px) and (max-device-width: 812px) and (orientation: portrait) {
+  ${props => `@media only screen and (min-device-width: 375px) and (max-device-width: 812px) and (orientation: portrait)`} {
     .bottom, .top {
       width: 100vw;
       height: 60px;
     }
   }
   
-  @media only screen and (min-device-width: 375px) and (max-device-width: 812px) and (orientation: landscape) {
+  ${props => `@media only screen and (min-device-width: 375px) and (max-device-width: 812px) and (orientation: landscape)`} {
     .bottom, .top {
       width: 50vw;
     }
   }
   
   // iPad
-  @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+  ${props => `@media only screen and (min-device-width: 768px) and (max-device-width: 1024px)`} {
     width: 80vw;
     
     .top, .bottom {
@@ -104,7 +86,7 @@ export const FlexWrapper = styled(motion.div)`
   }
   
   // iPad Pro
-  @media only screen and (min-device-width: 1024px) and (max-device-width: 1366px) {
+  ${props => `@media only screen and (min-device-width: 1024px) and (max-device-width: 1366px)`} {
     display: block;
     
     .top, .bottom {
@@ -122,12 +104,12 @@ export const Boxes = styled(motion.div)`
   justify-content: space-evenly;
   width: 100vw;
   height: auto;
-  margin: 2px;
-  padding: 2px 0;
-  transition: all 0.3s ease;
+  margin: ${props => props.theme.spacing.xs};
+  padding: ${props => props.theme.spacing.xs} 0;
+  ${props => props.theme.mixins.smoothTransition('all')}
   
   p {
-    font-size: 1em;
+    font-size: ${props => props.theme.typography.fontSizes.base};
     letter-spacing: 2px;
     color: black;
   }
@@ -135,13 +117,13 @@ export const Boxes = styled(motion.div)`
 
 export const RightBox = styled(motion.div)`
   width: 50%;
-  margin: 10px;
-  padding: 10px;
+  margin: ${props => props.theme.spacing.md};
+  padding: ${props => props.theme.spacing.md};
   box-sizing: border-box;
-  box-shadow: 0 1px 5px 1px rgba(250, 250, 250, 0.25);
+  box-shadow: ${props => props.theme.shadows.sm};
   text-align: center;
   
-  ${mediaQueries.tablet} {
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     width: auto;
   }
 `;
@@ -151,28 +133,29 @@ export const TextSpan = styled(motion.div)`
   position: relative;
   text-align: left;
   overflow: hidden;
-  padding: 2px 10px;
+  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
   margin: 70px auto 0;
 
-  ${mediaQueries.tablet} {
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     width: auto;
   }
   
-  @media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (orientation: landscape) {
+  ${props => `@media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (orientation: landscape)`} {
     margin-top: 100px;
     width: auto;
   }
   
-  @media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (orientation: landscape) {
+  ${props => `@media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (orientation: landscape)`} {
     margin-top: 110px;
   }
   
-  @media only screen and (min-device-width: 414px) and (max-device-width: 736px) and (orientation: landscape) {
+  ${props => `@media only screen and (min-device-width: 414px) and (max-device-width: 736px) and (orientation: landscape)`} {
     margin-top: 90px;
     width: auto;
   }
 
-  @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+  ${props => `@media only screen and (min-device-width: 768px) and (max-device-width: 1024px)`} {
     margin-top: 100px;
   }
 `;
+
