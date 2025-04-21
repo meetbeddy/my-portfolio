@@ -241,14 +241,14 @@ const SideNav = () => {
       icon: "fa fa-user",
       key: 2,
     },
+    // {
+    //   path: "/skills",
+    //   name: "Skills",
+    //   icon: "fa fa-cogs",
+    //   key: 3,
+    // },
     {
-      path: "/skills",
-      name: "Skills",
-      icon: "fa fa-cogs",
-      key: 3,
-    },
-    {
-      path: "/works",
+      path: "/projects",
       name: "Works",
       icon: "fa fa-briefcase",
       key: 4,

@@ -8,6 +8,7 @@ import Skills from "./components/pages/skills/Skills";
 import * as THREE from "three";
 import { AnimatePresence } from "framer-motion";
 import styled from "styled-components";
+import Projects from "./components/pages/work/Work";
 
 const LoadingScreen = styled.div`
   position: fixed;
@@ -60,7 +61,7 @@ const AnimationRoutes = () => {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/skills" element={<Skills />} />
-        {/* <Route path="/works" element={<Work />} /> */}
+        <Route path="/projects" element={<Projects />} />
       </Routes>
     </AnimatePresence>
   );
