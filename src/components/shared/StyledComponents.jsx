@@ -5,32 +5,32 @@ import { circleMove } from "../animations";
 export const ContentContainer = styled(motion.div)`
   max-width: ${props => props.maxWidth || "1000px"};
   width: 90%;
-  margin: 10px auto 0;
-  padding: 2rem;
-  background: rgba(30, 30, 30, 0.6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  margin: ${props => props.theme.spacing.md} auto 0;
+  padding: ${props => props.theme.spacing.xl};
+  background: ${props => props.theme.mixins.glassEffect.background};
+  backdrop-filter: ${props => props.theme.mixins.glassEffect.backdropFilter};
+  -webkit-backdrop-filter: ${props => props.theme.mixins.glassEffect.backdropFilter};
+  border-radius: ${props => props.theme.borders.radius.xl};
+  border: ${props => props.theme.mixins.glassEffect.border};
+  box-shadow: ${props => props.theme.shadows.lg};
   position: relative;
-  z-index: 2;
+  z-index: ${props => props.theme.zIndex.base + 2};
   
-  @media (max-width: 768px) {
-    padding: 1rem;
-    margin-top: 0.5px;
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    padding: ${props => props.theme.spacing.md};
+    margin-top: ${props => props.theme.spacing.xs};
   }
 `;
 
 export const PageHeader = styled.div`
   position: relative;
   height: 80px;
-  margin-bottom: 20px;
+  margin-bottom: ${props => props.theme.spacing.lg};
   
   .bottom, .top {
     position: absolute;
     width: 100%;
-    height: 80px;
+    height: 100px;
     display: flex;
     align-items: center;
   }
@@ -47,42 +47,35 @@ export const PageHeader = styled.div`
     z-index: 1;
   }
   
-  h1 {
-    font-size: 3.3rem;
-    letter-spacing: -2px;
-    font-weight: 700;
-    margin: 0;
-  }
-  
-  @media (max-width: 768px) {
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     h1 {
-      font-size: 2.2rem;
+      font-size: ${props => props.theme.typography.fontSizes['2xl']};
     }
   }
 `;
 
 export const PageParagraph = styled(motion.p)`
-  font-size: 1rem;
-  line-height: 1.8;
-  margin-bottom: 2rem;
-  color: rgba(255, 255, 255, 0.9);
-  letter-spacing: 0.5px;
+  font-size: ${props => props.theme.typography.fontSizes.base};
+  line-height: ${props => props.theme.typography.lineHeight.relaxed};
+  margin-bottom: ${props => props.theme.spacing.xl};
+  color: ${props => props.theme.colors.textSecondary};
+  letter-spacing: ${props => props.theme.typography.letterSpacing.wide};
 `;
 
 export const SubTitle = styled(motion.h5)`
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin-bottom: 1.5rem;
-  color: #f5b7b3;
-  line-height: 1.4;
+  font-size: ${props => props.theme.typography.fontSizes.xl};
+  font-weight: ${props => props.theme.typography.fontWeight.medium};
+  margin-bottom: ${props => props.theme.spacing.lg};
+  color: ${props => props.theme.colors.primaryLight};
+  line-height: ${props => props.theme.typography.lineHeight.normal};
 `;
 
 export const TwoColumnLayout = styled.div`
   display: flex;
   flex-direction: row;
-  gap: 30px;
+  gap: ${props => props.theme.spacing.lg};
   
-  @media (max-width: 768px) {
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     flex-direction: column;
   }
 `;
@@ -93,33 +86,35 @@ export const LeftColumn = styled(motion.div)`
 
 export const RightColumn = styled(motion.div)`
   flex: ${props => props.flex || 1};
-  padding: 20px;
-  background: rgba(40, 40, 40, 0.5);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: ${props => props.theme.spacing.lg};
+  background: ${props => props.theme.colors.backgroundElevated};
+  border-radius: ${props => props.theme.borders.radius.lg};
+  border: ${props => props.theme.borders.width.thin} solid ${props => props.theme.colors.border};
+  box-shadow: ${props => props.theme.shadows.sm};
 `;
 
 export const StyledButton = styled(motion.button)`
-  background: linear-gradient(135deg, #e04848 0%, #c04040 100%);
-  color: white;
-  font-weight: 600;
-  letter-spacing: 1px;
-  padding: 12px 28px;
-  border-radius: 30px;
-  box-shadow: 0 4px 15px rgba(224, 72, 72, 0.4);
+  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryDark} 100%);
+  color: ${props => props.theme.colors.text};
+  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  font-size: ${props => props.theme.typography.fontSizes.base}; 
+  letter-spacing: ${props => props.theme.typography.letterSpacing.wide};
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
+  border-radius: ${props => props.theme.borders.radius.full};
+  box-shadow: ${props => props.theme.shadows.glow};
   border: none;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 2.5rem;
+  ${props => props.theme.mixins.smoothTransition('all')}
   
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(224, 72, 72, 0.6);
+    box-shadow: 0 6px 20px ${props => `rgba(${parseInt(props.theme.colors.primary.slice(1, 3), 16)}, ${parseInt(props.theme.colors.primary.slice(3, 5), 16)}, ${parseInt(props.theme.colors.primary.slice(5, 7), 16)}, 0.6)`};
   }
   
   &:active {
     transform: translateY(1px);
-    box-shadow: 0 2px 10px rgba(224, 72, 72, 0.4);
+    box-shadow: 0 2px 10px ${props => `rgba(${parseInt(props.theme.colors.primary.slice(1, 3), 16)}, ${parseInt(props.theme.colors.primary.slice(3, 5), 16)}, ${parseInt(props.theme.colors.primary.slice(5, 7), 16)}, 0.4)`};
   }
 `;
 

@@ -1,15 +1,14 @@
 import styled from "styled-components";
 import { motion } from "framer-motion";
 
-// Using theme breakpoints directly instead of defining constants
 export const FlexWrapper = styled(motion.div)`
   display: flex;
   flex-wrap: wrap;
   position: absolute;
-  top: 0.2vh;
+  top: 0vh;
   left: 76px;
   width: auto;
-  margin-top: 8vh;
+  margin-top: 0vh;
   margin-left: ${props => props.theme.spacing.xs};
   margin-right: ${props => props.theme.spacing.xs};
   cursor: auto;

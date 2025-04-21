@@ -1,7 +1,6 @@
 import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyles = createGlobalStyle`
-  /* Import fonts */
   @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
   @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
   @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap");
@@ -137,7 +136,7 @@ export const GlobalStyles = createGlobalStyle`
     margin-bottom: ${props => props.theme.spacing.md};
     line-height: ${props => props.theme.typography.lineHeight.tight};
     font-weight: ${props => props.theme.typography.fontWeight.semibold};
-    color: ${props => props.theme.colors.text};
+    // color: ${props => props.theme.colors.text};
   }
 
   h1 {
