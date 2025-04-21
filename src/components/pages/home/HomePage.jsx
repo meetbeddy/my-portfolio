@@ -5,6 +5,7 @@ import { Button } from "../../button/Button";
 import { motion, useAnimation } from "framer-motion";
 import styled from "styled-components";
 import "./homepage.css";
+import AnimatedBackground from "../../shared/AnimatedBackground";
 
 // Container animation variants
 const ContainerVariants = {
@@ -67,7 +68,7 @@ const SubtitleVariants = {
   },
 };
 
-// Card styling with glass morphism
+// Glass card style
 const GlassCard = styled(motion.div)`
   width: 100%;
   max-width: 700px;
@@ -80,20 +81,20 @@ const GlassCard = styled(motion.div)`
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  
+
   @media (max-width: 768px) {
     width: 85%;
     padding: 1.5rem;
     margin: 8vh auto 4vh;
   }
-  
+
   @media only screen and (max-width: 568px) and (orientation: landscape) {
     margin-top: 20vh;
     padding: 1rem;
   }
 `;
 
-// Updated heading styles
+// Heading styles
 const Heading = styled(motion.h1)`
   font-size: 4rem;
   font-weight: 700;
@@ -101,7 +102,7 @@ const Heading = styled(motion.h1)`
   color: white;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   letter-spacing: -2px;
-  
+
   @media (max-width: 768px) {
     font-size: 3rem;
   }
@@ -113,7 +114,7 @@ const Name = styled(motion.h2)`
   margin: 0.5rem 0 1rem;
   color: white;
   letter-spacing: -2px;
-  
+
   @media (max-width: 768px) {
     font-size: 2.5rem;
   }
@@ -125,7 +126,7 @@ const Subtitle = styled(motion.h3)`
   margin: 1rem 0;
   color: #e04848;
   letter-spacing: -1px;
-  
+
   @media (max-width: 768px) {
     font-size: 1.5rem;
   }
@@ -139,12 +140,10 @@ const JobTitle = styled(motion.p)`
   letter-spacing: 1px;
 `;
 
-// Enhanced button container
 const ButtonContainer = styled(motion.div)`
   margin-top: 2rem;
 `;
 
-// Improved styled button
 const StyledButton = styled(Button)`
   background: linear-gradient(135deg, #e04848 0%, #c04040 100%);
   color: white;
@@ -156,12 +155,12 @@ const StyledButton = styled(Button)`
   border: none;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(224, 72, 72, 0.6);
   }
-  
+
   &:active {
     transform: translateY(1px);
     box-shadow: 0 2px 10px rgba(224, 72, 72, 0.4);
@@ -170,78 +169,85 @@ const StyledButton = styled(Button)`
 
 const HomePage = () => {
   const controls = useAnimation();
-  const nameString = "My Name is Obed,";
+  const nameString = "I'm Obed.";
 
   useEffect(() => {
     controls.start("visible");
   }, [controls]);
 
   return (
-    <FlexWrapper
-      className="home-wrapper"
-      variants={ContainerVariants}
-      initial="initial"
-      animate="visible"
-      exit="exit"
-    >
-      <GlassCard
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
+    <>
+      <AnimatedBackground />
+      <FlexWrapper
+        className="home-wrapper"
+        variants={ContainerVariants}
+        initial="initial"
+        animate="visible"
+        exit="exit"
       >
-        <Heading
-          initial={{ opacity: 0, y: 20 }}
+        <div className="animated-circle circle-1"></div>
+        <div className="animated-circle circle-2"></div>
+        <div className="animated-circle circle-3"></div>
+
+        <GlassCard
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
+          transition={{ duration: 0.8 }}
         >
-          Hello,
-        </Heading>
+          <Heading
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+          >
+            Hello,
+          </Heading>
 
-        <motion.div
-          variants={TextContainerVariants}
-          initial="hidden"
-          animate={controls}
-        >
-          <Name>
-            {nameString.split("").map((char, index) => (
-              <motion.span
-                key={index}
-                variants={CharacterVariants}
-                style={{ display: "inline-block" }}
-              >
-                {char === " " ? "\u00A0" : char}
-              </motion.span>
-            ))}
-          </Name>
-        </motion.div>
+          <motion.div
+            variants={TextContainerVariants}
+            initial="hidden"
+            animate={controls}
+          >
+            <Name>
+              {nameString.split("").map((char, index) => (
+                <motion.span
+                  key={index}
+                  variants={CharacterVariants}
+                  style={{ display: "inline-block" }}
+                >
+                  {char === " " ? "\u00A0" : char}
+                </motion.span>
+              ))}
+            </Name>
+          </motion.div>
 
-        <Subtitle
-          variants={SubtitleVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          Web Developer
-        </Subtitle>
+          <Subtitle
+            variants={SubtitleVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            Full-Stack Web Developer
+          </Subtitle>
 
-        <JobTitle
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2, duration: 1 }}
-        >
-          Front-end Developer / JavaScript Expert
-        </JobTitle>
+          <JobTitle
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2, duration: 1 }}
+          >
+            Building elegant, scalable web experiences with React, Node.js & Three.js
+          </JobTitle>
 
-        <ButtonContainer
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 2.5, duration: 0.8 }}
-        >
-          <Link to="/contact" style={{ textDecoration: 'none' }}>
-            <StyledButton>Contact Me</StyledButton>
-          </Link>
-        </ButtonContainer>
-      </GlassCard>
-    </FlexWrapper>
+          <ButtonContainer
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.5, duration: 0.8 }}
+          >
+            <Link to="/about" style={{ textDecoration: 'none' }}>
+              <StyledButton>Learn More</StyledButton>
+            </Link>
+          </ButtonContainer>
+        </GlassCard>
+      </FlexWrapper></>
+
   );
 };
 
