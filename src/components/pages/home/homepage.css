@@ -21,7 +21,7 @@
 	background-image: url("obed-dark-bg.png");
 	background-repeat: no-repeat;
 	background-position: center;
-	background-size: cover;
+	background-size: contain;
 	z-index: -2;
 	filter: brightness(0.8);
 }

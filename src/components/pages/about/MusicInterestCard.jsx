@@ -25,8 +25,8 @@ const InterestTitle = styled.h3`
 `;
 
 const MusicInterestCard = ({ bgColor }) => {
-    // Spotify playlist ID - replace with your actual playlist ID
-    const spotifyPlaylistId = "37i9dQZF1DX5trt9i14X7j"; // Example playlist ID (coding focus playlist)
+
+    const spotifyPlaylistId = "37i9dQZF1DX5trt9i14X7j"
 
     return (
         <InterestCard bgColor={bgColor}>

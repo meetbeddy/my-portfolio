@@ -18,6 +18,7 @@ const CardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: ${props => props.theme.spacing.lg};
+  margin-top: ${props => props.theme.spacing.xl};
 `;
 
 // Interest cards with theme colors
@@ -39,12 +40,16 @@ const InterestsSection = () => {
 
             <CardGrid>
                 <MusicInterestCard bgColor={interestCardColors.music} />
-                <FootballInterestCard bgColor={interestCardColors.football} />
+
                 <CoffeeInterestCard
                     bgColor={interestCardColors.coffee}
                     coffeeCount={coffeeCount}
                     setCoffeeCount={setCoffeeCount}
                 />
+
+            </CardGrid>
+            <CardGrid >
+                <FootballInterestCard bgColor={interestCardColors.football} />
             </CardGrid>
 
             <Card style={{ marginTop: "2rem" }}>
