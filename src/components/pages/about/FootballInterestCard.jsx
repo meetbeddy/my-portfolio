@@ -734,212 +734,466 @@ const EnhancedGoalkeeper = ({ position, animation }) => {
             }}
             style={{
                 position: 'absolute',
-                top: '48%', // Position on goal line
+                top: '48%',
                 transform: 'translateX(-50%)',
-                width: '24px',
-                height: '70px',
+                width: '30px',
+                height: '66px',
                 zIndex: 3
             }}
         >
-            {/* Goalkeeper shadow */}
+            {/* Goalkeeper shadow - more realistic */}
             <div style={{
                 position: 'absolute',
-                bottom: '-5px',
+                bottom: '-8px',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                width: '20px',
-                height: '8px',
-                background: 'radial-gradient(ellipse, rgba(0,0,0,0.3), transparent)',
+                width: '28px',
+                height: '10px',
+                background: 'radial-gradient(ellipse, rgba(0,0,0,0.4), rgba(0,0,0,0.1), transparent)',
                 borderRadius: '50%',
                 zIndex: -1
             }} />
 
-            {/* Goalkeeper body */}
+            {/* Goalkeeper head (16px) */}
             <div style={{
-                width: '24px',
-                height: '45px',
-                background: 'linear-gradient(180deg, #ff6b35, #e55a2b)',
-                borderRadius: '6px',
+                width: '16px',
+                height: '16px',
+                background: 'radial-gradient(circle at 35% 30%, #ffdbac, #f4c2a1, #e8a082)',
+                borderRadius: '50%',
+                margin: '0 auto 2px auto',
                 position: 'relative',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
+                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                zIndex: 2,
+                border: '1px solid rgba(0,0,0,0.1)'
             }}>
-                {/* Jersey number */}
+                {/* Eyes with focused expression */}
                 <div style={{
                     position: 'absolute',
-                    top: '8px',
+                    top: '4px',
+                    left: '3px',
+                    width: '2px',
+                    height: '3px',
+                    backgroundColor: '#000',
+                    borderRadius: '50% 50% 20% 20%',
+                    transform: 'rotate(-10deg)'
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    top: '4px',
+                    right: '3px',
+                    width: '2px',
+                    height: '3px',
+                    backgroundColor: '#000',
+                    borderRadius: '50% 50% 20% 20%',
+                    transform: 'rotate(10deg)'
+                }} />
+
+                {/* Concentrated eyebrows */}
+                <div style={{
+                    position: 'absolute',
+                    top: '2px',
+                    left: '2px',
+                    width: '5px',
+                    height: '1px',
+                    backgroundColor: '#8B4513',
+                    borderRadius: '1px',
+                    transform: 'rotate(-15deg)'
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    top: '2px',
+                    right: '2px',
+                    width: '5px',
+                    height: '1px',
+                    backgroundColor: '#8B4513',
+                    borderRadius: '1px',
+                    transform: 'rotate(15deg)'
+                }} />
+
+                {/* Nose with better shape */}
+                <div style={{
+                    position: 'absolute',
+                    top: '7px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '1px',
+                    height: '3px',
+                    backgroundColor: '#d49070',
+                    borderRadius: '1px'
+                }} />
+
+                {/* Mouth - determined/focused */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '2px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '3px',
+                    height: '1px',
+                    backgroundColor: '#8B4513',
+                    borderRadius: '1px'
+                }} />
+
+                {/* Enhanced hair with texture */}
+                <div style={{
+                    position: 'absolute',
+                    top: '-3px',
+                    left: '-1px',
+                    right: '-1px',
+                    height: '8px',
+                    background: 'linear-gradient(180deg, #8B4513, #7A3F0F)',
+                    borderRadius: '9px 9px 4px 4px',
+                    zIndex: -1,
+                    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.2)'
+                }} />
+            </div>
+
+            {/* Goalkeeper body (35px) - improved jersey */}
+            <div style={{
+                width: '24px',
+                height: '35px',
+                background: 'linear-gradient(180deg, #22c55e, #16a34a, #15803d)',
+                borderRadius: '6px 6px 4px 4px',
+                position: 'relative',
+                boxShadow: '0 3px 6px rgba(0,0,0,0.3), inset 0 1px 3px rgba(255,255,255,0.2)',
+                zIndex: 1,
+                border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+                {/* Jersey number - better positioning */}
+                <div style={{
+                    position: 'absolute',
+                    top: '6px',
                     left: '50%',
                     transform: 'translateX(-50%)',
                     color: 'white',
-                    fontSize: '8px',
+                    fontSize: '10px',
                     fontWeight: 'bold',
-                    textShadow: '1px 1px 1px rgba(0,0,0,0.5)'
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                    width: '100%',
+                    textAlign: 'center'
                 }}>
                     1
                 </div>
 
-                {/* Enhanced arms with realistic movement */}
+                {/* Jersey details - modern design */}
+                <div style={{
+                    position: 'absolute',
+                    top: '18px',
+                    left: '3px',
+                    right: '3px',
+                    height: '2px',
+                    background: 'linear-gradient(90deg, white, transparent, white)',
+                    borderRadius: '1px',
+                    opacity: 0.8
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    top: '22px',
+                    left: '3px',
+                    right: '3px',
+                    height: '2px',
+                    background: 'linear-gradient(90deg, white, transparent, white)',
+                    borderRadius: '1px',
+                    opacity: 0.8
+                }} />
+
+                {/* Jersey collar */}
+                <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '6px',
+                    right: '6px',
+                    height: '4px',
+                    backgroundColor: '#1e3a8a',
+                    borderRadius: '0 0 2px 2px',
+                    border: '1px solid white'
+                }} />
+
+                {/* Enhanced arms with better anatomy */}
                 <motion.div
-                    animate={animation === 'dive-left' ? { rotate: -60, x: -6, y: -2 } :
-                        animation === 'dive-right' ? { rotate: 60, x: 6, y: -2 } :
-                            animation === 'jump' ? { rotate: -30, y: -4 } : { rotate: 10, y: 0 }}
+                    animate={animation === 'dive-left' ? { rotate: -70, x: -8, y: -4 } :
+                        animation === 'dive-right' ? { rotate: 70, x: 8, y: -4 } :
+                            animation === 'jump' ? { rotate: -45, y: -6 } : { rotate: 15, y: 1 }}
                     style={{
                         position: 'absolute',
-                        top: '12px',
-                        left: '-10px',
-                        width: '16px',
-                        height: '5px',
+                        top: '8px',
+                        left: '-12px',
+                        width: '18px',
+                        height: '6px',
                         background: 'linear-gradient(90deg, #ffdbac, #f4c2a1)',
                         borderRadius: '3px',
                         transformOrigin: 'right center',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                        zIndex: 0,
+                        border: '1px solid rgba(0,0,0,0.1)'
                     }}
                 />
                 <motion.div
-                    animate={animation === 'dive-left' ? { rotate: 60, x: -6, y: -2 } :
-                        animation === 'dive-right' ? { rotate: -60, x: 6, y: -2 } :
-                            animation === 'jump' ? { rotate: 30, y: -4 } : { rotate: -10, y: 0 }}
+                    animate={animation === 'dive-left' ? { rotate: 70, x: -8, y: -4 } :
+                        animation === 'dive-right' ? { rotate: -70, x: 8, y: -4 } :
+                            animation === 'jump' ? { rotate: 45, y: -6 } : { rotate: -15, y: 1 }}
                     style={{
                         position: 'absolute',
-                        top: '12px',
-                        right: '-10px',
-                        width: '16px',
-                        height: '5px',
+                        top: '8px',
+                        right: '-12px',
+                        width: '18px',
+                        height: '6px',
                         background: 'linear-gradient(90deg, #f4c2a1, #ffdbac)',
                         borderRadius: '3px',
                         transformOrigin: 'left center',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                        zIndex: 0,
+                        border: '1px solid rgba(0,0,0,0.1)'
                     }}
                 />
-
-                {/* Legs */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: '-18px',
-                    left: '4px',
-                    width: '6px',
-                    height: '18px',
-                    background: 'linear-gradient(180deg, #333, #222)',
-                    borderRadius: '0 0 3px 3px'
-                }} />
-                <div style={{
-                    position: 'absolute',
-                    bottom: '-18px',
-                    right: '4px',
-                    width: '6px',
-                    height: '18px',
-                    background: 'linear-gradient(180deg, #333, #222)',
-                    borderRadius: '0 0 3px 3px'
-                }} />
-
-                {/* Boots */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: '-22px',
-                    left: '2px',
-                    width: '8px',
-                    height: '4px',
-                    backgroundColor: '#000',
-                    borderRadius: '2px'
-                }} />
-                <div style={{
-                    position: 'absolute',
-                    bottom: '-22px',
-                    right: '2px',
-                    width: '8px',
-                    height: '4px',
-                    backgroundColor: '#000',
-                    borderRadius: '2px'
-                }} />
             </div>
 
-            {/* Enhanced Goalkeeper head */}
+            {/* Goalkeeper legs (15px) - improved stance and shorts */}
             <div style={{
-                width: '20px',
-                height: '20px',
-                background: 'radial-gradient(circle at 30% 30%, #ffdbac, #f4c2a1)',
-                borderRadius: '50%',
-                margin: '2px auto',
-                position: 'relative',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-            }}>
-                {/* Eyes with expression */}
-                <div style={{
-                    position: 'absolute',
-                    top: '6px',
-                    left: '4px',
-                    width: '3px',
-                    height: '3px',
-                    backgroundColor: '#000',
-                    borderRadius: '50%'
-                }} />
-                <div style={{
-                    position: 'absolute',
-                    top: '6px',
-                    right: '4px',
-                    width: '3px',
-                    height: '3px',
-                    backgroundColor: '#000',
-                    borderRadius: '50%'
-                }} />
+                position: 'absolute',
+                bottom: '0',
+                left: '4px',
+                width: '7px',
+                height: '12px',
+                background: 'linear-gradient(180deg, #22c55e, #16a34a)',
+                borderRadius: '0 0 3px 3px',
+                transform: 'rotate(8deg)',
+                transformOrigin: 'top center',
+                border: '1px solid rgba(0,0,0,0.1)'
+            }} />
+            <div style={{
+                position: 'absolute',
+                bottom: '0',
+                right: '4px',
+                width: '7px',
+                height: '12px',
+                background: 'linear-gradient(180deg, #22c55e, #16a34a)',
+                borderRadius: '0 0 3px 3px',
+                transform: 'rotate(-8deg)',
+                transformOrigin: 'top center',
+                border: '1px solid rgba(0,0,0,0.1)'
+            }} />
 
-                {/* Nose */}
+            {/* Socks */}
+            <div style={{
+                position: 'absolute',
+                bottom: '5px',
+                left: '3px',
+                width: '9px',
+                height: '8px',
+                backgroundColor: '#1e3a8a',
+                borderRadius: '2px',
+                transform: 'rotate(8deg)',
+                transformOrigin: 'top center'
+            }} />
+            <div style={{
+                position: 'absolute',
+                bottom: '5px',
+                right: '3px',
+                width: '9px',
+                height: '8px',
+                backgroundColor: '#1e3a8a',
+                borderRadius: '2px',
+                transform: 'rotate(-8deg)',
+                transformOrigin: 'top center'
+            }} />
+
+            {/* Enhanced boots with cleats */}
+            <div style={{
+                position: 'absolute',
+                bottom: '-6px',
+                left: '1px',
+                width: '12px',
+                height: '6px',
+                background: 'linear-gradient(180deg, #000, #333)',
+                borderRadius: '3px',
+                transform: 'rotate(8deg)',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
+            }}>
+                {/* Cleat studs */}
                 <div style={{
                     position: 'absolute',
-                    top: '8px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    bottom: '-2px',
+                    left: '2px',
                     width: '2px',
                     height: '2px',
-                    backgroundColor: '#e0a080',
+                    backgroundColor: '#666',
                     borderRadius: '50%'
                 }} />
-
-                {/* Hair */}
                 <div style={{
                     position: 'absolute',
-                    top: '-2px',
+                    bottom: '-2px',
+                    right: '2px',
+                    width: '2px',
+                    height: '2px',
+                    backgroundColor: '#666',
+                    borderRadius: '50%'
+                }} />
+            </div>
+            <div style={{
+                position: 'absolute',
+                bottom: '-6px',
+                right: '1px',
+                width: '12px',
+                height: '6px',
+                background: 'linear-gradient(180deg, #000, #333)',
+                borderRadius: '3px',
+                transform: 'rotate(-8deg)',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
+            }}>
+                {/* Cleat studs */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: '2px',
+                    width: '2px',
+                    height: '2px',
+                    backgroundColor: '#666',
+                    borderRadius: '50%'
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    right: '2px',
+                    width: '2px',
+                    height: '2px',
+                    backgroundColor: '#666',
+                    borderRadius: '50%'
+                }} />
+            </div>
+
+            {/* Professional goalkeeper gloves - larger and more realistic */}
+            <motion.div
+                animate={animation === 'dive-left' ? { x: -6, y: 0, rotate: -30 } :
+                    animation === 'dive-right' ? { x: 6, y: 0, rotate: 30 } :
+                        animation === 'jump' ? { y: -4, rotate: 0 } : { rotate: 0 }}
+                style={{
+                    position: 'absolute',
+                    top: '10px',
+                    left: '-16px',
+                    width: '14px',
+                    height: '14px',
+                    background: 'radial-gradient(circle at 30% 30%, #ffffff, #f0f0f0, #e0e0e0)',
+                    borderRadius: '40% 60% 60% 40%',
+                    border: '2px solid #1a472a',
+                    boxShadow: '0 3px 6px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.3)',
+                    zIndex: 4,
+                    transformOrigin: 'center center'
+                }}
+            >
+                {/* Glove grip pattern */}
+                <div style={{
+                    position: 'absolute',
+                    top: '2px',
                     left: '2px',
                     right: '2px',
-                    height: '8px',
-                    backgroundColor: '#8B4513',
-                    borderRadius: '10px 10px 0 0',
-                    zIndex: -1
+                    bottom: '2px',
+                    background: `
+                        repeating-linear-gradient(45deg, 
+                            transparent, transparent 2px, 
+                            rgba(26,71,42,0.3) 2px, rgba(26,71,42,0.3) 3px)
+                    `,
+                    borderRadius: '40% 60% 60% 40%'
                 }} />
+                {/* Glove logo/brand mark */}
+                <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '3px',
+                    height: '3px',
+                    backgroundColor: '#1a472a',
+                    borderRadius: '50%'
+                }} />
+            </motion.div>
 
-                {/* Enhanced Gloves with better positioning */}
-                <motion.div
-                    animate={animation === 'dive-left' ? { x: -3, y: 2 } :
-                        animation === 'dive-right' ? { x: 3, y: 2 } :
-                            animation === 'jump' ? { y: -2 } : {}}
-                    style={{
-                        position: 'absolute',
-                        top: '-6px',
-                        left: '-16px',
-                        width: '10px',
-                        height: '10px',
-                        background: 'radial-gradient(circle, #ffffff, #e0e0e0)',
-                        borderRadius: '50%',
-                        border: '2px solid #1a472a',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                    }}
-                />
-                <motion.div
-                    animate={animation === 'dive-left' ? { x: -3, y: 2 } :
-                        animation === 'dive-right' ? { x: 3, y: 2 } :
-                            animation === 'jump' ? { y: -2 } : {}}
-                    style={{
-                        position: 'absolute',
-                        top: '-6px',
-                        right: '-16px',
-                        width: '10px',
-                        height: '10px',
-                        background: 'radial-gradient(circle, #ffffff, #e0e0e0)',
-                        borderRadius: '50%',
-                        border: '2px solid #1a472a',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                    }}
-                />
+            <motion.div
+                animate={animation === 'dive-left' ? { x: -6, y: 0, rotate: 30 } :
+                    animation === 'dive-right' ? { x: 6, y: 0, rotate: -30 } :
+                        animation === 'jump' ? { y: -4, rotate: 0 } : { rotate: 0 }}
+                style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '-16px',
+                    width: '14px',
+                    height: '14px',
+                    background: 'radial-gradient(circle at 70% 30%, #ffffff, #f0f0f0, #e0e0e0)',
+                    borderRadius: '60% 40% 40% 60%',
+                    border: '2px solid #1a472a',
+                    boxShadow: '0 3px 6px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.3)',
+                    zIndex: 4,
+                    transformOrigin: 'center center'
+                }}
+            >
+                {/* Glove grip pattern */}
+                <div style={{
+                    position: 'absolute',
+                    top: '2px',
+                    left: '2px',
+                    right: '2px',
+                    bottom: '2px',
+                    background: `
+                        repeating-linear-gradient(45deg, 
+                            transparent, transparent 2px, 
+                            rgba(26,71,42,0.3) 2px, rgba(26,71,42,0.3) 3px)
+                    `,
+                    borderRadius: '60% 40% 40% 60%'
+                }} />
+                {/* Glove logo/brand mark */}
+                <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '3px',
+                    height: '3px',
+                    backgroundColor: '#1a472a',
+                    borderRadius: '50%'
+                }} />
+            </motion.div>
+
+            {/* Captain's armband */}
+            <div style={{
+                position: 'absolute',
+                top: '20px',
+                left: '-2px',
+                width: '28px',
+                height: '4px',
+                background: 'linear-gradient(90deg, #ffd700, #ffed4e, #ffd700)',
+                borderRadius: '2px',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                border: '1px solid rgba(0,0,0,0.2)'
+            }}>
+                {/* Captain "C" */}
+                <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    color: '#000',
+                    fontSize: '6px',
+                    fontWeight: 'bold'
+                }}>
+                    C
+                </div>
             </div>
+
+            {/* Subtle breathing animation when idle */}
+            <motion.div
+                animate={animation === 'idle' ? {
+                    scaleY: [1, 1.02, 1],
+                    transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                } : {}}
+                style={{
+                    position: 'absolute',
+                    top: '18px',
+                    left: '0',
+                    right: '0',
+                    bottom: '15px',
+                    pointerEvents: 'none'
+                }}
+            />
         </motion.div>
     );
 };
