@@ -734,7 +734,7 @@ const EnhancedGoalkeeper = ({ position, animation }) => {
             }}
             style={{
                 position: 'absolute',
-                top: '48%',
+                top: '35%',
                 transform: 'translateX(-50%)',
                 width: '30px',
                 height: '66px',
