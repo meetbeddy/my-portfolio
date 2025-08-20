@@ -23,7 +23,10 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
         bestStreak: 0,
         power: 0,
         isCharging: false,
-        maxPower: 100
+        maxPower: 100,
+        saveType: null, // 'caught' | 'parried' | 'fingertip'
+        ballAnimation: {}, // Additional animation properties
+        finalShotDirection: null // Track last shot direction for save reactions
     });
 
     const fieldRef = useRef(null);
@@ -33,7 +36,7 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
     const {
         score, saves, misses, attempts, isGoal, isSave, isMiss, ballPosition,
         goalkeeperPosition, goalkeeperAnimation, isAnimating, gamePhase, aimTarget,
-        showAimingLine, streak, bestStreak, power, isCharging, maxPower
+        showAimingLine, streak, bestStreak, power, isCharging, maxPower, ballAnimation, saveType, finalShotDirection
     } = gameState;
 
     // Constants for game configuration
@@ -126,7 +129,10 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
             gamePhase: 'ready',
             showAimingLine: false,
             power: 0,
-            isCharging: false
+            isCharging: false,
+            saveType: null,
+            ballAnimation: {},
+            finalShotDirection: null
         }));
     }, []);
 
@@ -159,20 +165,24 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
             isAnimating: true,
             attempts: prev.attempts + 1,
             gamePhase: 'shooting',
-            isCharging: false
+            isCharging: false,
+            finalShotDirection: targetX > 50 ? 'right' : 'left'
         }));
 
         const { finalX, finalY, animationDuration } = calculateShotPhysics(targetX, targetY, shotPower);
 
-        // Update ball position with power-based animation
-        setGameState(prev => ({ ...prev, ballPosition: { x: finalX, y: finalY } }));
+        // Ball flight animation
+        setGameState(prev => ({
+            ...prev,
+            ballPosition: { x: finalX, y: finalY },
+            ballAnimation: {
+                rotate: [0, 360 * (finalX > 50 ? 1 : -1)],
+                transition: { duration: animationDuration / 1000, ease: "linear" }
+            }
+        }));
 
-        // Enhanced goalkeeper reaction based on shot direction and power
-        const goalkeeperReactionTime = GAME_CONFIG.GOALKEEPER.BASE_REACTION_TIME +
-            Math.random() * GAME_CONFIG.GOALKEEPER.REACTION_VARIANCE;
-
+        // Goalkeeper reaction
         setTimeout(() => {
-            // Goalkeeper dive animation and positioning
             const diveDirection = finalX > 50 ? 'right' : finalX < 50 ? 'left' : 'center';
             let newGoalkeeperPos = goalkeeperPosition;
             let animation = 'idle';
@@ -183,8 +193,6 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
             } else if (diveDirection === 'left') {
                 newGoalkeeperPos = Math.max(30, goalkeeperPosition - 15);
                 animation = 'dive-left';
-            } else {
-                animation = 'jump';
             }
 
             setGameState(prev => ({
@@ -192,9 +200,9 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
                 goalkeeperPosition: newGoalkeeperPos,
                 goalkeeperAnimation: animation
             }));
-        }, goalkeeperReactionTime);
+        }, GAME_CONFIG.GOALKEEPER.BASE_REACTION_TIME);
 
-        // Determine result with enhanced logic
+        // Determine outcome
         setTimeout(() => {
             const isWithinGoal = finalX >= GAME_CONFIG.GOAL_BOUNDS.minX &&
                 finalX <= GAME_CONFIG.GOAL_BOUNDS.maxX &&
@@ -202,11 +210,9 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
                 finalY <= GAME_CONFIG.GOAL_BOUNDS.maxY;
 
             const goalkeeperReach = Math.abs(finalX - goalkeeperPosition) < GAME_CONFIG.GOALKEEPER.REACH_THRESHOLD;
-
-            // Save probability affected by power and goalkeeper position
             const saveProbability = GAME_CONFIG.GOALKEEPER.SAVE_PROBABILITY *
-                (goalkeeperReach ? 1.0 : 0.1) *
-                (shotPower > 90 ? 0.7 : 1.0); // Harder to save powerful shots
+                (goalkeeperReach ? 1.0 : 0.2) *
+                (shotPower > 90 ? 0.6 : 1.0);
 
             const isSaved = isWithinGoal && Math.random() < saveProbability;
 
@@ -218,16 +224,64 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
                     score: prev.score + 1,
                     streak: prev.streak + 1,
                     bestStreak: Math.max(prev.bestStreak, prev.streak + 1),
-                    gamePhase: 'result'
+                    gamePhase: 'result',
+                    ballPosition: { x: finalX, y: finalY }
                 }));
             } else if (isSaved) {
-                // Shot saved
+                // Handle different save types
+                const saveRoll = Math.random();
+                let saveType, savedBallPosition, ballAnimation;
+
+                if (saveRoll < 0.4) {
+                    // Caught cleanly
+                    saveType = 'caught';
+                    savedBallPosition = {
+                        x: goalkeeperPosition + (finalX > goalkeeperPosition ? -8 : 8),
+                        y: 38
+                    };
+                    ballAnimation = {
+                        scale: [1, 0.7, 1],
+                        transition: { duration: 0.3 }
+                    };
+                } else if (saveRoll < 0.8) {
+                    // Parried away
+                    saveType = 'parried';
+                    const angle = finalX > goalkeeperPosition ?
+                        Math.random() * 45 + 30 :
+                        -(Math.random() * 45 + 30);
+
+                    savedBallPosition = {
+                        x: Math.min(90, Math.max(10,
+                            50 + Math.cos(angle * Math.PI / 180) * 40)),
+                        y: Math.min(80, 60 + Math.abs(Math.sin(angle * Math.PI / 180) * 20))
+                    };
+
+                    ballAnimation = {
+                        rotate: angle * 4,
+                        transition: { duration: 0.6 }
+                    };
+                } else {
+                    // Fingertip save
+                    saveType = 'fingertip';
+                    savedBallPosition = {
+                        x: finalX + (Math.random() * 15 - 7.5),
+                        y: Math.min(70, finalY - 5 + Math.random() * 10)
+                    };
+                    ballAnimation = {
+                        y: [finalY, finalY - 10, savedBallPosition.y],
+                        transition: { duration: 0.7 }
+                    };
+                }
+
                 setGameState(prev => ({
                     ...prev,
                     isSave: true,
                     saves: prev.saves + 1,
                     streak: 0,
-                    gamePhase: 'result'
+                    gamePhase: 'result',
+                    saveType,
+                    ballPosition: savedBallPosition,
+                    ballAnimation
                 }));
             } else {
                 // Missed
@@ -359,8 +413,8 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
                 fontSize: '0.9rem',
                 lineHeight: '1.5'
             }}>
-                Don't judge the "bulk" though — I'm more about the hustle on the field.
-                Football keeps me balanced when I'm not coding.
+                I play football to unwind and stay sharp — nothing beats time on the pitch.
+                And when I’m not playing, you’ll probably catch me watching a good match.
             </p>
 
             <div style={{ marginTop: '1rem' }}>
@@ -444,18 +498,59 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
 
                         {/* Ball */}
                         <motion.div
-                            animate={isAnimating ? { rotate: 720 } : {}}
-                            transition={{ duration: 0.6, ease: "linear" }}
+                            animate={{
+                                left: `${ballPosition.x}%`,
+                                top: `${ballPosition.y}%`,
+                                ...ballAnimation
+                            }}
+                            transition={ballAnimation.transition || { duration: 0.6 }}
                             style={{
-                                width: '16px',
-                                height: '16px',
-                                borderRadius: '50%',
-                                background: 'radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0, #cccccc)',
-                                boxShadow: '0 2px 6px rgba(0,0,0,0.4), inset -2px -2px 4px rgba(0,0,0,0.2)',
-                                border: '1px solid #999',
-                                position: 'relative'
+                                position: 'absolute',
+                                transform: 'translate(-50%, -50%)',
+                                zIndex: 4,
+                                filter: isSave ? 'brightness(1.1)' : 'none'
                             }}
                         >
+                            {/* Ball shadow with save effect */}
+                            <motion.div
+                                animate={{
+                                    scale: isSave ? 1.5 : 1,
+                                    opacity: isSave ? 0.5 : 0.8
+                                }}
+                                style={{
+                                    position: 'absolute',
+                                    top: '20px',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    width: isSave ? '24px' : '12px',
+                                    height: isSave ? '12px' : '6px',
+                                    background: 'radial-gradient(ellipse, rgba(0,0,0,0.4), transparent)',
+                                    borderRadius: '50%',
+                                    zIndex: -1
+                                }}
+                            />
+
+                            {/* Ball with save effects */}
+                            <motion.div
+                                animate={{
+                                    rotate: gameState.ballAnimation.rotate || 0,
+                                    scale: gameState.ballAnimation.scale || 1,
+                                    y: gameState.ballAnimation.y || 0
+                                }}
+                                style={{
+                                    width: '16px',
+                                    height: '16px',
+                                    borderRadius: '50%',
+                                    background: isSave
+                                        ? 'radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0, #aaaaaa)'
+                                        : 'radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0, #cccccc)',
+                                    boxShadow: isSave
+                                        ? '0 4px 8px rgba(0,0,0,0.6), inset -2px -2px 4px rgba(0,0,0,0.3)'
+                                        : '0 2px 6px rgba(0,0,0,0.4), inset -2px -2px 4px rgba(0,0,0,0.2)',
+                                    border: '1px solid #999',
+                                    position: 'relative'
+                                }}
+                            ></motion.div>
                             {/* Ball pattern */}
                             <div style={{
                                 position: 'absolute',
@@ -570,24 +665,66 @@ const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
                         {isGoal && (
                             <ResultMessage
                                 text="GOAL! ⚽"
-                                bgColor="rgba(0,180,0,0.95)"
-                                shadowColor="rgba(0,180,0,0.4)"
+                                bgColor="#4CAF50"
+                                shadowColor="rgba(76, 175, 80, 0.7)"
                             />
                         )}
-
                         {isSave && (
-                            <ResultMessage
-                                text="SAVED! 🧤"
-                                bgColor="rgba(220,0,0,0.95)"
-                                shadowColor="rgba(220,0,0,0.4)"
-                            />
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                style={{
+                                    position: 'absolute',
+                                    top: '40%',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    background: saveType === 'caught'
+                                        ? 'linear-gradient(135deg, rgba(200,0,0,0.9), rgba(150,0,0,0.9))'
+                                        : saveType === 'parried'
+                                            ? 'linear-gradient(135deg, rgba(220,100,0,0.9), rgba(180,80,0,0.9))'
+                                            : 'linear-gradient(135deg, rgba(220,0,100,0.9), rgba(180,0,80,0.9))',
+                                    color: 'white',
+                                    padding: '16px 24px',
+                                    borderRadius: '12px',
+                                    fontWeight: 'bold',
+                                    fontSize: '1.4rem',
+                                    zIndex: 10,
+                                    boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
+                                    border: '2px solid rgba(255,255,255,0.3)'
+                                }}
+                            >
+                                {saveType === 'caught' && (
+                                    <motion.div
+                                        animate={{ scale: [1, 1.1, 1] }}
+                                        transition={{ duration: 0.8, repeat: Infinity }}
+                                    >
+                                        CAUGHT! 🧤
+                                    </motion.div>
+                                )}
+                                {saveType === 'parried' && (
+                                    <motion.div
+                                        animate={{ x: [-5, 5, -5] }}
+                                        transition={{ duration: 0.5, repeat: Infinity }}
+                                    >
+                                        PARRIED AWAY! ✋
+                                    </motion.div>
+                                )}
+                                {saveType === 'fingertip' && (
+                                    <motion.div
+                                        animate={{ y: [0, -5, 0] }}
+                                        transition={{ duration: 0.7, repeat: Infinity }}
+                                    >
+                                        FINGERTIP SAVE! 👆
+                                    </motion.div>
+                                )}
+                            </motion.div>
                         )}
-
                         {isMiss && (
                             <ResultMessage
-                                text="MISSED! 😤"
-                                bgColor="rgba(255,140,0,0.95)"
-                                shadowColor="rgba(255,140,0,0.4)"
+                                text="MISS! ❌"
+                                bgColor="#F44336"
+                                shadowColor="rgba(244, 67, 54, 0.7)"
                             />
                         )}
                     </AnimatePresence>
