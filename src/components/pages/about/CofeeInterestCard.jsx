@@ -8,6 +8,7 @@ const InterestCard = styled(motion.div)`
   padding: ${props => props.theme.spacing.lg};
   border-radius: ${props => props.theme.borders.radius.lg};
   box-shadow: ${props => props.theme.shadows.sm};
+  will-change: transform;
 `;
 
 const CoffeeInterestCard = ({ bgColor }) => {

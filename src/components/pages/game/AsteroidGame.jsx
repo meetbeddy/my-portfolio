@@ -246,8 +246,12 @@ const AsteroidGame = () => {
     if (!mount) return;
 
     // ── Renderer ──────────────────────────────────────────────────────────
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    const isMobile = mount.clientWidth < 768;
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: !isMobile, // Disable antialias on mobile for performance
+      powerPreference: "high-performance"
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.setClearColor(0x060612);
     mount.appendChild(renderer.domElement);
@@ -286,8 +290,9 @@ const AsteroidGame = () => {
     scene.add(shipLight);
 
     // ── Stars ─────────────────────────────────────────────────────────────
-    const starPos = new Float32Array(600 * 3);
-    for (let i = 0; i < 600; i++) {
+    const starCount = isMobile ? 300 : 600;
+    const starPos = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
       starPos[i * 3] = (Math.random() - .5) * 55;
       starPos[i * 3 + 1] = (Math.random() - .5) * 38;
       starPos[i * 3 + 2] = -5 - Math.random() * 15;
@@ -411,7 +416,8 @@ const AsteroidGame = () => {
     };
 
     const explode = (pos, color = 0xff5500, count = 14) => {
-      for (let i = 0; i < count; i++) {
+      const particleCount = mount.clientWidth < 768 ? Math.floor(count * 0.6) : count;
+      for (let i = 0; i < particleCount; i++) {
         // Fix 7: reuse shared particleGeo — never track via trackMesh (avoids double-dispose)
         const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 });
         particleMats.push(mat);

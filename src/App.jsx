@@ -85,7 +85,6 @@ const AnimationRoutes = () => {
 }
 
 // --- DYNAMIC TITLES ---
-// --- DYNAMIC TITLES ---
 const PageTitleHandler = () => {
   const location = useLocation();
   useEffect(() => {

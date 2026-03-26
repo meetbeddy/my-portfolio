@@ -32,6 +32,7 @@ const FootballInterestCard = ({ bgColor = "rgba(255,255,255,0.08)" }) => {
             cursor: pointer;
             transform-style: preserve-3d;
             transition: transform 0.15s ease;
+            will-change: transform;
           }
           .fut-card-wrapper:hover {
             transform: scale(1.04) rotateY(-7deg) rotateX(4deg);
@@ -46,13 +47,14 @@ const FootballInterestCard = ({ bgColor = "rgba(255,255,255,0.08)" }) => {
             border-radius: 16px;
             position: relative;
             overflow: hidden;
+            will-change: transform;
           }
           .scene-glow {
             position: absolute;
             width: 400px;
             height: 400px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(218,165,32,0.2) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(218,165,32,0.1) 0%, transparent 70%);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -58%);
@@ -61,10 +63,12 @@ const FootballInterestCard = ({ bgColor = "rgba(255,255,255,0.08)" }) => {
           .card-outer-glow {
             position: absolute;
             inset: -20px;
-            background: radial-gradient(ellipse at 50% 40%, rgba(255,210,50,0.38) 0%, transparent 65%);
-            filter: blur(18px);
+            background: radial-gradient(ellipse at 50% 40%, rgba(255,210,50,0.3) 0%, transparent 65%);
+            /* Reduced blur for performance */
+            filter: blur(12px);
             pointer-events: none;
             z-index: 0;
+            will-change: filter;
           }
           .card-body {
             position: relative;
@@ -76,7 +80,8 @@ const FootballInterestCard = ({ bgColor = "rgba(255,255,255,0.08)" }) => {
             width: 100%;
             height: 100%;
             overflow: visible;
-            filter: drop-shadow(0 25px 50px rgba(0,0,0,0.9)) drop-shadow(0 0 30px rgba(200,150,20,0.45));
+            /* Simplified drop-shadow */
+            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.7));
           }
           @keyframes shimmer-sweep {
             0%   { transform: translateX(-160px); }
@@ -85,6 +90,7 @@ const FootballInterestCard = ({ bgColor = "rgba(255,255,255,0.08)" }) => {
           .shimmer-sweep {
             animation: shimmer-sweep 3.8s ease-in-out infinite;
             animation-delay: 1.2s;
+            will-change: transform;
           }
           @keyframes float-particle {
             0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
@@ -99,6 +105,7 @@ const FootballInterestCard = ({ bgColor = "rgba(255,255,255,0.08)" }) => {
             border-radius: 50%;
             background: #fce97a;
             animation: float-particle 3s ease-out infinite;
+            will-change: transform, opacity;
           }
           .fut-footer {
             margin-top: 18px;

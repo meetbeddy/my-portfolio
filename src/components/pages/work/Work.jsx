@@ -47,6 +47,7 @@ const ProjectCard = styled(motion.div)`
   flex-direction: column;
   position: relative;
   perspective: 1000px;
+  will-change: transform;
   
   &:hover {
     box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(224, 72, 72, 0.2);

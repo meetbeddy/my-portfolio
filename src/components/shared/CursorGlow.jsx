@@ -99,65 +99,55 @@ const CursorGlow = () => {
       dotRef.current && (dotRef.current.style.opacity = '0');
     };
 
+    const animate = () => {
+      // Calculate distance between target and smooth position
+      const dx = posRef.current.x - smoothRef.current.x;
+      const dy = posRef.current.y - smoothRef.current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // If we're visible and still moving/settling, keep animating
+      if (visible || distance > 0.1) {
+        // The circle spotlight trails the cursor slightly (0.12 lerp)
+        smoothRef.current.x += dx * 0.12;
+        smoothRef.current.y += dy * 0.12;
+
+        const sx = smoothRef.current.x;
+        const sy = smoothRef.current.y;
+
+        // Update CSS custom properties on the elements
+        if (circleRef.current) {
+          circleRef.current.style.setProperty('--cx', `${sx}px`);
+          circleRef.current.style.setProperty('--cy', `${sy}px`);
+        }
+        if (ringRef.current) {
+          ringRef.current.style.setProperty('--cx', `${sx}px`);
+          ringRef.current.style.setProperty('--cy', `${sy}px`);
+        }
+
+        // Dot snaps to exact cursor
+        if (dotRef.current) {
+          dotRef.current.style.transform = `translate(${posRef.current.x - 3}px, ${posRef.current.y - 3}px)`;
+        }
+
+        rafRef.current = requestAnimationFrame(animate);
+      } else {
+        // Stop the loop when settled and invisible/stationary
+        rafRef.current = null;
+      }
+    };
+
+    const startAnimation = () => {
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
+
     const onMove = (e) => {
       posRef.current.x = e.clientX;
       posRef.current.y = e.clientY;
       show();
+      startAnimation();
     };
-
-    // Expand dot on interactive elements
-    const onOver = (e) => {
-      if (e.target.closest('a, button, [role="button"], input, textarea, select')) {
-        if (dotRef.current) {
-          dotRef.current.style.width = '10px';
-          dotRef.current.style.height = '10px';
-        }
-      }
-    };
-
-    const onOut = (e) => {
-      if (e.target.closest('a, button, [role="button"], input, textarea, select')) {
-        if (dotRef.current) {
-          dotRef.current.style.width = '6px';
-          dotRef.current.style.height = '6px';
-        }
-      }
-    };
-
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseover', onOver);
-    document.addEventListener('mouseout', onOut);
-    document.documentElement.addEventListener('mouseleave', hide);
-    document.documentElement.addEventListener('mouseenter', show);
-
-    const animate = () => {
-      // The circle spotlight trails the cursor slightly (0.12 lerp)
-      // making it feel like it "drags" — just like the PageHeader auto-animation
-      smoothRef.current.x += (posRef.current.x - smoothRef.current.x) * 0.12;
-      smoothRef.current.y += (posRef.current.y - smoothRef.current.y) * 0.12;
-
-      const sx = smoothRef.current.x;
-      const sy = smoothRef.current.y;
-
-      // Update CSS custom properties on the elements — browser handles GPU compositing
-      if (circleRef.current) {
-        circleRef.current.style.setProperty('--cx', `${sx}px`);
-        circleRef.current.style.setProperty('--cy', `${sy}px`);
-      }
-      if (ringRef.current) {
-        ringRef.current.style.setProperty('--cx', `${sx}px`);
-        ringRef.current.style.setProperty('--cy', `${sy}px`);
-      }
-
-      // Dot snaps to exact cursor (no lag — you need to know where you're clicking)
-      if (dotRef.current) {
-        dotRef.current.style.transform = `translate(${posRef.current.x - 3}px, ${posRef.current.y - 3}px)`;
-      }
-
-      rafRef.current = requestAnimationFrame(animate);
-    };
-
-    rafRef.current = requestAnimationFrame(animate);
 
     return () => {
       document.removeEventListener('mousemove', onMove);

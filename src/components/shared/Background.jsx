@@ -35,11 +35,13 @@ const Background = () => {
       powerPreference: "high-performance",
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Cap pixel ratio more aggressively for better performance
+    const maxPixelRatio = window.innerWidth < 768 ? 1.5 : 2;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio));
     container.appendChild(renderer.domElement);
 
-    // Create Sphere
-    const geometry = new THREE.SphereGeometry(0.5, 64, 64);
+    // Create Sphere - Reduced segments for better performance
+    const geometry = new THREE.SphereGeometry(0.5, 32, 32);
     const material = new THREE.MeshStandardMaterial({
       metalness: 0.7,
       roughness: 0.2,
@@ -58,7 +60,7 @@ const Background = () => {
     redLight.position.set(-1.86, 1, -1.65);
     scene.add(redLight);
 
-    const softLight = new THREE.PointLight(0xe1fff, 1);
+    const softLight = new THREE.PointLight(0xe1ffff, 1);
     softLight.position.set(2.13, 1, 0.65);
     scene.add(softLight);
 
