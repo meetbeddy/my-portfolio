@@ -1,169 +1,90 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import NavItem from "./NavItem";
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import useIsMobile from "../../hook/useIsMobile";
 
-// Enhanced animation variants for the overall sidebar
-const sidebarVariants = {
-  hidden: {
-    opacity: 0,
-    x: -80,
-  },
+// ─── Animation variants (fast fade/slide — no sluggish springs) ──────────────
+const desktopVariants = {
+  hidden:  { opacity: 0, x: -40 },
   visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      type: "spring",
-      damping: 20,
-      stiffness: 100,
-      staggerChildren: 0.1,
-      delayChildren: 0.3
-    }
-  },
-  exit: {
-    opacity: 0,
-    x: -80,
-    transition: {
-      ease: "easeInOut",
-      duration: 0.3,
-    }
-  }
-};
-
-// Mobile sidebar variants
-const mobileSidebarVariants = {
-  hidden: {
-    opacity: 0,
-    y: 80,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      damping: 20,
-      stiffness: 100,
-      staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
-  },
-  exit: {
-    opacity: 0,
-    y: 80,
-    transition: {
-      ease: "easeInOut",
-      duration: 0.3,
-    }
-  }
-};
-
-// Enhanced animation variants for icons
-const iconVariants = {
-  hidden: {
-    opacity: 0,
-    y: 20,
-    x: -50,
-    transition: {
-      type: "spring",
-      damping: 12,
-      stiffness: 100,
-    },
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    x: 0,
-    transition: {
-      type: "spring",
-      damping: 10,
-      stiffness: 80,
-      duration: 0.4,
-    },
-  },
-  hover: {
-    scale: 1.2,
-    transition: {
-      type: "spring",
-      damping: 10,
-      stiffness: 300,
-    },
+    opacity: 1, x: 0,
+    transition: { duration: 0.25, ease: "easeOut", staggerChildren: 0.06, delayChildren: 0.1 }
   },
 };
 
-// Mobile icon variants
-const mobileIconVariants = {
-  hidden: {
-    opacity: 0,
-    y: 50,
-    transition: {
-      type: "spring",
-      damping: 12,
-      stiffness: 100,
-    },
-  },
+const mobileVariants = {
+  hidden:  { opacity: 0, y: 30 },
   visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      damping: 10,
-      stiffness: 80,
-      duration: 0.4,
-    },
-  },
-  hover: {
-    scale: 1.2,
-    transition: {
-      type: "spring",
-      damping: 10,
-      stiffness: 300,
-    },
+    opacity: 1, y: 0,
+    transition: { duration: 0.22, ease: "easeOut", staggerChildren: 0.05, delayChildren: 0.05 }
   },
 };
 
+const itemVariants = {
+  hidden:  { opacity: 0, x: -16 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.2, ease: "easeOut" } },
+  hover:   { scale: 1.15, transition: { duration: 0.15 } },
+};
+
+const mobileItemVariants = {
+  hidden:  { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
+  hover:   { scale: 1.15, transition: { duration: 0.15 } },
+};
+
+// ─── Styled components ────────────────────────────────────────────────────────
 const StyledSideNav = styled(motion.nav)`
   position: fixed;
   height: 100vh;
-  width: 80px;
-  z-index: 100;
+  width: 76px;
+  z-index: 200;
   top: 0;
   left: 0;
-  background: rgba(25, 25, 25, 0.8);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  background: rgba(14, 14, 22, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 2rem 0;
-  overflow: hidden;
-  
+
+  /* Red gradient left accent line */
   &::before {
     content: '';
     position: absolute;
-    top: 0;
+    top: 15%;
     left: 0;
-    width: 4px;
-    height: 100%;
+    width: 2px;
+    height: 70%;
+    border-radius: 1px;
     background: linear-gradient(to bottom, transparent, #e04848, transparent);
   }
-  
+
+  /* Mobile: bottom bar */
   @media (max-width: 768px) {
-    bottom: 0;
     top: auto;
+    bottom: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: auto;
+    min-height: 60px;
     width: 100%;
     flex-direction: row;
     justify-content: space-around;
-    padding: 0;
-    
+    padding: 0.5rem 0.5rem;
+    /* iOS safe area */
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+
     &::before {
-      width: 100%;
-      height: 3px;
+      width: 60%;
+      left: 20%;
+      top: 0;
+      bottom: auto;
+      height: 1px;
       background: linear-gradient(to right, transparent, #e04848, transparent);
     }
   }
@@ -172,28 +93,38 @@ const StyledSideNav = styled(motion.nav)`
 const NavContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  
+  gap: 0.25rem;
+
   @media (max-width: 768px) {
     flex-direction: row;
     width: 100%;
     justify-content: space-around;
-    gap: 1rem;
+    gap: 0;
   }
 `;
 
-// Animated logo component
 const Logo = styled(motion.div)`
   position: absolute;
-  top: 20px;
+  top: 18px;
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e04848 0%, #8a1818 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  
+  box-shadow: 0 4px 12px rgba(224, 72, 72, 0.35);
+
+  span {
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: -1px;
+    font-family: 'Outfit', sans-serif;
+  }
+
   @media (max-width: 768px) {
     display: none;
   }
@@ -201,114 +132,89 @@ const Logo = styled(motion.div)`
 
 const SocialContainer = styled(motion.div)`
   position: absolute;
-  bottom: 20px;
+  bottom: 18px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  
+  align-items: center;
+  gap: 0.85rem;
+
   a {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 1.2rem;
-    transition: color 0.3s ease, transform 0.3s ease;
-    
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 1rem;
+    transition: color 0.2s ease, transform 0.2s ease;
+    line-height: 1;
+
     &:hover {
       color: #e04848;
-      transform: scale(1.2);
+      transform: scale(1.25);
     }
   }
-  
+
   @media (max-width: 768px) {
     display: none;
   }
 `;
 
+// ─── Component ────────────────────────────────────────────────────────────────
 const SideNav = () => {
   const location = useLocation();
+  const isMobile = useIsMobile();
 
-
-  const isMobile = useIsMobile()
+  // Hide nav on the fullscreen game page
+  if (location.pathname === '/play') return null;
 
   const navigationItems = [
-    {
-      path: "/",
-      name: "Home",
-      icon: "fa fa-home",
-      key: 1,
-    },
-    {
-      path: "/about",
-      name: "About",
-      icon: "fa fa-user",
-      key: 2,
-    },
-    {
-      path: "/skills",
-      name: "Skills",
-      icon: "fa fa-cogs",
-      key: 3,
-    },
-    {
-      path: "/projects",
-      name: "Works",
-      icon: "fa fa-briefcase",
-      key: 4,
-    },
-    {
-      path: "/contact",
-      name: "Contact",
-      icon: "fas fa-address-book",
-      key: 5,
-    },
-    {
-      path: "/play",
-      name: "Play",
-      icon: "fa fa-gamepad",
-      key: 6,
-    },
+    { path: "/",        name: "Home",    icon: "fa fa-home",         key: 1 },
+    { path: "/about",   name: "About",   icon: "fa fa-user",         key: 2 },
+    { path: "/skills",  name: "Skills",  icon: "fa fa-cogs",         key: 3 },
+    { path: "/projects",name: "Works",   icon: "fa fa-briefcase",    key: 4 },
+    { path: "/contact", name: "Contact", icon: "fas fa-address-book",key: 5 },
+    { path: "/play",    name: "Play",    icon: "fa fa-gamepad",      key: 6 },
   ];
 
   const socialLinks = [
-    { icon: "fab fa-github", url: "https://github.com/obed-beddy", key: 1 }, // TODO: update to your GitHub
-    { icon: "fab fa-linkedin", url: "https://linkedin.com/in/obed-beddy", key: 2 }, // TODO: update to your LinkedIn
-    { icon: "fab fa-twitter", url: "https://twitter.com/obed_beddy", key: 3 } // TODO: update to your Twitter/X
+    { icon: "fab fa-github",   url: "https://github.com/obed-beddy",    key: 1 },
+    { icon: "fab fa-linkedin", url: "https://linkedin.com/in/obed-beddy",key: 2 },
+    { icon: "fab fa-twitter",  url: "https://twitter.com/obed_beddy",   key: 3 },
   ];
 
   return (
     <StyledSideNav
-      variants={isMobile ? mobileSidebarVariants : sidebarVariants}
+      variants={isMobile ? mobileVariants : desktopVariants}
       initial="hidden"
       animate="visible"
-      exit="exit"
     >
+      {/* Desktop Logo */}
       {!isMobile && (
         <Logo
-          initial={{ opacity: 0, scale: 0 }}
+          initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
+          transition={{ delay: 0.25, duration: 0.3, ease: "easeOut" }}
         >
-          <span style={{ fontSize: "24px", color: "#e04848", fontWeight: "bold" }}>O</span>
+          <span>OB</span>
         </Logo>
       )}
 
       <NavContainer>
         {navigationItems.map((item) => (
           <NavItem
+            key={item.key}
             path={item.path}
             name={item.name}
             icon={item.icon}
             active={item.path === location.pathname}
-            key={item.key}
-            variants={isMobile ? mobileIconVariants : iconVariants}
+            variants={isMobile ? mobileItemVariants : itemVariants}
             isMobile={isMobile}
           />
         ))}
       </NavContainer>
 
+      {/* Desktop Social Links */}
       {!isMobile && (
         <SocialContainer
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.5 }}
+          transition={{ delay: 0.5, duration: 0.3 }}
         >
           {socialLinks.map((link) => (
             <motion.a
@@ -316,9 +222,9 @@ const SideNav = () => {
               target="_blank"
               rel="noopener noreferrer"
               key={link.key}
-              whileHover={{ scale: 1.2 }}
+              whileHover={{ scale: 1.25, color: "#e04848" }}
             >
-              <i className={link.icon}></i>
+              <i className={link.icon} />
             </motion.a>
           ))}
         </SocialContainer>
