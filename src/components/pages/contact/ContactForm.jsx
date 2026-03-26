@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import emailjs from "@emailjs/browser";
 import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.min.css";
 import "./contact-form.css";
 import { ButtonSmall } from "../../button/Button";
 import { StyledButton } from "../../shared/StyledComponents";
@@ -205,6 +206,7 @@ const ContactForm = () => {
           </div>
         </div>
         <StyledButton onClick={handleSubmit}>Submit</StyledButton>
+        <ToastContainer />
       </form>
     </div>
   );

@@ -149,15 +149,13 @@ const CursorGlow = () => {
       startAnimation();
     };
 
-    document.addEventListener('mousemove', onMove);
-    document.documentElement.addEventListener('mouseleave', hide);
-    document.documentElement.addEventListener('mouseenter', show);
-
     return () => {
       document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseover', onOver);
+      document.removeEventListener('mouseout', onOut);
       document.documentElement.removeEventListener('mouseleave', hide);
       document.documentElement.removeEventListener('mouseenter', show);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      cancelAnimationFrame(rafRef.current);
     };
   }, []);
 

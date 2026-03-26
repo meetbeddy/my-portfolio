@@ -10,14 +10,14 @@ const slideIn = keyframes`from{opacity:0;transform:translateY(-10px)}to{opacity:
 const shakeAnim = keyframes`
   0%,100%{transform:translate(0,0)}
   10%{transform:translate(-4px, 3px)}
+  20%{transform:translate(5px,-3px)}
+  30%{transform:translate(-4px, 2px)}
+  40%{transform:translate(4px,-2px)}
   50%{transform:translate(-3px, 3px)}
+  60%{transform:translate(3px,-3px)}
+  70%{transform:translate(-2px, 2px)}
+  80%{transform:translate(2px,-2px)}
   90%{transform:translate(-1px, 1px)}
-`;
-const glitchAnim = keyframes`
-  0% { filter: hue-rotate(0deg) contrast(100%) brightness(100%); }
-  10% { filter: hue-rotate(90deg) contrast(200%) brightness(150%) skewX(5deg); }
-  20% { filter: hue-rotate(-90deg) contrast(150%) brightness(120%) skewX(-5deg); }
-  30% { filter: hue-rotate(0deg) contrast(100%) brightness(100%); }
 `;
 const grazeFlash = keyframes`
   0%{opacity:0;transform:translateX(-50%) scale(.7)}
@@ -29,7 +29,7 @@ const grazeFlash = keyframes`
 const Wrapper = styled.div`
   position:fixed;inset:0;background:#060612;
   overflow:hidden;font-family:'Fira Code','Courier New',monospace;user-select:none;
-  ${p => p.$shake && css`animation:${shakeAnim} .38s ease-out, ${glitchAnim} .25s ease-out;`}
+  ${p => p.$shake && css`animation:${shakeAnim} .38s ease-out;`}
 `;
 const CanvasMount = styled.div`width:100%;height:100%;touch-action:none;`;
 
@@ -141,7 +141,6 @@ const PUPS = {
   shield: { color: 0x4880e0, hex: '#4880e0', label: 'SHIELD', dur: 10000 },
   rapid: { color: 0x48e080, hex: '#48e080', label: 'RAPID FIRE', dur: 8000 },
   bigbullet: { color: 0xffb74d, hex: '#ffb74d', label: 'BIG SHOT', dur: 8000 },
-  magnet: { color: 0xe048e0, hex: '#e048e0', label: 'MAGNET', dur: 12000 },
 };
 
 // ✅ FIX 1: Correct colour construction — use THREE.Color properly, not raw floats
@@ -287,8 +286,6 @@ const AsteroidGame = () => {
     const sun = new THREE.DirectionalLight(0xffffff, 0.9);
     sun.position.set(4, 8, 6);
     scene.add(sun);
-    const softLight = new THREE.PointLight(0xe1ffff, 1);
-    scene.add(softLight);
     const shipLight = new THREE.PointLight(0xe04848, 3, 8);
     scene.add(shipLight);
 
@@ -305,20 +302,6 @@ const AsteroidGame = () => {
     const starField = new THREE.Points(sg,
       new THREE.PointsMaterial({ color: 0xffffff, size: .065, sizeAttenuation: true, transparent: true, opacity: .8 }));
     scene.add(starField);
-
-    // Parallax Dust Layer (Background)
-    const dustCount = isMobile ? 150 : 300;
-    const dustPos = new Float32Array(dustCount * 3);
-    for (let i = 0; i < dustCount; i++) {
-      dustPos[i * 3] = (Math.random() - .5) * 80;
-      dustPos[i * 3 + 1] = (Math.random() - .5) * 60;
-      dustPos[i * 3 + 2] = -25 - Math.random() * 20;
-    }
-    const dg = new THREE.BufferGeometry();
-    dg.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-    const dustField = new THREE.Points(dg,
-      new THREE.PointsMaterial({ color: 0x8888aa, size: .03, sizeAttenuation: true, transparent: true, opacity: .4 }));
-    scene.add(dustField);
 
     // ── Ship ──────────────────────────────────────────────────────────────
     const shipGroup = new THREE.Group();
@@ -544,29 +527,9 @@ const AsteroidGame = () => {
       engineMesh.material.color.setHex(Math.random() > .35 ? 0xff8800 : 0xff3300);
       shipGroup.rotation.z = Math.sin(t * .002) * .05;
 
-      // NEW: Engine Exhaust Particles
-      if (gs.running) {
-        const pColor = gs.rapid ? 0x48e080 : gs.shield ? 0x4880e0 : gs.magnet ? 0xe048e0 : 0xffaa00;
-        const mat = new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 0.8 });
-        particleMats.push(mat);
-        const p = new THREE.Mesh(particleGeo, mat);
-        p.position.copy(shipGroup.position);
-        p.position.y -= 0.8;
-        p.position.x += (Math.random() - 0.5) * 0.3;
-        const vel = new THREE.Vector3((Math.random() - 0.5) * 0.05, -0.15 - Math.random() * 0.1, 0);
-        scene.add(p);
-        gs.engineParticles.push({ mesh: p, vel, life: 1, mat });
-      }
-
-      // NEW: Star Parallax
-      starField.position.y -= 0.012;
-      if (starField.position.y < -20) starField.position.y = 0;
-      dustField.position.y -= 0.005;
-      if (dustField.position.y < -20) dustField.position.y = 0;
-
       // Power-up timing
       const pActive = {};
-      for (const type of ['shield', 'rapid', 'bigbullet', 'magnet']) {
+      for (const type of ['shield', 'rapid', 'bigbullet']) {
         if (gs[type]) {
           if (now > gs[`${type}Expires`]) { gs[type] = false; }
           else { pActive[type] = Math.ceil((gs[`${type}Expires`] - now) / 1000); }
@@ -744,16 +707,6 @@ const AsteroidGame = () => {
         p.mesh.position.y += p.vy;
         p.mesh.rotation.y += .03;
         p.mesh.rotation.x += .02;
-
-        // NEW: Magnet Logic
-        if (gs.magnet) {
-          const dist = p.mesh.position.distanceTo(shipGroup.position);
-          if (dist < 8) {
-            const dir = new THREE.Vector3().subVectors(shipGroup.position, p.mesh.position).normalize();
-            p.mesh.position.addScaledVector(dir, 0.12);
-          }
-        }
-
         if (p.mesh.position.distanceTo(shipGroup.position) < 1.05) {
           gs[p.type] = true;
           gs[`${p.type}Expires`] = now + PUPS[p.type].dur;
@@ -767,8 +720,7 @@ const AsteroidGame = () => {
         if (p.mesh.position.y < -B.y - 2) { removeMesh(p.mesh); gs.powerups.splice(i, 1); }
       }
 
-      // ── Particles (Explosion + Engine) ────────────────────────────────
-      const allParticles = [...gs.particles, ...gs.engineParticles];
+      // ── Particles ─────────────────────────────────────────────────────
       for (let i = gs.particles.length - 1; i >= 0; i--) {
         const p = gs.particles[i];
         p.mesh.position.add(p.vel);
@@ -776,14 +728,6 @@ const AsteroidGame = () => {
         p.life -= .045;
         p.mesh.material.opacity = Math.max(0, p.life);
         if (p.life <= 0) { removeMesh(p.mesh); gs.particles.splice(i, 1); }
-      }
-      for (let i = gs.engineParticles.length - 1; i >= 0; i--) {
-        const p = gs.engineParticles[i];
-        p.mesh.position.add(p.vel);
-        p.life -= 0.055;
-        p.mesh.material.opacity = Math.max(0, p.life);
-        p.mesh.scale.setScalar(p.life);
-        if (p.life <= 0) { removeMesh(p.mesh); gs.engineParticles.splice(i, 1); }
       }
 
       renderer.render(scene, cam);
@@ -820,7 +764,6 @@ const AsteroidGame = () => {
 
       // Star field
       sg.dispose(); starField.material.dispose(); scene.remove(starField);
-      dg.dispose(); dustField.material.dispose(); scene.remove(dustField);
 
       // Ship meshes
       [coneMesh, wings, engineMesh, shieldMesh].forEach(m => {
@@ -886,7 +829,6 @@ const AsteroidGame = () => {
               {activePUps.shield && <Pill $c="#4880e0">SHIELD {activePUps.shield}s</Pill>}
               {activePUps.rapid && <Pill $c="#48e080">RAPID {activePUps.rapid}s</Pill>}
               {activePUps.bigbullet && <Pill $c="#ffb74d">BIG SHOT {activePUps.bigbullet}s</Pill>}
-              {activePUps.magnet && <Pill $c="#e048e0">MAGNET {activePUps.magnet}s</Pill>}
             </PowerBar>
           )}
         </>
@@ -910,12 +852,11 @@ const AsteroidGame = () => {
             <ObjRow>              <span>Total lives</span>      <span className="v">♥ ♥ ♥</span></ObjRow>
           </ObjBox>
 
-            <Legend>
-              <LItem $c="#4880e0">Shield</LItem>
-              <LItem $c="#48e080">Rapid Fire</LItem>
-              <LItem $c="#ffb74d">Big Shot</LItem>
-              <LItem $c="#e048e0">Magnet</LItem>
-            </Legend>
+          <Legend>
+            <LItem $c="#4880e0">SHIELD — absorbs one hit (10s)</LItem>
+            <LItem $c="#48e080">RAPID + triple spread shot (8s)</LItem>
+            <LItem $c="#ffb74d">BIG SHOT — wide bullets (8s)</LItem>
+          </Legend>
 
           <CtrlRow>
             MOUSE / TOUCH — move ship &nbsp;·&nbsp; WASD / ARROWS — keyboard<br />
