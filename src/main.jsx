@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from 'styled-components';
 import { theme } from './theme';
 import App from './App';
-import { GlobalStyles } from './GlobalStyles';
+import { GlobalStyles } from './globalStyles';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

@@ -13,14 +13,15 @@ const ContainerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      duration: 0.8,
+      duration: 0.3,
+      ease: [0.4, 0, 0.2, 1],
     },
   },
   exit: {
-    x: "-100vw",
+    opacity: 0,
     transition: {
-      ease: "easeInOut",
-      duration: 0.5,
+      duration: 0.2,
+      ease: [0.4, 0, 1, 1],
     },
   },
 };

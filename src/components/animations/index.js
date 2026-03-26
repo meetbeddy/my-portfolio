@@ -12,51 +12,45 @@ export const circleMove = keyframes`
 
 
 export const ContainerVariants = {
-    initial: { opacity: 0, x: "100vw" },
+    initial: { opacity: 0 },
     visible: {
         opacity: 1,
-        x: 0,
         transition: {
-            type: "spring",
-            stiffness: 50,
-            damping: 20,
-            delay: 0.3,
-            duration: 1,
+            duration: 0.3,
+            ease: [0.4, 0, 0.2, 1],
         },
     },
     exit: {
-        x: "-100vw",
+        opacity: 0,
         transition: {
-            ease: "easeInOut",
-            duration: 0.5,
+            duration: 0.2,
+            ease: [0.4, 0, 1, 1],
         },
     },
 };
 
 export const TextAreaVariants = {
-    initial: { x: "-100vw", opacity: 0 },
+    initial: { opacity: 0, y: 16 },
     visible: {
-        x: 0,
         opacity: 1,
+        y: 0,
         transition: {
-            type: "spring",
-            stiffness: 50,
-            damping: 20,
-            delay: 0.8
+            duration: 0.4,
+            ease: [0.4, 0, 0.2, 1],
+            delay: 0.1,
         }
     },
 };
 
 export const RightBoxVariants = {
-    initial: { y: "50vh", opacity: 0 },
+    initial: { opacity: 0, y: 24 },
     visible: {
-        y: 0,
         opacity: 1,
+        y: 0,
         transition: {
-            type: "spring",
-            stiffness: 50,
-            damping: 20,
-            delay: 1.2
+            duration: 0.4,
+            ease: [0.4, 0, 0.2, 1],
+            delay: 0.2,
         }
     },
 };

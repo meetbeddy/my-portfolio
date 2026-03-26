@@ -241,12 +241,12 @@ const SideNav = () => {
       icon: "fa fa-user",
       key: 2,
     },
-    // {
-    //   path: "/skills",
-    //   name: "Skills",
-    //   icon: "fa fa-cogs",
-    //   key: 3,
-    // },
+    {
+      path: "/skills",
+      name: "Skills",
+      icon: "fa fa-cogs",
+      key: 3,
+    },
     {
       path: "/projects",
       name: "Works",
@@ -259,12 +259,18 @@ const SideNav = () => {
       icon: "fas fa-address-book",
       key: 5,
     },
+    {
+      path: "/play",
+      name: "Play",
+      icon: "fa fa-gamepad",
+      key: 6,
+    },
   ];
 
   const socialLinks = [
-    { icon: "fab fa-github", url: "https://github.com/yourusername", key: 1 },
-    { icon: "fab fa-linkedin", url: "https://linkedin.com/in/yourusername", key: 2 },
-    { icon: "fab fa-twitter", url: "https://twitter.com/yourusername", key: 3 }
+    { icon: "fab fa-github", url: "https://github.com/obed-beddy", key: 1 }, // TODO: update to your GitHub
+    { icon: "fab fa-linkedin", url: "https://linkedin.com/in/obed-beddy", key: 2 }, // TODO: update to your LinkedIn
+    { icon: "fab fa-twitter", url: "https://twitter.com/obed_beddy", key: 3 } // TODO: update to your Twitter/X
   ];
 
   return (

@@ -9,6 +9,8 @@ import * as THREE from "three";
 import { AnimatePresence } from "framer-motion";
 import styled from "styled-components";
 import Projects from "./components/pages/work/Work";
+import CursorGlow from "./components/shared/CursorGlow";
+import AsteroidGame from "./components/pages/game/AsteroidGame";
 
 const LoadingScreen = styled.div`
   position: fixed;
@@ -62,6 +64,7 @@ const AnimationRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/skills" element={<Skills />} />
         <Route path="/projects" element={<Projects />} />
+        <Route path="/play" element={<AsteroidGame />} />
       </Routes>
     </AnimatePresence>
   );
@@ -174,6 +177,7 @@ function App() {
 
   return (
     <Router>
+      <CursorGlow />
       <LoadingScreen isLoading={isLoading}>
         <LoadingContent>
           <h2>Loading Experience</h2>

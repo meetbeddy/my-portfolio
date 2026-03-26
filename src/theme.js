@@ -29,6 +29,8 @@ export const theme = {
         borderFocus: 'rgba(224, 72, 72, 0.5)', // Based on primary color
         divider: 'rgba(255, 255, 255, 0.06)',
         shadow: 'rgba(0, 0, 0, 0.5)',
+        surfaceDark: '#0d0d0d',
+        surfaceLight: 'rgba(255, 255, 255, 0.15)',
 
         // Status colors with better contrast for dark mode
         success: '#5cff5c',

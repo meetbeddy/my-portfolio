@@ -1,9 +1,6 @@
 import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyles = createGlobalStyle`
-  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-  @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
-  @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap");
 
   *,
   *::before,
@@ -32,6 +29,16 @@ export const GlobalStyles = createGlobalStyle`
     font-display: swap;
     font-weight: ${props => props.theme.typography.fontWeight.regular};
     font-size: ${props => props.theme.typography.fontSizes.base};
+
+    @media (hover: hover) and (pointer: fine) {
+      cursor: none;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    a, button, input, textarea, select, label, [role="button"] {
+      cursor: none;
+    }
   }
 
   /* Scrollbar styling */
