@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import SideNav from "./components/layouts/SideNav";
 import HomePage from "./components/pages/home/HomePage";
@@ -10,7 +10,8 @@ import { AnimatePresence } from "framer-motion";
 import styled from "styled-components";
 import Projects from "./components/pages/work/Work";
 import CursorGlow from "./components/shared/CursorGlow";
-import AsteroidGame from "./components/pages/game/AsteroidGame";
+// Lazy-load game so Three.js (~600 KB) stays out of the main bundle
+const AsteroidGame = lazy(() => import("./components/pages/game/AsteroidGame"));
 
 const LoadingScreen = styled.div`
   position: fixed;
@@ -64,7 +65,14 @@ const AnimationRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/skills" element={<Skills />} />
         <Route path="/projects" element={<Projects />} />
-        <Route path="/play" element={<AsteroidGame />} />
+        <Route
+          path="/play"
+          element={
+            <Suspense fallback={null}>
+              <AsteroidGame />
+            </Suspense>
+          }
+        />
       </Routes>
     </AnimatePresence>
   );
@@ -161,10 +169,10 @@ function App() {
     };
     animate();
 
-    // Hide loading after everything is set up
+    // Hide loading quickly — no need for a long artificial delay
     setTimeout(() => {
       setIsLoading(false);
-    }, 1500);
+    }, 200);
 
     // Cleanup Function
     return () => {
