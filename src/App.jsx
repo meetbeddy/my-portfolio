@@ -14,6 +14,8 @@ import CursorGlow from "./components/shared/CursorGlow";
 // Lazy-load game so Three.js (~600 KB) stays out of the main bundle
 const AsteroidGame = lazy(() => import("./components/pages/game/AsteroidGame"));
 const Background   = lazy(() => import("./components/shared/Background"));
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.min.css";
 
 const LoadingScreen = styled.div`
   position: fixed;
@@ -126,6 +128,7 @@ function App() {
         <SideNav />
         <MobileNav />
         <AnimationRoutes />
+        <ToastContainer />
       </div>
     </Router>
   );
