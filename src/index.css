@@ -1,14 +1,212 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: black;
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap");
+
+/* Modern CSS Reset */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
 }
 
+/* Improved base styles */
+:root {
+	/* Color variables */
+	--primary: #e04848;
+	--primary-dark: #c04040;
+	--text: #ffffff;
+	--text-secondary: rgba(255, 255, 255, 0.8);
+	--background: #121212;
+	--surface: rgba(255, 255, 255, 0.1);
+	--surface-hover: rgba(255, 255, 255, 0.15);
+	--shadow: rgba(0, 0, 0, 0.2);
+
+	/* Font sizes */
+	--font-xs: 0.75rem; /* 12px */
+	--font-sm: 0.875rem; /* 14px */
+	--font-base: 1rem; /* 16px */
+	--font-md: 1.125rem; /* 18px */
+	--font-lg: 1.25rem; /* 20px */
+	--font-xl: 1.5rem; /* 24px */
+	--font-2xl: 2rem; /* 32px */
+	--font-3xl: 3rem; /* 48px */
+	--font-4xl: 4rem; /* 64px */
+
+	/* Spacing */
+	--space-xs: 0.25rem; /* 4px */
+	--space-sm: 0.5rem; /* 8px */
+	--space-md: 1rem; /* 16px */
+	--space-lg: 1.5rem; /* 24px */
+	--space-xl: 2rem; /* 32px */
+	--space-2xl: 3rem; /* 48px */
+}
+
+html {
+	/* For smooth scrolling */
+	scroll-behavior: smooth;
+	/* For better font rendering */
+	font-size: 16px;
+	/* For better typography */
+	line-height: 1.5;
+	/* Force scrollbar to avoid layout shifts */
+	overflow-y: scroll;
+}
+
+body {
+	margin: 0;
+	font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+		"Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+		sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	background-color: var(--background);
+	color: var(--text);
+
+	/* Better text rendering */
+	text-rendering: optimizeLegibility;
+
+	/* Disable pull-to-refresh on mobile */
+	overscroll-behavior: none;
+
+	/* Prevent FOUT (Flash of Unstyled Text) */
+	font-display: swap;
+}
+
+/* Styled scrollbar for WebKit browsers */
+::-webkit-scrollbar {
+	width: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(224, 72, 72, 0.5);
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(224, 72, 72, 0.7);
+}
+
+/* Selection styling */
+::selection {
+	background-color: var(--primary);
+	color: white;
+}
+
+/* Focus styling for better accessibility */
+:focus {
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+	outline: none;
+}
+
+:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+
+/* Code blocks */
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+	font-family: "Fira Code", source-code-pro, Menlo, Monaco, Consolas,
+		"Courier New", monospace;
+	background-color: rgba(255, 255, 255, 0.1);
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 0.9em;
+}
+
+/* Link styling */
+a {
+	color: var(--primary);
+	text-decoration: none;
+	transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+a:hover {
+	color: var(--primary-dark);
+	text-decoration: underline;
+}
+
+/* Heading resets */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin-top: 0;
+	line-height: 1.2;
+	font-weight: 600;
+}
+
+/* Image resets */
+img {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+/* Disable focus on touch devices */
+@media (hover: none) {
+	:focus {
+		outline: none;
+	}
+}
+
+/* Utility classes */
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+/* Animation classes */
+.fade-in {
+	animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+/* Text classes */
+.text-gradient {
+	background: linear-gradient(135deg, var(--primary) 0%, #ff8a8a 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	color: transparent;
+}
+
+/* App container */
+.App {
+	position: relative;
+	min-height: 100vh;
+	width: 100%;
+	overflow-x: hidden;
+}
+
+/* Homepage specific styles */
+.home-wrapper {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-lg);
 }

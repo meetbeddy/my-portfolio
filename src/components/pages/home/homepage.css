@@ -1,18 +1,146 @@
+/* Enhanced Homepage Styling */
 .home-wrapper {
-  background-image: url("beddybackground.png");
-  background-repeat: no-repeat;
-  background-position: center top;
-  background-size: auto center;
-
-  width: 80vw;
-  height: 100vh;
+	min-height: 100vh;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-lg);
+	position: relative;
+	overflow: hidden;
 }
+
+/* Background image with overlay */
+.home-wrapper::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-image: url("obed-dark-bg.png");
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: contain;
+	z-index: -2;
+	filter: brightness(0.8);
+}
+
+/* Optional dark gradient overlay to improve text readability */
+.home-wrapper::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		135deg,
+		rgba(18, 18, 18, 0.8) 0%,
+		rgba(18, 18, 18, 0.5) 100%
+	);
+	z-index: -1;
+}
+
+/* Animated background elements */
+.animated-circle {
+	position: absolute;
+	border-radius: 50%;
+	background: rgba(224, 72, 72, 0.15);
+	filter: blur(50px);
+	z-index: -1;
+	animation: floating 10s infinite ease-in-out;
+}
+
+.circle-1 {
+	width: 300px;
+	height: 300px;
+	top: 10%;
+	left: 15%;
+	animation-delay: 0s;
+}
+
+.circle-2 {
+	width: 200px;
+	height: 200px;
+	bottom: 20%;
+	right: 10%;
+	animation-delay: -3s;
+}
+
+.circle-3 {
+	width: 150px;
+	height: 150px;
+	bottom: 30%;
+	left: 5%;
+	animation-delay: -6s;
+}
+
+@keyframes floating {
+	0%,
+	100% {
+		transform: translate(0, 0) scale(1);
+	}
+	25% {
+		transform: translate(5%, 5%) scale(1.05);
+	}
+	50% {
+		transform: translate(0, 10%) scale(0.95);
+	}
+	75% {
+		transform: translate(-5%, 5%) scale(1.05);
+	}
+}
+
+/* Custom scrollbar for the homepage */
+.home-wrapper::-webkit-scrollbar {
+	width: 6px;
+}
+
+.home-wrapper::-webkit-scrollbar-track {
+	background: rgba(255, 255, 255, 0.05);
+}
+
+.home-wrapper::-webkit-scrollbar-thumb {
+	background: rgba(224, 72, 72, 0.5);
+	border-radius: 3px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+	.animated-circle {
+		opacity: 0.6;
+	}
+}
+
 @media (max-width: 768px) {
-  .home-wrapper {
-    width: 100vw;
-    background-position: 20% 90%;
-    background-size: auto;
-    background-attachment: fixed;
-    background-origin: content-box;
-  }
+	.home-wrapper {
+		padding: var(--space-md);
+	}
+
+	.home-wrapper::before {
+		background-position: 75% center;
+	}
+
+	.animated-circle {
+		opacity: 0.4;
+	}
+}
+
+@media (max-width: 480px) {
+	.home-wrapper::before {
+		background-position: 80% center;
+	}
+
+	.animated-circle {
+		display: none;
+	}
+}
+
+/* Landscape mode optimizations */
+@media only screen and (max-height: 500px) and (orientation: landscape) {
+	.home-wrapper {
+		height: auto;
+		min-height: 120vh;
+	}
 }
