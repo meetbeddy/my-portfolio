@@ -1,1613 +1,364 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Circle } from "lucide-react";
-
-const FootballInterestCard = ({ bgColor = "#1a1a1a" }) => {
-    // Game state
-    const [gameState, setGameState] = useState({
-        score: 0,
-        saves: 0,
-        misses: 0,
-        attempts: 0,
-        isGoal: false,
-        isSave: false,
-        isMiss: false,
-        ballPosition: { x: 50, y: 85 },
-        goalkeeperPosition: 50,
-        goalkeeperAnimation: 'idle',
-        isAnimating: false,
-        gamePhase: 'ready',
-        aimTarget: { x: 50, y: 40 },
-        showAimingLine: false,
-        streak: 0,
-        bestStreak: 0,
-        power: 0,
-        isCharging: false,
-        maxPower: 100,
-        saveType: null, // 'caught' | 'parried' | 'fingertip'
-        ballAnimation: {}, // Additional animation properties
-        finalShotDirection: null // Track last shot direction for save reactions
-    });
-
-    const fieldRef = useRef(null);
-    const powerChargeRef = useRef(null);
-
-    // Destructure state for easier access
-    const {
-        score, saves, misses, attempts, isGoal, isSave, isMiss, ballPosition,
-        goalkeeperPosition, goalkeeperAnimation, isAnimating, gamePhase, aimTarget,
-        showAimingLine, streak, bestStreak, power, isCharging, maxPower, ballAnimation, saveType, finalShotDirection
-    } = gameState;
-
-    // Constants for game configuration
-    const GAME_CONFIG = {
-        GOAL_BOUNDS: { minX: 25, maxX: 75, minY: 15, maxY: 50 },
-        GOALKEEPER: {
-            BASE_REACTION_TIME: 200,
-            REACTION_VARIANCE: 150,
-            REACH_THRESHOLD: 18,
-            SAVE_PROBABILITY: 0.65,
-            MOVEMENT_RANGE: { min: 42, max: 58 }
-        },
-        SHOT: {
-            BASE_ACCURACY: 0.85,
-            ACCURACY_VARIANCE: 0.15,
-            POWER_ACCURACY_FACTOR: 0.3,
-            RANDOMNESS: { x: 8, y: 4 }
-        },
-        POWER: {
-            CHARGE_RATE: 2,
-            MIN_POWER: 20,
-            OPTIMAL_RANGE: { min: 60, max: 85 }
-        },
-        ANIMATION: {
-            SHOT_DURATION: 600,
-            RESULT_DISPLAY_TIME: 2500,
-            GOALKEEPER_DIVE_DURATION: 400
-        }
-    };
-
-    // Power charging mechanism
-    useEffect(() => {
-        if (isCharging) {
-            powerChargeRef.current = setInterval(() => {
-                setGameState(prev => {
-                    const newPower = prev.power + GAME_CONFIG.POWER.CHARGE_RATE;
-                    if (newPower >= maxPower) {
-                        return { ...prev, power: maxPower };
-                    }
-                    return { ...prev, power: newPower };
-                });
-            }, 50);
-        } else {
-            if (powerChargeRef.current) {
-                clearInterval(powerChargeRef.current);
-            }
-        }
-
-        return () => {
-            if (powerChargeRef.current) {
-                clearInterval(powerChargeRef.current);
-            }
-        };
-    }, [isCharging, maxPower]);
-
-    // Goalkeeper AI movement - more realistic positioning
-    useEffect(() => {
-        if (!isAnimating && gamePhase === 'ready') {
-            const interval = setInterval(() => {
-                const centerBias = 0.3; // Tendency to stay near center
-                const randomMove = Math.random() < centerBias
-                    ? 45 + Math.random() * 10 // Stay central
-                    : GAME_CONFIG.GOALKEEPER.MOVEMENT_RANGE.min +
-                    Math.random() * (GAME_CONFIG.GOALKEEPER.MOVEMENT_RANGE.max - GAME_CONFIG.GOALKEEPER.MOVEMENT_RANGE.min);
-
-                setGameState(prev => ({
-                    ...prev,
-                    goalkeeperPosition: randomMove,
-                    goalkeeperAnimation: 'idle'
-                }));
-            }, 1500 + Math.random() * 1000);
-            return () => clearInterval(interval);
-        }
-    }, [isAnimating, gamePhase]);
-
-    // Calculate success percentage
-    const successPercentage = attempts > 0 ? Math.round((score / attempts) * 100) : 0;
-
-    // Reset game after shot with proper goalkeeper reset
-    const resetGame = useCallback(() => {
-        setGameState(prev => ({
-            ...prev,
-            isGoal: false,
-            isSave: false,
-            isMiss: false,
-            ballPosition: { x: 50, y: 85 },
-            goalkeeperPosition: 50, // Reset to center
-            goalkeeperAnimation: 'idle',
-            isAnimating: false,
-            gamePhase: 'ready',
-            showAimingLine: false,
-            power: 0,
-            isCharging: false,
-            saveType: null,
-            ballAnimation: {},
-            finalShotDirection: null
-        }));
-    }, []);
-
-    // Calculate shot physics based on power
-    const calculateShotPhysics = (targetX, targetY, shotPower) => {
-        // Power affects accuracy - too much or too little power reduces accuracy
-        const powerEfficiency = shotPower < GAME_CONFIG.POWER.MIN_POWER ? 0.3 :
-            (shotPower >= GAME_CONFIG.POWER.OPTIMAL_RANGE.min && shotPower <= GAME_CONFIG.POWER.OPTIMAL_RANGE.max) ? 1.0 :
-                Math.max(0.4, 1.0 - (shotPower - GAME_CONFIG.POWER.OPTIMAL_RANGE.max) * 0.02);
-
-        const accuracy = GAME_CONFIG.SHOT.BASE_ACCURACY * powerEfficiency;
-
-        // Power affects shot deviation
-        const powerDeviation = Math.max(0, (shotPower - GAME_CONFIG.POWER.OPTIMAL_RANGE.max) * 0.3);
-
-        const finalX = targetX + (Math.random() - 0.5) * (GAME_CONFIG.SHOT.RANDOMNESS.x + powerDeviation) * (1 - accuracy);
-        const finalY = targetY + (Math.random() - 0.5) * (GAME_CONFIG.SHOT.RANDOMNESS.y + powerDeviation) * (1 - accuracy);
-
-        // Power affects shot speed (animation duration)
-        const shotSpeed = Math.max(0.3, Math.min(1.2, shotPower / 70));
-        const animationDuration = GAME_CONFIG.ANIMATION.SHOT_DURATION / shotSpeed;
-
-        return { finalX, finalY, animationDuration, powerEfficiency };
-    };
-
-    // Execute penalty shot with realistic physics
-    const executeShot = useCallback((targetX, targetY, shotPower) => {
-        setGameState(prev => ({
-            ...prev,
-            isAnimating: true,
-            attempts: prev.attempts + 1,
-            gamePhase: 'shooting',
-            isCharging: false,
-            finalShotDirection: targetX > 50 ? 'right' : 'left'
-        }));
-
-        const { finalX, finalY, animationDuration } = calculateShotPhysics(targetX, targetY, shotPower);
-
-        // Ball flight animation
-        setGameState(prev => ({
-            ...prev,
-            ballPosition: { x: finalX, y: finalY },
-            ballAnimation: {
-                rotate: [0, 360 * (finalX > 50 ? 1 : -1)],
-                transition: { duration: animationDuration / 1000, ease: "linear" }
-            }
-        }));
-
-        // Goalkeeper reaction
-        setTimeout(() => {
-            const diveDirection = finalX > 50 ? 'right' : finalX < 50 ? 'left' : 'center';
-            let newGoalkeeperPos = goalkeeperPosition;
-            let animation = 'idle';
-
-            if (diveDirection === 'right') {
-                newGoalkeeperPos = Math.min(70, goalkeeperPosition + 15);
-                animation = 'dive-right';
-            } else if (diveDirection === 'left') {
-                newGoalkeeperPos = Math.max(30, goalkeeperPosition - 15);
-                animation = 'dive-left';
-            }
-
-            setGameState(prev => ({
-                ...prev,
-                goalkeeperPosition: newGoalkeeperPos,
-                goalkeeperAnimation: animation
-            }));
-        }, GAME_CONFIG.GOALKEEPER.BASE_REACTION_TIME);
-
-        // Determine outcome
-        setTimeout(() => {
-            const isWithinGoal = finalX >= GAME_CONFIG.GOAL_BOUNDS.minX &&
-                finalX <= GAME_CONFIG.GOAL_BOUNDS.maxX &&
-                finalY >= GAME_CONFIG.GOAL_BOUNDS.minY &&
-                finalY <= GAME_CONFIG.GOAL_BOUNDS.maxY;
-
-            const goalkeeperReach = Math.abs(finalX - goalkeeperPosition) < GAME_CONFIG.GOALKEEPER.REACH_THRESHOLD;
-            const saveProbability = GAME_CONFIG.GOALKEEPER.SAVE_PROBABILITY *
-                (goalkeeperReach ? 1.0 : 0.2) *
-                (shotPower > 90 ? 0.6 : 1.0);
-
-            const isSaved = isWithinGoal && Math.random() < saveProbability;
-
-            if (isWithinGoal && !isSaved) {
-                // Goal scored
-                setGameState(prev => ({
-                    ...prev,
-                    isGoal: true,
-                    score: prev.score + 1,
-                    streak: prev.streak + 1,
-                    bestStreak: Math.max(prev.bestStreak, prev.streak + 1),
-                    gamePhase: 'result',
-                    ballPosition: { x: finalX, y: finalY }
-                }));
-            } else if (isSaved) {
-                // Handle different save types
-                const saveRoll = Math.random();
-                let saveType, savedBallPosition, ballAnimation;
-
-                if (saveRoll < 0.4) {
-                    // Caught cleanly
-                    saveType = 'caught';
-                    savedBallPosition = {
-                        x: goalkeeperPosition + (finalX > goalkeeperPosition ? -8 : 8),
-                        y: 38
-                    };
-                    ballAnimation = {
-                        scale: [1, 0.7, 1],
-                        transition: { duration: 0.3 }
-                    };
-                } else if (saveRoll < 0.8) {
-                    // Parried away
-                    saveType = 'parried';
-                    const angle = finalX > goalkeeperPosition ?
-                        Math.random() * 45 + 30 :
-                        -(Math.random() * 45 + 30);
-
-                    savedBallPosition = {
-                        x: Math.min(90, Math.max(10,
-                            50 + Math.cos(angle * Math.PI / 180) * 40)),
-                        y: Math.min(80, 60 + Math.abs(Math.sin(angle * Math.PI / 180) * 20))
-                    };
-
-                    ballAnimation = {
-                        rotate: angle * 4,
-                        transition: { duration: 0.6 }
-                    };
-                } else {
-                    // Fingertip save
-                    saveType = 'fingertip';
-                    savedBallPosition = {
-                        x: finalX + (Math.random() * 15 - 7.5),
-                        y: Math.min(70, finalY - 5 + Math.random() * 10)
-                    };
-                    ballAnimation = {
-                        y: [finalY, finalY - 10, savedBallPosition.y],
-                        transition: { duration: 0.7 }
-                    };
-                }
-
-                setGameState(prev => ({
-                    ...prev,
-                    isSave: true,
-                    saves: prev.saves + 1,
-                    streak: 0,
-                    gamePhase: 'result',
-                    saveType,
-                    ballPosition: savedBallPosition,
-                    ballAnimation
-                }));
-            } else {
-                // Missed
-                setGameState(prev => ({
-                    ...prev,
-                    isMiss: true,
-                    misses: prev.misses + 1,
-                    streak: 0,
-                    gamePhase: 'result'
-                }));
-            }
-
-            setTimeout(resetGame, GAME_CONFIG.ANIMATION.RESULT_DISPLAY_TIME);
-        }, animationDuration);
-    }, [goalkeeperPosition, resetGame]);
-
-    // Handle mouse down to start charging power
-    const handleMouseDown = useCallback((e) => {
-        if (isAnimating || gamePhase !== 'ready') return;
-
-        const field = fieldRef.current;
-        const rect = field.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-        // Only allow shooting in goal area
-        const isInGoalArea = x >= GAME_CONFIG.GOAL_BOUNDS.minX &&
-            x <= GAME_CONFIG.GOAL_BOUNDS.maxX &&
-            y >= GAME_CONFIG.GOAL_BOUNDS.minY &&
-            y <= GAME_CONFIG.GOAL_BOUNDS.maxY;
-
-        if (isInGoalArea) {
-            setGameState(prev => ({
-                ...prev,
-                aimTarget: { x, y },
-                isCharging: true,
-                power: 0
-            }));
-        }
-    }, [isAnimating, gamePhase]);
-
-    // Handle mouse up to execute shot
-    const handleMouseUp = useCallback(() => {
-        if (isCharging && gamePhase === 'ready') {
-            executeShot(aimTarget.x, aimTarget.y, power);
-        }
-    }, [isCharging, gamePhase, aimTarget, power, executeShot]);
-
-    // Handle mouse movement for aiming
-    const handleMouseMove = useCallback((e) => {
-        if (gamePhase === 'ready' && !isAnimating) {
-            const field = fieldRef.current;
-            const rect = field.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100;
-            const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-            const isInGoalArea = x >= GAME_CONFIG.GOAL_BOUNDS.minX &&
-                x <= GAME_CONFIG.GOAL_BOUNDS.maxX &&
-                y >= GAME_CONFIG.GOAL_BOUNDS.minY &&
-                y <= GAME_CONFIG.GOAL_BOUNDS.maxY;
-
-            setGameState(prev => ({
-                ...prev,
-                aimTarget: { x, y },
-                showAimingLine: isInGoalArea && !prev.isCharging
-            }));
-        }
-    }, [gamePhase, isAnimating]);
-
-    // Handle mouse leave
-    const handleMouseLeave = useCallback(() => {
-        setGameState(prev => ({
-            ...prev,
-            showAimingLine: false,
-            isCharging: false,
-            power: 0
-        }));
-    }, []);
-
-    // Add global mouse up handler
-    useEffect(() => {
-        const handleGlobalMouseUp = () => {
-            if (isCharging) {
-                handleMouseUp();
-            }
-        };
-
-        document.addEventListener('mouseup', handleGlobalMouseUp);
-        return () => document.removeEventListener('mouseup', handleGlobalMouseUp);
-    }, [isCharging, handleMouseUp]);
-
-    // Calculate aiming line properties
-    const aimingLineProperties = {
-        height: Math.sqrt(
-            Math.pow((aimTarget.x - 50) * 4, 2) +
-            Math.pow((85 - aimTarget.y) * 4, 2)
-        ),
-        rotation: Math.atan2(
-            (aimTarget.x - 50) * 4,
-            (85 - aimTarget.y) * 4
-        ) * 180 / Math.PI
-    };
-
-    return (
-        <div style={{
-            backgroundColor: bgColor,
-            padding: '1.5rem',
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            transition: 'all 0.3s ease'
-        }}>
-            <div style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                marginBottom: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                color: 'white'
-            }}>
-                <Circle style={{
-                    marginRight: '0.5rem',
-                    color: '#4a9fff'
-                }} size={20} /> Football
-            </div>
-
-            <p style={{
-                color: '#ccc',
-                marginBottom: '1rem',
-                fontSize: '0.9rem',
-                lineHeight: '1.5'
-            }}>
-                I play football to unwind and stay sharp — nothing beats time on the pitch.
-                And when I’m not playing, you’ll probably catch me watching a good match.
-            </p>
-
-            <div style={{ marginTop: '1rem' }}>
-                <h4 style={{
-                    fontSize: '0.9rem',
-                    fontWeight: '600',
-                    marginBottom: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: 'white'
-                }}>
-                    <motion.div
-                        animate={{ rotate: [0, 20, 0, -20, 0] }}
-                        transition={{ repeat: Infinity, duration: 2 }}
-                        style={{ marginRight: '8px', fontSize: '1.2rem' }}
-                    >
-                        ⚽
-                    </motion.div>
-                    Realistic Penalty Shootout
-                </h4>
-
-                <div
-                    ref={fieldRef}
-                    style={{
-                        position: 'relative',
-                        background: 'linear-gradient(180deg, #2d5016 0%, #2a4a14 40%, #1f3810 100%)',
-                        borderRadius: '8px',
-                        cursor: gamePhase === 'ready' ? 'crosshair' : 'default',
-                        height: '400px',
-                        overflow: 'hidden',
-                        userSelect: 'none',
-                        border: '3px solid #ffffff',
-                        boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.3)',
-                        backgroundImage: `
-                            repeating-linear-gradient(90deg, 
-                                transparent, transparent 40px, 
-                                rgba(255,255,255,0.1) 40px, rgba(255,255,255,0.1) 42px)
-                        `
-                    }}
-                    onMouseMove={handleMouseMove}
-                    onMouseDown={handleMouseDown}
-                    onMouseLeave={handleMouseLeave}
-                >
-                    {/* Field markings */}
-                    <FieldMarkings />
-
-                    {/* Enhanced Goalkeeper with animations */}
-                    <EnhancedGoalkeeper
-                        position={goalkeeperPosition}
-                        animation={goalkeeperAnimation}
-                    />
-
-                    {/* Ball with realistic physics and shadow */}
-                    <motion.div
-                        animate={{
-                            left: `${ballPosition.x}%`,
-                            top: `${ballPosition.y}%`
-                        }}
-                        transition={{
-                            duration: isAnimating ? 0.6 : 0,
-                            ease: [0.25, 0.46, 0.45, 0.94]
-                        }}
-                        style={{
-                            position: 'absolute',
-                            transform: 'translate(-50%, -50%)',
-                            zIndex: 4
-                        }}
-                    >
-                        {/* Ball shadow */}
-                        <div style={{
-                            position: 'absolute',
-                            top: '20px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            width: '12px',
-                            height: '6px',
-                            background: 'radial-gradient(ellipse, rgba(0,0,0,0.4), transparent)',
-                            borderRadius: '50%',
-                            zIndex: -1
-                        }} />
-
-                        {/* Ball */}
-                        <motion.div
-                            animate={{
-                                left: `${ballPosition.x}%`,
-                                top: `${ballPosition.y}%`,
-                                ...ballAnimation
-                            }}
-                            transition={ballAnimation.transition || { duration: 0.6 }}
-                            style={{
-                                position: 'absolute',
-                                transform: 'translate(-50%, -50%)',
-                                zIndex: 4,
-                                filter: isSave ? 'brightness(1.1)' : 'none'
-                            }}
-                        >
-                            {/* Ball shadow with save effect */}
-                            <motion.div
-                                animate={{
-                                    scale: isSave ? 1.5 : 1,
-                                    opacity: isSave ? 0.5 : 0.8
-                                }}
-                                style={{
-                                    position: 'absolute',
-                                    top: '20px',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    width: isSave ? '24px' : '12px',
-                                    height: isSave ? '12px' : '6px',
-                                    background: 'radial-gradient(ellipse, rgba(0,0,0,0.4), transparent)',
-                                    borderRadius: '50%',
-                                    zIndex: -1
-                                }}
-                            />
-
-                            {/* Ball with save effects */}
-                            <motion.div
-                                animate={{
-                                    rotate: gameState.ballAnimation.rotate || 0,
-                                    scale: gameState.ballAnimation.scale || 1,
-                                    y: gameState.ballAnimation.y || 0
-                                }}
-                                style={{
-                                    width: '16px',
-                                    height: '16px',
-                                    borderRadius: '50%',
-                                    background: isSave
-                                        ? 'radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0, #aaaaaa)'
-                                        : 'radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0, #cccccc)',
-                                    boxShadow: isSave
-                                        ? '0 4px 8px rgba(0,0,0,0.6), inset -2px -2px 4px rgba(0,0,0,0.3)'
-                                        : '0 2px 6px rgba(0,0,0,0.4), inset -2px -2px 4px rgba(0,0,0,0.2)',
-                                    border: '1px solid #999',
-                                    position: 'relative'
-                                }}
-                            ></motion.div>
-                            {/* Ball pattern */}
-                            <div style={{
-                                position: 'absolute',
-                                top: '2px',
-                                left: '2px',
-                                right: '2px',
-                                bottom: '2px',
-                                borderRadius: '50%',
-                                background: `
-                                    radial-gradient(circle at 25% 25%, transparent 20%, #000 21%, #000 22%, transparent 23%),
-                                    radial-gradient(circle at 75% 25%, transparent 20%, #000 21%, #000 22%, transparent 23%),
-                                    radial-gradient(circle at 50% 75%, transparent 20%, #000 21%, #000 22%, transparent 23%)
-                                `
-                            }} />
-                        </motion.div>
-                    </motion.div>
-
-                    {/* Power meter */}
-                    {isCharging && (
-                        <PowerMeter power={power} maxPower={maxPower} />
-                    )}
-
-                    {/* Enhanced Aiming line with gradient */}
-                    {showAimingLine && gamePhase === 'ready' && !isCharging && (
-                        <div style={{
-                            position: 'absolute',
-                            left: '50%',
-                            top: '85%',
-                            width: '3px',
-                            height: aimingLineProperties.height,
-                            background: 'linear-gradient(to top, #ffff00, rgba(255,255,0,0.3))',
-                            transformOrigin: 'top center',
-                            transform: `translateX(-50%) rotate(${aimingLineProperties.rotation}deg)`,
-                            zIndex: 2,
-                            boxShadow: '0 0 8px rgba(255,255,0,0.8)',
-                            borderRadius: '2px'
-                        }} />
-                    )}
-
-                    {/* Enhanced Target crosshair */}
-                    {(showAimingLine || isCharging) && gamePhase === 'ready' && (
-                        <div style={{
-                            position: 'absolute',
-                            left: `${aimTarget.x}%`,
-                            top: `${aimTarget.y}%`,
-                            transform: 'translate(-50%, -50%)',
-                            width: '24px',
-                            height: '24px',
-                            border: `3px solid ${isCharging ? '#ff4444' : '#ffff00'}`,
-                            borderRadius: '50%',
-                            zIndex: 3,
-                            boxShadow: `0 0 12px ${isCharging ? 'rgba(255,68,68,0.8)' : 'rgba(255,255,0,0.8)'}`,
-                            background: `radial-gradient(circle, ${isCharging ? 'rgba(255,68,68,0.1)' : 'rgba(255,255,0,0.1)'}, transparent)`
-                        }}>
-                            <div style={{
-                                position: 'absolute',
-                                top: '50%',
-                                left: '2px',
-                                right: '2px',
-                                height: '3px',
-                                backgroundColor: isCharging ? '#ff4444' : '#ffff00',
-                                transform: 'translateY(-50%)',
-                                borderRadius: '2px'
-                            }} />
-                            <div style={{
-                                position: 'absolute',
-                                left: '50%',
-                                top: '2px',
-                                bottom: '2px',
-                                width: '3px',
-                                backgroundColor: isCharging ? '#ff4444' : '#ffff00',
-                                transform: 'translateX(-50%)',
-                                borderRadius: '2px'
-                            }} />
-                        </div>
-                    )}
-
-                    {/* Enhanced Scoreboard */}
-                    <EnhancedScoreboard
-                        score={score}
-                        saves={saves}
-                        misses={misses}
-                        attempts={attempts}
-                        successPercentage={successPercentage}
-                        streak={streak}
-                        bestStreak={bestStreak}
-                    />
-
-                    {/* Instructions */}
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '10px',
-                        left: '10px',
-                        zIndex: 5,
-                        fontSize: '0.75rem',
-                        background: 'linear-gradient(135deg, rgba(0,0,0,0.9), rgba(40,40,40,0.9))',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        color: 'white',
-                        maxWidth: '200px',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-                    }}>
-                        {gamePhase === 'ready' && !isCharging && 'Hover to aim, hold & release to shoot'}
-                        {isCharging && 'Charging power... Release to shoot!'}
-                        {gamePhase === 'shooting' && 'Shot in progress...'}
-                        {gamePhase === 'result' && 'Get ready for next shot!'}
-                    </div>
-
-                    {/* Result messages */}
-                    <AnimatePresence>
-                        {isGoal && (
-                            <ResultMessage
-                                text="GOAL! ⚽"
-                                bgColor="#4CAF50"
-                                shadowColor="rgba(76, 175, 80, 0.7)"
-                            />
-                        )}
-                        {isSave && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                style={{
-                                    position: 'absolute',
-                                    top: '40%',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    background: saveType === 'caught'
-                                        ? 'linear-gradient(135deg, rgba(200,0,0,0.9), rgba(150,0,0,0.9))'
-                                        : saveType === 'parried'
-                                            ? 'linear-gradient(135deg, rgba(220,100,0,0.9), rgba(180,80,0,0.9))'
-                                            : 'linear-gradient(135deg, rgba(220,0,100,0.9), rgba(180,0,80,0.9))',
-                                    color: 'white',
-                                    padding: '16px 24px',
-                                    borderRadius: '12px',
-                                    fontWeight: 'bold',
-                                    fontSize: '1.4rem',
-                                    zIndex: 10,
-                                    boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
-                                    border: '2px solid rgba(255,255,255,0.3)'
-                                }}
-                            >
-                                {saveType === 'caught' && (
-                                    <motion.div
-                                        animate={{ scale: [1, 1.1, 1] }}
-                                        transition={{ duration: 0.8, repeat: Infinity }}
-                                    >
-                                        CAUGHT! 🧤
-                                    </motion.div>
-                                )}
-                                {saveType === 'parried' && (
-                                    <motion.div
-                                        animate={{ x: [-5, 5, -5] }}
-                                        transition={{ duration: 0.5, repeat: Infinity }}
-                                    >
-                                        PARRIED AWAY! ✋
-                                    </motion.div>
-                                )}
-                                {saveType === 'fingertip' && (
-                                    <motion.div
-                                        animate={{ y: [0, -5, 0] }}
-                                        transition={{ duration: 0.7, repeat: Infinity }}
-                                    >
-                                        FINGERTIP SAVE! 👆
-                                    </motion.div>
-                                )}
-                            </motion.div>
-                        )}
-                        {isMiss && (
-                            <ResultMessage
-                                text="MISS! ❌"
-                                bgColor="#F44336"
-                                shadowColor="rgba(244, 67, 54, 0.7)"
-                            />
-                        )}
-                    </AnimatePresence>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Enhanced sub-components
-const FieldMarkings = () => (
-    <>
-        {/* Goal post with 3D effect */}
-        <div style={{
-            position: 'absolute',
-            top: '15%',
-            left: '25%',
-            width: '50%',
-            height: '35%',
-            border: '4px solid #ffffff',
-            borderBottom: 'none',
-            zIndex: 2,
-            boxShadow: 'inset 0 0 10px rgba(255,255,255,0.3)',
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.05), transparent)'
-        }}>
-            {/* Enhanced Goal net pattern */}
-            <div style={{
-                width: '100%',
-                height: '100%',
-                backgroundImage: `
-                    repeating-linear-gradient(0deg, 
-                        transparent, transparent 10px, 
-                        rgba(255,255,255,0.4) 10px, rgba(255,255,255,0.4) 11px),
-                    repeating-linear-gradient(90deg, 
-                        transparent, transparent 10px, 
-                        rgba(255,255,255,0.4) 10px, rgba(255,255,255,0.4) 11px)
-                `,
-                opacity: 0.7
-            }} />
-
-            {/* Goal line */}
-            <div style={{
-                position: 'absolute',
-                bottom: '-4px',
-                left: '-4px',
-                right: '-4px',
-                height: '4px',
-                backgroundColor: '#ffffff',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-            }} />
-        </div>
-
-        {/* Penalty spot with grass texture */}
-        <div style={{
-            position: 'absolute',
-            top: '85%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '10px',
-            height: '10px',
-            backgroundColor: '#ffffff',
-            borderRadius: '50%',
-            zIndex: 1,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.5), inset 0 1px 2px rgba(0,0,0,0.2)'
-        }} />
-
-        {/* Enhanced Penalty area marking */}
-        <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '20%',
-            width: '60%',
-            height: '35%',
-            border: '3px solid rgba(255,255,255,0.9)',
-            borderTop: 'none',
-            borderRadius: '0 0 12px 12px',
-            boxShadow: '0 0 10px rgba(255,255,255,0.2)'
-        }} />
-
-        {/* Six-yard box */}
-        <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '35%',
-            width: '30%',
-            height: '20%',
-            border: '2px solid rgba(255,255,255,0.9)',
-            borderTop: 'none',
-            boxShadow: '0 0 6px rgba(255,255,255,0.2)'
-        }} />
-
-        {/* Center circle arc */}
-        <div style={{
-            position: 'absolute',
-            bottom: '10%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '80px',
-            height: '40px',
-            border: '2px solid rgba(255,255,255,0.6)',
-            borderTop: 'none',
-            borderRadius: '0 0 80px 80px'
-        }} />
-    </>
-);
-
-const EnhancedGoalkeeper = ({ position, animation }) => {
-    const getAnimationProps = () => {
-        switch (animation) {
-            case 'dive-left':
-                return {
-                    rotate: -25,
-                    x: -8,
-                    y: -3,
-                    transition: { duration: 0.4, ease: "easeOut" }
-                };
-            case 'dive-right':
-                return {
-                    rotate: 25,
-                    x: 8,
-                    y: -3,
-                    transition: { duration: 0.4, ease: "easeOut" }
-                };
-            case 'jump':
-                return {
-                    y: -8,
-                    transition: { duration: 0.3, ease: "easeOut" }
-                };
-            default:
-                return {
-                    rotate: 0,
-                    x: 0,
-                    y: 0,
-                    transition: { duration: 0.5, ease: "easeInOut" }
-                };
-        }
-    };
-
-    return (
-        <motion.div
-            animate={{
-                left: `${position}%`,
-                ...getAnimationProps()
-            }}
-            style={{
-                position: 'absolute',
-                top: '35%',
-                transform: 'translateX(-50%)',
-                width: '30px',
-                height: '66px',
-                zIndex: 3
-            }}
-        >
-            {/* Goalkeeper shadow - more realistic */}
-            <div style={{
-                position: 'absolute',
-                bottom: '-8px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '28px',
-                height: '10px',
-                background: 'radial-gradient(ellipse, rgba(0,0,0,0.4), rgba(0,0,0,0.1), transparent)',
-                borderRadius: '50%',
-                zIndex: -1
-            }} />
-
-            {/* Goalkeeper head (16px) */}
-            <div style={{
-                width: '16px',
-                height: '16px',
-                background: 'radial-gradient(circle at 35% 30%, #ffdbac, #f4c2a1, #e8a082)',
-                borderRadius: '50%',
-                margin: '0 auto 2px auto',
-                position: 'relative',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                zIndex: 2,
-                border: '1px solid rgba(0,0,0,0.1)'
-            }}>
-                {/* Eyes with focused expression */}
-                <div style={{
-                    position: 'absolute',
-                    top: '4px',
-                    left: '3px',
-                    width: '2px',
-                    height: '3px',
-                    backgroundColor: '#000',
-                    borderRadius: '50% 50% 20% 20%',
-                    transform: 'rotate(-10deg)'
-                }} />
-                <div style={{
-                    position: 'absolute',
-                    top: '4px',
-                    right: '3px',
-                    width: '2px',
-                    height: '3px',
-                    backgroundColor: '#000',
-                    borderRadius: '50% 50% 20% 20%',
-                    transform: 'rotate(10deg)'
-                }} />
-
-                {/* Concentrated eyebrows */}
-                <div style={{
-                    position: 'absolute',
-                    top: '2px',
-                    left: '2px',
-                    width: '5px',
-                    height: '1px',
-                    backgroundColor: '#8B4513',
-                    borderRadius: '1px',
-                    transform: 'rotate(-15deg)'
-                }} />
-                <div style={{
-                    position: 'absolute',
-                    top: '2px',
-                    right: '2px',
-                    width: '5px',
-                    height: '1px',
-                    backgroundColor: '#8B4513',
-                    borderRadius: '1px',
-                    transform: 'rotate(15deg)'
-                }} />
-
-                {/* Nose with better shape */}
-                <div style={{
-                    position: 'absolute',
-                    top: '7px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '1px',
-                    height: '3px',
-                    backgroundColor: '#d49070',
-                    borderRadius: '1px'
-                }} />
-
-                {/* Mouth - determined/focused */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: '2px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '3px',
-                    height: '1px',
-                    backgroundColor: '#8B4513',
-                    borderRadius: '1px'
-                }} />
-
-                {/* Enhanced hair with texture */}
-                <div style={{
-                    position: 'absolute',
-                    top: '-3px',
-                    left: '-1px',
-                    right: '-1px',
-                    height: '8px',
-                    background: 'linear-gradient(180deg, #8B4513, #7A3F0F)',
-                    borderRadius: '9px 9px 4px 4px',
-                    zIndex: -1,
-                    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.2)'
-                }} />
-            </div>
-
-            {/* Goalkeeper body (35px) - improved jersey */}
-            <div style={{
-                width: '24px',
-                height: '35px',
-                background: 'linear-gradient(180deg, #22c55e, #16a34a, #15803d)',
-                borderRadius: '6px 6px 4px 4px',
-                position: 'relative',
-                boxShadow: '0 3px 6px rgba(0,0,0,0.3), inset 0 1px 3px rgba(255,255,255,0.2)',
-                zIndex: 1,
-                border: '1px solid rgba(255,255,255,0.1)'
-            }}>
-                {/* Jersey number - better positioning */}
-                <div style={{
-                    position: 'absolute',
-                    top: '6px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    color: 'white',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-                    width: '100%',
-                    textAlign: 'center'
-                }}>
-                    1
-                </div>
-
-                {/* Jersey details - modern design */}
-                <div style={{
-                    position: 'absolute',
-                    top: '18px',
-                    left: '3px',
-                    right: '3px',
-                    height: '2px',
-                    background: 'linear-gradient(90deg, white, transparent, white)',
-                    borderRadius: '1px',
-                    opacity: 0.8
-                }} />
-                <div style={{
-                    position: 'absolute',
-                    top: '22px',
-                    left: '3px',
-                    right: '3px',
-                    height: '2px',
-                    background: 'linear-gradient(90deg, white, transparent, white)',
-                    borderRadius: '1px',
-                    opacity: 0.8
-                }} />
-
-                {/* Jersey collar */}
-                <div style={{
-                    position: 'absolute',
-                    top: '0',
-                    left: '6px',
-                    right: '6px',
-                    height: '4px',
-                    backgroundColor: '#1e3a8a',
-                    borderRadius: '0 0 2px 2px',
-                    border: '1px solid white'
-                }} />
-
-                {/* Enhanced arms with better anatomy */}
-                <motion.div
-                    animate={animation === 'dive-left' ? { rotate: -70, x: -8, y: -4 } :
-                        animation === 'dive-right' ? { rotate: 70, x: 8, y: -4 } :
-                            animation === 'jump' ? { rotate: -45, y: -6 } : { rotate: 15, y: 1 }}
-                    style={{
-                        position: 'absolute',
-                        top: '8px',
-                        left: '-12px',
-                        width: '18px',
-                        height: '6px',
-                        background: 'linear-gradient(90deg, #ffdbac, #f4c2a1)',
-                        borderRadius: '3px',
-                        transformOrigin: 'right center',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                        zIndex: 0,
-                        border: '1px solid rgba(0,0,0,0.1)'
-                    }}
-                />
-                <motion.div
-                    animate={animation === 'dive-left' ? { rotate: 70, x: -8, y: -4 } :
-                        animation === 'dive-right' ? { rotate: -70, x: 8, y: -4 } :
-                            animation === 'jump' ? { rotate: 45, y: -6 } : { rotate: -15, y: 1 }}
-                    style={{
-                        position: 'absolute',
-                        top: '8px',
-                        right: '-12px',
-                        width: '18px',
-                        height: '6px',
-                        background: 'linear-gradient(90deg, #f4c2a1, #ffdbac)',
-                        borderRadius: '3px',
-                        transformOrigin: 'left center',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                        zIndex: 0,
-                        border: '1px solid rgba(0,0,0,0.1)'
-                    }}
-                />
-            </div>
-
-            {/* Goalkeeper legs (15px) - improved stance and shorts */}
-            <div style={{
-                position: 'absolute',
-                bottom: '0',
-                left: '4px',
-                width: '7px',
-                height: '12px',
-                background: 'linear-gradient(180deg, #22c55e, #16a34a)',
-                borderRadius: '0 0 3px 3px',
-                transform: 'rotate(8deg)',
-                transformOrigin: 'top center',
-                border: '1px solid rgba(0,0,0,0.1)'
-            }} />
-            <div style={{
-                position: 'absolute',
-                bottom: '0',
-                right: '4px',
-                width: '7px',
-                height: '12px',
-                background: 'linear-gradient(180deg, #22c55e, #16a34a)',
-                borderRadius: '0 0 3px 3px',
-                transform: 'rotate(-8deg)',
-                transformOrigin: 'top center',
-                border: '1px solid rgba(0,0,0,0.1)'
-            }} />
-
-            {/* Socks */}
-            <div style={{
-                position: 'absolute',
-                bottom: '5px',
-                left: '3px',
-                width: '9px',
-                height: '8px',
-                backgroundColor: '#1e3a8a',
-                borderRadius: '2px',
-                transform: 'rotate(8deg)',
-                transformOrigin: 'top center'
-            }} />
-            <div style={{
-                position: 'absolute',
-                bottom: '5px',
-                right: '3px',
-                width: '9px',
-                height: '8px',
-                backgroundColor: '#1e3a8a',
-                borderRadius: '2px',
-                transform: 'rotate(-8deg)',
-                transformOrigin: 'top center'
-            }} />
-
-            {/* Enhanced boots with cleats */}
-            <div style={{
-                position: 'absolute',
-                bottom: '-6px',
-                left: '1px',
-                width: '12px',
-                height: '6px',
-                background: 'linear-gradient(180deg, #000, #333)',
-                borderRadius: '3px',
-                transform: 'rotate(8deg)',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
-            }}>
-                {/* Cleat studs */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: '-2px',
-                    left: '2px',
-                    width: '2px',
-                    height: '2px',
-                    backgroundColor: '#666',
-                    borderRadius: '50%'
-                }} />
-                <div style={{
-                    position: 'absolute',
-                    bottom: '-2px',
-                    right: '2px',
-                    width: '2px',
-                    height: '2px',
-                    backgroundColor: '#666',
-                    borderRadius: '50%'
-                }} />
-            </div>
-            <div style={{
-                position: 'absolute',
-                bottom: '-6px',
-                right: '1px',
-                width: '12px',
-                height: '6px',
-                background: 'linear-gradient(180deg, #000, #333)',
-                borderRadius: '3px',
-                transform: 'rotate(-8deg)',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
-            }}>
-                {/* Cleat studs */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: '-2px',
-                    left: '2px',
-                    width: '2px',
-                    height: '2px',
-                    backgroundColor: '#666',
-                    borderRadius: '50%'
-                }} />
-                <div style={{
-                    position: 'absolute',
-                    bottom: '-2px',
-                    right: '2px',
-                    width: '2px',
-                    height: '2px',
-                    backgroundColor: '#666',
-                    borderRadius: '50%'
-                }} />
-            </div>
-
-            {/* Professional goalkeeper gloves - larger and more realistic */}
-            <motion.div
-                animate={animation === 'dive-left' ? { x: -6, y: 0, rotate: -30 } :
-                    animation === 'dive-right' ? { x: 6, y: 0, rotate: 30 } :
-                        animation === 'jump' ? { y: -4, rotate: 0 } : { rotate: 0 }}
-                style={{
-                    position: 'absolute',
-                    top: '10px',
-                    left: '-16px',
-                    width: '14px',
-                    height: '14px',
-                    background: 'radial-gradient(circle at 30% 30%, #ffffff, #f0f0f0, #e0e0e0)',
-                    borderRadius: '40% 60% 60% 40%',
-                    border: '2px solid #1a472a',
-                    boxShadow: '0 3px 6px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.3)',
-                    zIndex: 4,
-                    transformOrigin: 'center center'
-                }}
-            >
-                {/* Glove grip pattern */}
-                <div style={{
-                    position: 'absolute',
-                    top: '2px',
-                    left: '2px',
-                    right: '2px',
-                    bottom: '2px',
-                    background: `
-                        repeating-linear-gradient(45deg, 
-                            transparent, transparent 2px, 
-                            rgba(26,71,42,0.3) 2px, rgba(26,71,42,0.3) 3px)
-                    `,
-                    borderRadius: '40% 60% 60% 40%'
-                }} />
-                {/* Glove logo/brand mark */}
-                <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '3px',
-                    height: '3px',
-                    backgroundColor: '#1a472a',
-                    borderRadius: '50%'
-                }} />
-            </motion.div>
-
-            <motion.div
-                animate={animation === 'dive-left' ? { x: -6, y: 0, rotate: 30 } :
-                    animation === 'dive-right' ? { x: 6, y: 0, rotate: -30 } :
-                        animation === 'jump' ? { y: -4, rotate: 0 } : { rotate: 0 }}
-                style={{
-                    position: 'absolute',
-                    top: '10px',
-                    right: '-16px',
-                    width: '14px',
-                    height: '14px',
-                    background: 'radial-gradient(circle at 70% 30%, #ffffff, #f0f0f0, #e0e0e0)',
-                    borderRadius: '60% 40% 40% 60%',
-                    border: '2px solid #1a472a',
-                    boxShadow: '0 3px 6px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.3)',
-                    zIndex: 4,
-                    transformOrigin: 'center center'
-                }}
-            >
-                {/* Glove grip pattern */}
-                <div style={{
-                    position: 'absolute',
-                    top: '2px',
-                    left: '2px',
-                    right: '2px',
-                    bottom: '2px',
-                    background: `
-                        repeating-linear-gradient(45deg, 
-                            transparent, transparent 2px, 
-                            rgba(26,71,42,0.3) 2px, rgba(26,71,42,0.3) 3px)
-                    `,
-                    borderRadius: '60% 40% 40% 60%'
-                }} />
-                {/* Glove logo/brand mark */}
-                <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '3px',
-                    height: '3px',
-                    backgroundColor: '#1a472a',
-                    borderRadius: '50%'
-                }} />
-            </motion.div>
-
-            {/* Captain's armband */}
-            <div style={{
-                position: 'absolute',
-                top: '20px',
-                left: '-2px',
-                width: '28px',
-                height: '4px',
-                background: 'linear-gradient(90deg, #ffd700, #ffed4e, #ffd700)',
-                borderRadius: '2px',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                border: '1px solid rgba(0,0,0,0.2)'
-            }}>
-                {/* Captain "C" */}
-                <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    color: '#000',
-                    fontSize: '6px',
-                    fontWeight: 'bold'
-                }}>
-                    C
-                </div>
-            </div>
-
-            {/* Subtle breathing animation when idle */}
-            <motion.div
-                animate={animation === 'idle' ? {
-                    scaleY: [1, 1.02, 1],
-                    transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                } : {}}
-                style={{
-                    position: 'absolute',
-                    top: '18px',
-                    left: '0',
-                    right: '0',
-                    bottom: '15px',
-                    pointerEvents: 'none'
-                }}
+import React from "react";
+
+const STATS_LEFT = [
+  { label: "PAC", value: 90 },
+  { label: "SHO", value: 92 },
+  { label: "PAS", value: 88 },
+];
+
+const STATS_RIGHT = [
+  { label: "DRI", value: 87 },
+  { label: "DEF", value: 85 },
+  { label: "PHY", value: 89 },
+];
+
+const FootballInterestCard = ({ bgColor = "rgba(255,255,255,0.08)" }) => {
+  return (
+    <div style={{ backgroundColor: bgColor, padding: "1.5rem", borderRadius: "12px" }}>
+      <div style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: "0.5rem", color: "white" }}>
+        ⚽ Football
+      </div>
+      <p style={{ color: "#aaa", marginBottom: "1.5rem", fontSize: "0.88rem", lineHeight: "1.6" }}>
+        More hustle than bulk — football keeps me sharp when I&apos;m off the keyboard.
+      </p>
+
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap');
+
+          .fut-card-wrapper {
+            position: relative;
+            width: 260px;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.15s ease;
+          }
+          .fut-card-wrapper:hover {
+            transform: scale(1.04) rotateY(-7deg) rotateX(4deg);
+          }
+          .fut-scene {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            background: radial-gradient(ellipse at 50% 30%, #1a1200 0%, #0a0800 60%, #000 100%);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+          }
+          .scene-glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(218,165,32,0.2) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -58%);
+            pointer-events: none;
+          }
+          .card-outer-glow {
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(ellipse at 50% 40%, rgba(255,210,50,0.38) 0%, transparent 65%);
+            filter: blur(18px);
+            pointer-events: none;
+            z-index: 0;
+          }
+          .card-body {
+            position: relative;
+            width: 260px;
+            height: 370px;
+            z-index: 1;
+          }
+          .card-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            filter: drop-shadow(0 25px 50px rgba(0,0,0,0.9)) drop-shadow(0 0 30px rgba(200,150,20,0.45));
+          }
+          @keyframes shimmer-sweep {
+            0%   { transform: translateX(-160px); }
+            100% { transform: translateX(420px); }
+          }
+          .shimmer-sweep {
+            animation: shimmer-sweep 3.8s ease-in-out infinite;
+            animation-delay: 1.2s;
+          }
+          @keyframes float-particle {
+            0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+            20%       { opacity: 1; }
+            80%       { opacity: 0.5; }
+            100%      { opacity: 0; transform: translateY(-64px) scale(1); }
+          }
+          .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: #fce97a;
+            animation: float-particle 3s ease-out infinite;
+          }
+          .fut-footer {
+            margin-top: 18px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: rgba(245,208,96,0.28);
+            font-weight: 700;
+            text-align: center;
+          }
+        `}</style>
+
+        <div className="fut-scene">
+          <div className="scene-glow" />
+
+          {/* Floating gold particles */}
+          {[
+            { left: "40%", bottom: "30%", delay: "0s" },
+            { left: "55%", bottom: "28%", delay: "0.8s", size: "2px" },
+            { left: "48%", bottom: "32%", delay: "1.6s", size: "4px" },
+            { left: "62%", bottom: "35%", delay: "2.2s" },
+            { left: "35%", bottom: "25%", delay: "0.4s", size: "2px" },
+          ].map((p, i) => (
+            <div
+              key={i}
+              className="particle"
+              style={{
+                left: p.left,
+                bottom: p.bottom,
+                animationDelay: p.delay,
+                width: p.size || "3px",
+                height: p.size || "3px",
+              }}
             />
-        </motion.div>
-    );
-};
+          ))}
 
-const PowerMeter = ({ power, maxPower }) => {
-    const powerPercentage = (power / maxPower) * 100;
-    const getPowerColor = () => {
-        if (powerPercentage < 30) return '#ff4444';
-        if (powerPercentage < 60) return '#ffaa00';
-        if (powerPercentage < 85) return '#44ff44';
-        return '#ff4444'; // Too much power is bad
-    };
+          <div className="fut-card-wrapper">
+            <div className="card-outer-glow" />
+            <div className="card-body">
+              <svg
+                className="card-svg"
+                viewBox="0 0 260 370"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <clipPath id="card-clip">
+                    <path d="M10,42 L50,10 L130,22 L210,10 L250,42 L250,310 L130,368 L10,310 Z" />
+                  </clipPath>
+                  <linearGradient id="gold-frame" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#fef3a0" />
+                    <stop offset="12%" stopColor="#d4a017" />
+                    <stop offset="28%" stopColor="#fce97a" />
+                    <stop offset="45%" stopColor="#b8860b" />
+                    <stop offset="62%" stopColor="#f0c030" />
+                    <stop offset="78%" stopColor="#c8960a" />
+                    <stop offset="88%" stopColor="#fce97a" />
+                    <stop offset="100%" stopColor="#d4a017" />
+                  </linearGradient>
+                  <linearGradient id="card-bg" x1="20%" y1="0%" x2="80%" y2="100%">
+                    <stop offset="0%" stopColor="#181200" />
+                    <stop offset="30%" stopColor="#0d0900" />
+                    <stop offset="65%" stopColor="#141000" />
+                    <stop offset="100%" stopColor="#0a0700" />
+                  </linearGradient>
+                  <radialGradient id="inner-glow" cx="50%" cy="35%" r="60%">
+                    <stop offset="0%" stopColor="#c8960a" stopOpacity="0.18" />
+                    <stop offset="100%" stopColor="#000" stopOpacity="0" />
+                  </radialGradient>
+                  <linearGradient id="silk-sheen" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#fff" stopOpacity="0" />
+                    <stop offset="48%" stopColor="#fff" stopOpacity="0.07" />
+                    <stop offset="52%" stopColor="#fff" stopOpacity="0.14" />
+                    <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="shimmer-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#fff" stopOpacity="0" />
+                    <stop offset="40%" stopColor="#fff" stopOpacity="0" />
+                    <stop offset="50%" stopColor="#fff" stopOpacity="0.2" />
+                    <stop offset="60%" stopColor="#fff" stopOpacity="0" />
+                    <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="name-bar" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#c8960a" stopOpacity="0" />
+                    <stop offset="20%" stopColor="#c8960a" stopOpacity="0.55" />
+                    <stop offset="50%" stopColor="#f0c030" stopOpacity="0.65" />
+                    <stop offset="80%" stopColor="#c8960a" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#c8960a" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="photo-fade" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#0d0900" stopOpacity="0" />
+                    <stop offset="60%" stopColor="#0d0900" stopOpacity="0" />
+                    <stop offset="100%" stopColor="#0d0900" stopOpacity="1" />
+                  </linearGradient>
+                  <linearGradient id="divider-glow" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#f5d060" stopOpacity="0" />
+                    <stop offset="50%" stopColor="#f5d060" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#f5d060" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="bottom-vignette" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#000" stopOpacity="0" />
+                    <stop offset="100%" stopColor="#000" stopOpacity="0.5" />
+                  </linearGradient>
+                  <pattern id="frame-lines" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="6" x2="6" y2="0" stroke="#fff" strokeWidth="0.3" strokeOpacity="0.08" />
+                  </pattern>
+                </defs>
 
-    const getPowerLabel = () => {
-        if (powerPercentage < 30) return 'TOO WEAK';
-        if (powerPercentage < 60) return 'BUILDING';
-        if (powerPercentage < 85) return 'PERFECT';
-        return 'TOO STRONG';
-    };
+                {/* Gold outer frame */}
+                <path d="M10,42 L50,10 L130,22 L210,10 L250,42 L250,310 L130,368 L10,310 Z" fill="url(#gold-frame)" />
+                <path d="M10,42 L50,10 L130,22 L210,10 L250,42 L250,310 L130,368 L10,310 Z" fill="url(#frame-lines)" />
 
-    return (
-        <div style={{
-            position: 'absolute',
-            top: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '220px',
-            height: '30px',
-            background: 'linear-gradient(135deg, rgba(0,0,0,0.9), rgba(40,40,40,0.9))',
-            borderRadius: '15px',
-            zIndex: 10,
-            overflow: 'hidden',
-            border: '2px solid #fff',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-        }}>
-            <motion.div
-                animate={{ width: `${powerPercentage}%` }}
-                style={{
-                    height: '100%',
-                    background: `linear-gradient(90deg, ${getPowerColor()}, ${getPowerColor()}dd)`,
-                    borderRadius: '13px',
-                    boxShadow: `0 0 15px ${getPowerColor()}`,
-                    position: 'relative'
-                }}
-            />
+                {/* Inner card face */}
+                <path d="M17,46 L52,16 L130,28 L208,16 L243,46 L243,307 L130,362 L17,307 Z" fill="url(#card-bg)" />
+                <path d="M17,46 L52,16 L130,28 L208,16 L243,46 L243,307 L130,362 L17,307 Z" fill="url(#inner-glow)" />
+                <path d="M17,46 L52,16 L130,28 L208,16 L243,46 L243,307 L130,362 L17,307 Z" fill="url(#silk-sheen)" />
+                <path d="M17,180 L243,180 L243,307 L130,362 L17,307 Z" fill="url(#bottom-vignette)" />
 
-            {/* Power indicator zones */}
-            <div style={{
-                position: 'absolute',
-                top: '0',
-                left: '30%',
-                width: '1px',
-                height: '100%',
-                backgroundColor: 'rgba(255,255,255,0.5)'
-            }} />
-            <div style={{
-                position: 'absolute',
-                top: '0',
-                left: '60%',
-                width: '1px',
-                height: '100%',
-                backgroundColor: 'rgba(255,255,255,0.5)'
-            }} />
-            <div style={{
-                position: 'absolute',
-                top: '0',
-                left: '85%',
-                width: '1px',
-                height: '100%',
-                backgroundColor: 'rgba(255,255,255,0.5)'
-            }} />
+                {/* ICON badge */}
+                <rect x="22" y="24" width="38" height="13" rx="3" fill="#c8960a" opacity="0.3" />
+                <text x="41" y="34" textAnchor="middle"
+                  fontFamily="'Barlow Condensed', sans-serif" fontSize="8" fontWeight="900"
+                  letterSpacing="1" fill="#fce97a">ICON</text>
 
-            <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                color: 'white',
-                fontSize: '0.7rem',
-                fontWeight: 'bold',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-                zIndex: 2
-            }}>
-                {getPowerLabel()} - {Math.round(powerPercentage)}%
+                {/* Overall rating */}
+                <text x="48" y="78" textAnchor="middle"
+                  fontFamily="'Bebas Neue', Impact, sans-serif"
+                  fontSize="52" fill="#f5d060">87</text>
+                <text x="48" y="94" textAnchor="middle"
+                  fontFamily="'Barlow Condensed', sans-serif"
+                  fontSize="11" fontWeight="800" letterSpacing="2" fill="#f5d060">MD</text>
+
+                {/* Nigeria flag */}
+                <rect x="22" y="100" width="24" height="16" rx="1.5" fill="#222" />
+                <rect x="22" y="100" width="8" height="16" fill="#008751" />
+                <rect x="30" y="100" width="8" height="16" fill="#fff" />
+                <rect x="38" y="100" width="6" height="16" rx="1.5" fill="#008751" />
+                <rect x="38" y="100" width="6" height="16" fill="#008751" />
+                <rect x="22" y="100" width="24" height="16" rx="1.5" fill="none" stroke="#fff" strokeWidth="0.4" strokeOpacity="0.4" />
+
+                {/* PlayStyle+ diamonds */}
+                {[28, 45, 62].map((y, i) => (
+                  <g key={i}>
+                    <rect x="212" y={y} width="12" height="12" rx="1.5"
+                      transform={`rotate(45 218 ${y + 6})`}
+                      fill="url(#gold-frame)" stroke="#fff" strokeWidth="0.8" />
+                    <text x="218" y={y + 9} textAnchor="middle"
+                      fontFamily="sans-serif" fontSize="6" fill="#000">★</text>
+                  </g>
+                ))}
+
+                {/* Player image */}
+                <image
+                  href="/image/obed-jersey.jpeg"
+                  x="70" y="48"
+                  width="120" height="160"
+                  clipPath="url(#card-clip)"
+                  style={{ filter: "drop-shadow(0 0 10px rgba(180,100,255,0.2))" }}
+                />
+
+                {/* Photo area fade */}
+                <rect x="17" y="176" width="226" height="28" fill="url(#photo-fade)" clipPath="url(#card-clip)" />
+
+                {/* Name bar */}
+                <rect x="17" y="206" width="226" height="24" fill="url(#name-bar)" />
+                <line x1="40" y1="206" x2="220" y2="206" stroke="#f5d060" strokeWidth="0.4" strokeOpacity="0.5" />
+                <line x1="40" y1="230" x2="220" y2="230" stroke="#f5d060" strokeWidth="0.3" strokeOpacity="0.3" />
+                <text x="130" y="222" textAnchor="middle"
+                  fontFamily="'Bebas Neue', sans-serif" fontSize="16"
+                  letterSpacing="5" fill="#ffffff">OKPALA</text>
+
+                {/* Stats left column */}
+                {STATS_LEFT.map((s, i) => (
+                  <g key={s.label}>
+                    <text x="62" y={249 + i * 26} textAnchor="middle"
+                      fontFamily="'Bebas Neue', sans-serif" fontSize="18" fill="#f5d060">{s.value}</text>
+                    <text x="62" y={259 + i * 26} textAnchor="middle"
+                      fontFamily="'Barlow Condensed', sans-serif" fontSize="8" fontWeight="700"
+                      letterSpacing="1.5" fill="rgba(255,255,255,0.55)">{s.label}</text>
+                  </g>
+                ))}
+
+                {/* Center divider */}
+                <line x1="130" y1="236" x2="130" y2="318" stroke="url(#divider-glow)" strokeWidth="0.6" />
+
+                {/* Stats right column */}
+                {STATS_RIGHT.map((s, i) => (
+                  <g key={s.label}>
+                    <text x="198" y={249 + i * 26} textAnchor="middle"
+                      fontFamily="'Bebas Neue', sans-serif" fontSize="18" fill="#f5d060">{s.value}</text>
+                    <text x="198" y={259 + i * 26} textAnchor="middle"
+                      fontFamily="'Barlow Condensed', sans-serif" fontSize="8" fontWeight="700"
+                      letterSpacing="1.5" fill="rgba(255,255,255,0.55)">{s.label}</text>
+                  </g>
+                ))}
+
+                {/* Stat row separators */}
+                <line x1="36" y1="263" x2="224" y2="263" stroke="#f5d060" strokeWidth="0.2" strokeOpacity="0.15" />
+                <line x1="36" y1="289" x2="224" y2="289" stroke="#f5d060" strokeWidth="0.2" strokeOpacity="0.15" />
+
+                {/* Bottom bar */}
+                <rect x="17" y="318" width="226" height="44" fill="#0a0700" opacity="0.6" clipPath="url(#card-clip)" />
+                <line x1="40" y1="318" x2="220" y2="318" stroke="#f5d060" strokeWidth="0.3" strokeOpacity="0.3" />
+
+                {/* Club hex */}
+                <polygon points="98,329 106,325 114,329 114,337 106,341 98,337"
+                  fill="none" stroke="#f5d060" strokeWidth="0.8" strokeOpacity="0.5" />
+                <text x="106" y="336" textAnchor="middle"
+                  fontFamily="'Barlow Condensed', sans-serif" fontSize="7" fontWeight="700"
+                  fill="#f5d060" opacity="0.6">WEB</text>
+
+                <circle cx="126" cy="333" r="1.2" fill="#f5d060" opacity="0.3" />
+                <circle cx="134" cy="333" r="1.2" fill="#f5d060" opacity="0.3" />
+
+                {/* League hex */}
+                <polygon points="146,329 154,325 162,329 162,337 154,341 146,337"
+                  fill="none" stroke="#f5d060" strokeWidth="0.8" strokeOpacity="0.5" />
+                <text x="154" y="336" textAnchor="middle"
+                  fontFamily="'Barlow Condensed', sans-serif" fontSize="7" fontWeight="700"
+                  fill="#f5d060" opacity="0.6">DFC</text>
+
+                {/* Chemistry style badge */}
+                <rect x="214" y="326" width="18" height="18" rx="3"
+                  fill="rgba(200,150,10,0.15)" stroke="#f5d060" strokeWidth="0.6" strokeOpacity="0.5" />
+                <text x="223" y="338" textAnchor="middle"
+                  fontFamily="'Barlow Condensed', sans-serif" fontSize="9" fontWeight="800"
+                  fill="#f5d060" opacity="0.7">A</text>
+
+                {/* Frame corner ornaments */}
+                <path d="M20,52 L30,32 L40,25" stroke="#fce97a" strokeWidth="0.5" fill="none" opacity="0.4" />
+                <path d="M240,52 L230,32 L220,25" stroke="#fce97a" strokeWidth="0.5" fill="none" opacity="0.4" />
+                <path d="M105,20 L115,16 L125,14 L130,13 L135,14 L145,16 L155,20"
+                  stroke="#fce97a" strokeWidth="0.6" fill="none" opacity="0.5" />
+                <circle cx="130" cy="13" r="2.5" fill="#fce97a" opacity="0.5" />
+                <path d="M118,358 L124,364 L130,368 L136,364 L142,358"
+                  stroke="#fce97a" strokeWidth="0.6" fill="none" opacity="0.4" />
+                <circle cx="130" cy="368" r="2" fill="#fce97a" opacity="0.3" />
+
+                {/* Frame edge highlights */}
+                <path d="M10,42 L50,10 L130,22" stroke="#fef3a0" strokeWidth="1.5" fill="none" opacity="0.6" />
+                <path d="M17,46 L52,16 L130,28" stroke="#fff" strokeWidth="0.5" fill="none" opacity="0.25" />
+                <path d="M250,42 L250,310 L130,368" stroke="#7a5500" strokeWidth="1" fill="none" opacity="0.5" />
+
+                {/* Shimmer sweep */}
+                <g className="shimmer-sweep" clipPath="url(#card-clip)">
+                  <rect x="-60" y="0" width="80" height="370" fill="url(#shimmer-grad)" opacity="0.9" />
+                </g>
+
+                {/* EA watermark */}
+                <text x="130" y="354" textAnchor="middle"
+                  fontFamily="'Barlow Condensed', sans-serif" fontSize="6.5" fontWeight="700"
+                  letterSpacing="2" fill="#f5d060" opacity="0.22">EA SPORTS FC 25</text>
+              </svg>
             </div>
-        </div>
-    );
-};
+          </div>
 
-const EnhancedScoreboard = ({
-    score,
-    saves,
-    misses,
-    attempts,
-    successPercentage,
-    streak,
-    bestStreak
-}) => (
-    <div style={{
-        position: 'absolute',
-        top: '10px',
-        right: '10px',
-        background: 'linear-gradient(135deg, rgba(0,0,0,0.95), rgba(40,40,40,0.95))',
-        color: 'white',
-        padding: '12px 16px',
-        borderRadius: '12px',
-        fontSize: '0.8rem',
-        zIndex: 5,
-        minWidth: '140px',
-        border: '2px solid rgba(255,255,255,0.2)',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-        backdropFilter: 'blur(5px)'
-    }}>
-        <div style={{
-            fontWeight: 'bold',
-            marginBottom: '8px',
-            fontSize: '0.7rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            color: '#4a9fff',
-            textAlign: 'center',
-            borderBottom: '1px solid rgba(74,159,255,0.3)',
-            paddingBottom: '4px'
-        }}>
-            ⚽ Penalty Stats
+          <p className="fut-footer">ICON SERIES — ULTIMATE TEAM</p>
         </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ marginRight: '4px' }}>⚽</span>Goals:
-            </span>
-            <span style={{ color: '#44ff44', fontWeight: 'bold', fontSize: '0.9rem' }}>{score}</span>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ marginRight: '4px' }}>🧤</span>Saves:
-            </span>
-            <span style={{ color: '#ff4444', fontWeight: 'bold', fontSize: '0.9rem' }}>{saves}</span>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ marginRight: '4px' }}>❌</span>Misses:
-            </span>
-            <span style={{ color: '#ffaa00', fontWeight: 'bold', fontSize: '0.9rem' }}>{misses}</span>
-        </div>
-
-        <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '6px',
-            paddingBottom: '6px',
-            borderBottom: '1px solid rgba(255,255,255,0.1)'
-        }}>
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ marginRight: '4px' }}>📊</span>Total:
-            </span>
-            <span style={{ fontWeight: 'bold' }}>{attempts}</span>
-        </div>
-
-        <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '4px'
-        }}>
-            <span style={{ fontSize: '0.75rem' }}>Success Rate:</span>
-            <span style={{
-                color: successPercentage >= 70 ? '#44ff44' :
-                    successPercentage >= 50 ? '#ffaa00' : '#ff4444',
-                fontWeight: 'bold',
-                fontSize: '0.9rem'
-            }}>
-                {successPercentage}%
-            </span>
-        </div>
-
-        <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            fontSize: '0.7rem',
-            opacity: 0.9
-        }}>
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ marginRight: '2px' }}>🔥</span>Streak:
-            </span>
-            <span style={{
-                color: streak > 0 ? '#44ff44' : 'white',
-                fontWeight: streak > 2 ? 'bold' : 'normal'
-            }}>
-                {streak} <span style={{ opacity: 0.7 }}>(Best: {bestStreak})</span>
-            </span>
-        </div>
+      </div>
     </div>
-);
-
-const ResultMessage = ({ text, bgColor, shadowColor }) => (
-    <motion.div
-        initial={{ opacity: 0, scale: 0.5, y: -30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.8, y: 30 }}
-        transition={{
-            type: "spring",
-            stiffness: 300,
-            damping: 20
-        }}
-        style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: `linear-gradient(135deg, ${bgColor}, ${bgColor}cc)`,
-            color: 'white',
-            fontWeight: 'bold',
-            padding: '24px 36px',
-            borderRadius: '20px',
-            fontSize: '1.6rem',
-            zIndex: 10,
-            textAlign: 'center',
-            boxShadow: `0 12px 24px ${shadowColor}, 0 0 40px ${shadowColor}`,
-            border: '3px solid rgba(255,255,255,0.4)',
-            backdropFilter: 'blur(10px)',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-        }}
-    >
-        <motion.div
-            animate={{
-                scale: [1, 1.05, 1],
-                textShadow: [
-                    '2px 2px 4px rgba(0,0,0,0.5)',
-                    '2px 2px 8px rgba(0,0,0,0.8)',
-                    '2px 2px 4px rgba(0,0,0,0.5)'
-                ]
-            }}
-            transition={{ duration: 0.8, repeat: Infinity }}
-        >
-            {text}
-        </motion.div>
-
-        {/* Celebration particles effect */}
-        {text.includes('GOAL') && (
-            <>
-                <motion.div
-                    animate={{
-                        rotate: [0, 360],
-                        scale: [0, 1, 0],
-                        opacity: [0, 1, 0]
-                    }}
-                    transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-                    style={{
-                        position: 'absolute',
-                        top: '-10px',
-                        left: '-10px',
-                        fontSize: '1rem'
-                    }}
-                >
-                    ✨
-                </motion.div>
-                <motion.div
-                    animate={{
-                        rotate: [0, -360],
-                        scale: [0, 1, 0],
-                        opacity: [0, 1, 0]
-                    }}
-                    transition={{ duration: 1, repeat: Infinity, delay: 0.5 }}
-                    style={{
-                        position: 'absolute',
-                        top: '-10px',
-                        right: '-10px',
-                        fontSize: '1rem'
-                    }}
-                >
-                    🎉
-                </motion.div>
-            </>
-        )}
-    </motion.div>
-);
+  );
+};
 
 export default FootballInterestCard;

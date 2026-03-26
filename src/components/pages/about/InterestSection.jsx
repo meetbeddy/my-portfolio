@@ -4,6 +4,7 @@ import Section from "../../shared/Section";
 import MusicInterestCard from "./MusicInterestCard";
 import FootballInterestCard from "./FootballInterestCard";
 import CoffeeInterestCard from "./CofeeInterestCard";
+import GamingInterestCard from "./GamingInterestCard";
 import SocialButtons from "./SocialButton";
 import { SubTitle } from "../../shared/StyledComponents";
 
@@ -25,12 +26,11 @@ const CardGrid = styled.div`
 const interestCardColors = {
     music: "rgba(255, 255, 255, 0.05)",
     football: "rgba(255, 255, 255, 0.08)",
-    coffee: "rgba(255, 255, 255, 0.12)"
+    coffee: "rgba(255, 255, 255, 0.12)",
+    gaming: "rgba(255, 255, 255, 0.06)"
 };
 
 const InterestsSection = () => {
-    const [coffeeCount, setCoffeeCount] = useState(0);
-
     return (
         <Section id="panel-interests" ariaLabelledby="tab-interests">
             <SubTitle style={{
@@ -40,17 +40,12 @@ const InterestsSection = () => {
 
             <CardGrid>
                 <MusicInterestCard bgColor={interestCardColors.music} />
-
-                <CoffeeInterestCard
-                    bgColor={interestCardColors.coffee}
-                    coffeeCount={coffeeCount}
-                    setCoffeeCount={setCoffeeCount}
-                />
-
-            </CardGrid>
-            <CardGrid >
+                <CoffeeInterestCard bgColor={interestCardColors.coffee} />
                 <FootballInterestCard bgColor={interestCardColors.football} />
+                <GamingInterestCard bgColor={interestCardColors.gaming} />
             </CardGrid>
+
+
 
             <Card style={{ marginTop: "2rem" }}>
                 <h3>Let's Connect</h3>

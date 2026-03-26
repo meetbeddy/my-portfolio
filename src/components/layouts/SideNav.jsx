@@ -7,7 +7,7 @@ import useIsMobile from "../../hook/useIsMobile";
 
 // ─── Animation variants (fast fade/slide — no sluggish springs) ──────────────
 const desktopVariants = {
-  hidden:  { opacity: 0, x: -40 },
+  hidden: { opacity: 0, x: -40 },
   visible: {
     opacity: 1, x: 0,
     transition: { duration: 0.25, ease: "easeOut", staggerChildren: 0.06, delayChildren: 0.1 }
@@ -15,7 +15,7 @@ const desktopVariants = {
 };
 
 const mobileVariants = {
-  hidden:  { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1, y: 0,
     transition: { duration: 0.22, ease: "easeOut", staggerChildren: 0.05, delayChildren: 0.05 }
@@ -23,15 +23,15 @@ const mobileVariants = {
 };
 
 const itemVariants = {
-  hidden:  { opacity: 0, x: -16 },
+  hidden: { opacity: 0, x: -16 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.2, ease: "easeOut" } },
-  hover:   { scale: 1.15, transition: { duration: 0.15 } },
+  hover: { scale: 1.15, transition: { duration: 0.15 } },
 };
 
 const mobileItemVariants = {
-  hidden:  { opacity: 0, y: 14 },
+  hidden: { opacity: 0, y: 14 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
-  hover:   { scale: 1.15, transition: { duration: 0.15 } },
+  hover: { scale: 1.15, transition: { duration: 0.15 } },
 };
 
 // ─── Styled components ────────────────────────────────────────────────────────
@@ -50,9 +50,9 @@ const StyledSideNav = styled(motion.nav)`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 2rem 0;
+  padding: 2.5rem 0;
 
-  /* Red gradient left accent line */
+  /* Red gradient left accent line (former style) */
   &::before {
     content: '';
     position: absolute;
@@ -64,29 +64,8 @@ const StyledSideNav = styled(motion.nav)`
     background: linear-gradient(to bottom, transparent, #e04848, transparent);
   }
 
-  /* Mobile: bottom bar */
   @media (max-width: 768px) {
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: auto;
-    min-height: 60px;
-    width: 100%;
-    flex-direction: row;
-    justify-content: space-around;
-    padding: 0.5rem 0.5rem;
-    /* iOS safe area */
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-
-    &::before {
-      width: 60%;
-      left: 20%;
-      top: 0;
-      bottom: auto;
-      height: 1px;
-      background: linear-gradient(to right, transparent, #e04848, transparent);
-    }
+    display: none;
   }
 `;
 
@@ -94,13 +73,7 @@ const NavContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-
-  @media (max-width: 768px) {
-    flex-direction: row;
-    width: 100%;
-    justify-content: space-around;
-    gap: 0;
-  }
+  margin: 2rem 0;
 `;
 
 const Logo = styled(motion.div)`
@@ -124,10 +97,6 @@ const Logo = styled(motion.div)`
     letter-spacing: -1px;
     font-family: 'Outfit', sans-serif;
   }
-
-  @media (max-width: 768px) {
-    display: none;
-  }
 `;
 
 const SocialContainer = styled(motion.div)`
@@ -149,53 +118,53 @@ const SocialContainer = styled(motion.div)`
       transform: scale(1.25);
     }
   }
-
-  @media (max-width: 768px) {
-    display: none;
-  }
 `;
+
+const Divider = styled.div`
+  width: 30px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(224, 72, 72, 0.3), transparent);
+  margin: 0.5rem 0;
+`;
+
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const SideNav = () => {
   const location = useLocation();
-  const isMobile = useIsMobile();
 
   // Hide nav on the fullscreen game page
   if (location.pathname === '/play') return null;
 
   const navigationItems = [
-    { path: "/",        name: "Home",    icon: "fa fa-home",         key: 1 },
-    { path: "/about",   name: "About",   icon: "fa fa-user",         key: 2 },
-    { path: "/skills",  name: "Skills",  icon: "fa fa-cogs",         key: 3 },
-    { path: "/projects",name: "Works",   icon: "fa fa-briefcase",    key: 4 },
-    { path: "/contact", name: "Contact", icon: "fas fa-address-book",key: 5 },
-    { path: "/play",    name: "Play",    icon: "fa fa-gamepad",      key: 6 },
+    { path: "/", name: "Home", icon: "fa fa-home", key: 1 },
+    { path: "/about", name: "About", icon: "fa fa-user", key: 2 },
+    { path: "/skills", name: "Skills", icon: "fa fa-cogs", key: 3 },
+    { path: "/projects", name: "Works", icon: "fa fa-briefcase", key: 4 },
+    { path: "/contact", name: "Contact", icon: "fa fa-envelope", key: 5 },
+    { path: "/play", name: "Play", icon: "fa fa-gamepad", key: 6 },
   ];
 
   const socialLinks = [
-    { icon: "fab fa-github",   url: "https://github.com/obed-beddy",    key: 1 },
-    { icon: "fab fa-linkedin", url: "https://linkedin.com/in/obed-beddy",key: 2 },
-    { icon: "fab fa-twitter",  url: "https://twitter.com/obed_beddy",   key: 3 },
+    { icon: "fab fa-github", url: "https://github.com/meetbeddy", key: 1 },
+    { icon: "fab fa-linkedin", url: "https://linkedin.com/in/obed-okpala", key: 2 },
   ];
 
   return (
     <StyledSideNav
-      variants={isMobile ? mobileVariants : desktopVariants}
+      variants={desktopVariants}
       initial="hidden"
       animate="visible"
     >
-      {/* Desktop Logo */}
-      {!isMobile && (
-        <Logo
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.25, duration: 0.3, ease: "easeOut" }}
-        >
-          <span>OB</span>
-        </Logo>
-      )}
+      <Logo
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2, duration: 0.4, type: "spring" }}
+      >
+        <span>OB</span>
+      </Logo>
 
       <NavContainer>
+        <Divider />
         {navigationItems.map((item) => (
           <NavItem
             key={item.key}
@@ -203,34 +172,31 @@ const SideNav = () => {
             name={item.name}
             icon={item.icon}
             active={item.path === location.pathname}
-            variants={isMobile ? mobileItemVariants : itemVariants}
-            isMobile={isMobile}
+            variants={itemVariants}
           />
         ))}
+        <Divider />
       </NavContainer>
 
-      {/* Desktop Social Links */}
-      {!isMobile && (
-        <SocialContainer
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.3 }}
-        >
-          {socialLinks.map((link) => (
-            <motion.a
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              key={link.key}
-              whileHover={{ scale: 1.25, color: "#e04848" }}
-            >
-              <i className={link.icon} />
-            </motion.a>
-          ))}
-        </SocialContainer>
-      )}
+      <SocialContainer
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        {socialLinks.map((link) => (
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            key={link.key}
+          >
+            <i className={link.icon} />
+          </a>
+        ))}
+      </SocialContainer>
     </StyledSideNav>
   );
 };
+
 
 export default SideNav;

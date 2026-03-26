@@ -306,11 +306,22 @@ export default function About() {
   const [activeSection, setActiveSection] = useState("intro");
   const [expandedSkill, setExpandedSkill] = useState(null);
   const [coffeeCount, setCoffeeCount] = useState(0);
+  const [coffeeStrength, setCoffeeStrength] = useState("medium");
+  const [brewing, setBrewing] = useState(false);
+
+  const brewCoffee = () => {
+    if (brewing) return;
+    setBrewing(true);
+    setTimeout(() => {
+      setCoffeeCount(c => c + 1);
+      setBrewing(false);
+    }, 1800);
+  };
   const [typewriterComplete, setTypewriterComplete] = useState(false);
   const [displayText, setDisplayText] = useState("");
-  const introText = "Hey! I'm Obed, a web developer who loves turning ideas into functional, user-friendly websites.";
+  const introText = "Hey! I'm Obed Okpala — Full-Stack Developer with 4+ years building fast, scalable web apps.";
 
-  // Enhanced skills data with more context
+  // Skills — sourced directly from CV
   const skills = [
     {
       id: "react",
@@ -318,11 +329,36 @@ export default function About() {
       level: "Expert",
       years: 4,
       color: "#61DAFB",
-      description: "Building complex UI components with React's latest features and patterns",
-      technologies: ["Hooks", "Context API", "Redux", "Next.js", "Performance Optimization"],
+      description: "Building complex UIs with React's latest features, state management patterns, and performance optimisation techniques.",
+      technologies: ["Hooks", "Context API", "Redux / RTK", "Next.js", "Performance Optimisation"],
       projects: [
-        { name: "E-commerce Platform", link: "#projects/ecommerce" },
-        { name: "Content Management System", link: "#projects/cms" }
+        { name: "Cooperative Society Platform", link: "/projects" },
+        { name: "ICAN Election System", link: "/projects" }
+      ]
+    },
+    {
+      id: "typescript",
+      name: "TypeScript",
+      level: "Advanced",
+      years: 4,
+      color: "#3178C6",
+      description: "Applying strict typing across full-stack codebases for reliability, refactorability, and developer confidence.",
+      technologies: ["Strict mode", "Generics", "Decorators", "Interface design", "Type guards"],
+      projects: [
+        { name: "ICAN Election System", link: "/projects" },
+        { name: "FENIX VMS", link: "/projects" }
+      ]
+    },
+    {
+      id: "angular",
+      name: "Angular",
+      level: "Advanced",
+      years: 3,
+      color: "#DD0031",
+      description: "Enterprise-grade frontends using Angular's component architecture, RxJS observables, and reactive forms.",
+      technologies: ["RxJS", "Angular Material", "NgModules", "Reactive Forms", "NgRx"],
+      projects: [
+        { name: "FENIX VMS", link: "/projects" }
       ]
     },
     {
@@ -331,11 +367,11 @@ export default function About() {
       level: "Advanced",
       years: 3,
       color: "#68A063",
-      description: "Creating robust backend services with a focus on scalability and performance",
-      technologies: ["Express", "RESTful APIs", "Authentication", "Microservices"],
+      description: "Robust, scalable backend services and RESTful APIs with a focus on auth, microservices architecture, and performance.",
+      technologies: ["Express.js", "RESTful APIs", "JWT / Auth", "Microservices", "WebSockets"],
       projects: [
-        { name: "User Management API", link: "#projects/user-api" },
-        { name: "Payment Processing Service", link: "#projects/payment" }
+        { name: "Cooperative Society Platform", link: "/projects" },
+        { name: "ICAN Election System", link: "/projects" }
       ]
     },
     {
@@ -344,35 +380,35 @@ export default function About() {
       level: "Proficient",
       years: 2,
       color: "#E0234E",
-      description: "Building enterprise-grade applications with TypeScript-based architecture",
-      technologies: ["TypeORM", "Dependency Injection", "Modules", "Guards"],
+      description: "Enterprise APIs with TypeScript-first architecture, dependency injection, guards, and modular organisational patterns.",
+      technologies: ["TypeORM", "Dependency Injection", "Guards", "Interceptors", "Modules"],
       projects: [
-        { name: "Content Delivery API", link: "#projects/content-api" }
+        { name: "FENIX VMS", link: "/projects" }
       ]
     },
     {
-      id: "uiux",
-      name: "UI/UX",
-      level: "Intermediate",
+      id: "mongodb",
+      name: "MongoDB",
+      level: "Advanced",
+      years: 4,
+      color: "#47A248",
+      description: "NoSQL schema design, aggregation pipelines, and high-performance data retrieval for production applications.",
+      technologies: ["Mongoose", "Schema design", "Aggregation", "Indexes", "CRUD ops"],
+      projects: [
+        { name: "Cooperative Society Platform", link: "/projects" },
+        { name: "ICAN Election System", link: "/projects" }
+      ]
+    },
+    {
+      id: "sql",
+      name: "SQL / PostgreSQL",
+      level: "Proficient",
       years: 3,
-      color: "#FF7EB6",
-      description: "Designing intuitive interfaces with focus on user experience and accessibility",
-      technologies: ["Wireframing", "Prototyping", "User Testing", "Responsive Design"],
+      color: "#336791",
+      description: "Relational database design and querying with PostgreSQL and MySQL, using TypeORM for ORM-based workflows.",
+      technologies: ["PostgreSQL", "MySQL", "TypeORM", "Query optimisation", "Migrations"],
       projects: [
-        { name: "Design System", link: "#projects/design-system" }
-      ]
-    },
-    {
-      id: "problem",
-      name: "Problem Solving",
-      level: "Expert",
-      years: 5,
-      color: "#FFC107",
-      description: "Analytical approach to complex technical challenges across different domains",
-      technologies: ["Algorithms", "System Design", "Debugging", "Performance Tuning"],
-      projects: [
-        { name: "E-commerce Search Optimization", link: "#projects/search-opt" },
-        { name: "Real-time Data Processing", link: "#projects/realtime" }
+        { name: "Compumetrics Projects", link: "/projects" }
       ]
     }
   ];
@@ -500,7 +536,7 @@ export default function About() {
               Right now, I'm based in Abuja, Nigeria—but hey, I'm open to working from anywhere.
             </p>
             <TagContainer>
-              {["JavaScript", "React", "Node.js", "NestJS", "UI/UX", "Problem Solver"].map(tag => (
+              {["React", "Angular", "TypeScript", "Node.js", "NestJS", "MongoDB", "SQL"].map(tag => (
                 <Badge key={tag}>{tag}</Badge>
               ))}
             </TagContainer>
@@ -678,42 +714,46 @@ export default function About() {
           aria-labelledby={`tab-story`}
         >
           <PageParagraph>
-            I've spent the last few years building both the front and back ends of web apps, whether it's whipping up smooth interfaces with React, or building the server-side with Node.js and NestJS. I'm all about creating websites that don't just work, but feel right.
+            Over 4 years across 4 roles — from freelance websites in 2019 to enterprise multi-tenant platforms today. I specialise in React, Angular, Node.js, and TypeScript, always optimising for performance and clean architecture.
           </PageParagraph>
 
           <Quote>
-            "At the end of the day, it's all about solving problems making things easier and more efficient for people, whether that's with a better user interface, a smoother backend, or just a system that actually works when you need it."
+            "At the end of the day, it's all about solving problems — making things faster, more reliable, and more intuitive for real people."
           </Quote>
 
           <Timeline>
             <TimelineItem>
-              <TimelineTitle>Where I Started</TimelineTitle>
+              <TimelineTitle>Freelance Web Developer · Aug 2019</TimelineTitle>
               <p>
-                My journey began with a fascination for how websites work, diving into HTML/CSS, and quickly discovering the endless possibilities of JavaScript.
+                Started building websites for clients. Learned to balance clean code with real-world deadlines, client communication, and web performance optimisation.
               </p>
             </TimelineItem>
 
             <TimelineItem>
-              <TimelineTitle>Where I Am</TimelineTitle>
+              <TimelineTitle>Frontend Developer · 3reen Ltd · Nov 2020 – Mar 2021</TimelineTitle>
               <p>
-                Now I build complete web applications from concept to deployment, focusing on creating intuitive user experiences backed by solid, scalable architecture.
+                Built complex layouts for an e-commerce startup using React and styled-components. Engineered state management with Redux and converted Figma prototypes directly into production code.
               </p>
             </TimelineItem>
 
             <TimelineItem>
-              <TimelineTitle>Where I'm Going</TimelineTitle>
+              <TimelineTitle>Full-Stack Developer · Hero Technology (EagleApp) · Aug 2022 – Dec 2022</TimelineTitle>
               <p>
-                Always learning, always growing. I'm continuously exploring new technologies while mastering my current stack to craft better digital experiences. Lately, I've been diving into the world of 3D computer graphics with Three.js, creating immersive web environments that push the boundaries of what the browser can do.
+                Led an Agile team building microservices-based applications in React, Node.js, and Express. Mentored junior developers and drove adherence to Scrum best practices.
               </p>
+            </TimelineItem>
+
+            <TimelineItem>
+              <TimelineTitle>Full-Stack Developer · Compumetrics Solutions · Dec 2022 – Present</TimelineTitle>
               <p>
-                At the same time, I'm an enthusiastic builder with Electron and React Native, constantly sharpening my skills in cross-platform development to deliver seamless, responsive experiences across all kinds of devices. Whether it's on the web, desktop, or mobile, I'm all about creating solutions that feel intuitive, polished, and purposeful.
+                Building React, Angular, and TypeScript applications for enterprise clients. Achieved a 20% reduction in page load times through lazy loading and asset optimisation. Redesigned the user permission system from role-based to granular permission-based — improving security and scalability at scale.
               </p>
             </TimelineItem>
           </Timeline>
         </Section>
       )}
 
-      {/* Interests Section */}
+      {/* ── Interests Section ── */}
       {activeSection === "interests" && (
         <Section
           variants={sectionVariants}
@@ -860,384 +900,292 @@ export default function About() {
                   color: props => props.theme.colors.primary
                 }} size={20} /> Football
               </InterestTitle>
-              <p>Don't judge the "bulk" though — I'm more about the hustle on the field. Football keeps me balanced when I'm not coding.</p>
+              <p>More hustle than bulk — football keeps me sharp when I&apos;m off the keyboard. Tap the card to see my dev stats.</p>
 
-              {/* Football Mini-Game */}
-              <div style={{ marginTop: props => props.theme.spacing.md }}>
-                <h4 style={{
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  marginBottom: '8px',
-                  display: 'flex',
-                  alignItems: 'center'
+              {/* Developer FUT-style card */}
+              <motion.div
+                whileHover={{ scale: 1.04, rotateY: 6 }}
+                style={{ marginTop: '16px', perspective: '600px' }}
+              >
+                <div style={{
+                  background: 'linear-gradient(145deg, #1a1a2e 0%, #16213e 45%, #0f3460 100%)',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  border: '1px solid rgba(224,72,72,0.35)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 16px rgba(224,72,72,0.12)',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}>
-                  <motion.div
-                    animate={{ rotate: [0, 20, 0, -20, 0] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                    style={{ marginRight: '8px', fontSize: '1.2rem' }}
-                  >
-                    ⚽
-                  </motion.div>
-                  Mini Penalty Game
-                </h4>
-
-                {/* Football penalty mini-game */}
-                <motion.div
-                  whileHover={{
-                    boxShadow: '0 8px 15px rgba(0,0,0,0.3)'
-                  }}
-                  style={{
-                    backgroundColor: 'rgba(0,100,0,0.2)',
-                    borderRadius: '8px',
-                    padding: '16px',
-                    cursor: 'pointer',
-                    border: '2px solid rgba(255,255,255,0.1)',
-                    position: 'relative',
-                    height: '180px',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {/* Soccer field background */}
                   <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundImage: 'linear-gradient(to bottom, rgba(0,80,0,0.5), rgba(0,140,0,0.3))',
-                    zIndex: 0
-                  }}>
-                    {/* Field markings */}
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '10px',
-                      left: '10%',
-                      right: '10%',
-                      height: '70px',
-                      border: '2px solid rgba(255,255,255,0.5)',
-                      borderBottom: 'none'
-                    }}></div>
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '10px',
-                      left: '40%',
-                      right: '40%',
-                      height: '30px',
-                      border: '2px solid rgba(255,255,255,0.5)',
-                      borderBottom: 'none'
-                    }}></div>
-                  </div>
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 55%)',
+                    borderRadius: '12px', pointerEvents: 'none',
+                  }} />
 
-                  {/* Goal */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    left: '25%',
-                    right: '25%',
-                    height: '60px',
-                    borderTop: '4px solid white',
-                    borderLeft: '4px solid white',
-                    borderRight: '4px solid white',
-                    zIndex: 1
-                  }}></div>
-
-                  {/* Interactive football */}
-                  <motion.div
-                    drag
-                    dragConstraints={{
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0
-                    }}
-                    dragElastic={0.7}
-                    whileDrag={{ scale: 1.2 }}
-                    dragTransition={{ bounceStiffness: 600, bounceDamping: 10 }}
-                    style={{
-                      position: 'absolute',
-                      bottom: '30px',
-                      left: 'calc(50% - 15px)',
-                      width: '30px',
-                      height: '30px',
-                      borderRadius: '50%',
-                      backgroundColor: 'white',
-                      backgroundImage: 'radial-gradient(circle at 30% 30%, white, #888)',
-                      zIndex: 2,
-                      cursor: 'grab'
-                    }}
-                  >
-                    <div style={{
-                      position: 'absolute',
-                      fontSize: '0.6rem',
-                      width: '100%',
-                      textAlign: 'center',
-                      top: '8px',
-                      fontWeight: 'bold'
-                    }}>
-                      DRAG
+                  {/* Top row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '2rem', fontWeight: 900, color: '#e04848', lineHeight: 1 }}>87</div>
+                      <div style={{ fontSize: '0.5rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.4)' }}>OVR</div>
                     </div>
-                  </motion.div>
-
-                  {/* Goalkeeper (static) */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '20px',
-                    left: 'calc(50% - 20px)',
-                    width: '40px',
-                    height: '60px',
-                    backgroundImage: 'linear-gradient(to bottom, #ff0000, #aa0000)',
-                    borderRadius: '10px 10px 0 0',
-                    zIndex: 1
-                  }}>
                     <div style={{
-                      position: 'absolute',
-                      top: '-15px',
-                      left: '5px',
-                      width: '30px',
-                      height: '30px',
-                      backgroundColor: '#ffdbac',
-                      borderRadius: '50%'
-                    }}></div>
+                      background: 'linear-gradient(135deg, #e04848, #900)',
+                      borderRadius: '6px', padding: '4px 10px',
+                      fontSize: '0.5rem', fontWeight: 900,
+                      letterSpacing: '2px', color: '#fff',
+                    }}>FULL-STACK</div>
+                    <div style={{ fontSize: '1.1rem' }}>🇳🇬</div>
                   </div>
 
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    left: '10px',
-                    zIndex: 3,
-                    fontSize: '0.8rem',
-                    backgroundColor: 'rgba(0,0,0,0.7)',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    color: 'white'
-                  }}>
-                    Drag the ball to score!
+                  {/* Floating icon */}
+                  <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                    <motion.div
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                      style={{ fontSize: '3rem', lineHeight: 1 }}
+                    >⚽</motion.div>
                   </div>
-                </motion.div>
-              </div>
+
+                  {/* Name bar */}
+                  <div style={{
+                    textAlign: 'center', fontSize: '0.8rem', fontWeight: 900,
+                    letterSpacing: '4px', color: 'rgba(255,255,255,0.9)',
+                    borderTop: '1px solid rgba(255,255,255,0.1)',
+                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                    padding: '5px 0', marginBottom: '12px',
+                  }}>O B E D</div>
+
+                  {/* Stats grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', textAlign: 'center' }}>
+                    {[
+                      { label: 'PAC', value: 90, desc: 'Typing speed' },
+                      { label: 'SHO', value: 92, desc: 'Problem solving' },
+                      { label: 'PAS', value: 88, desc: 'Communication' },
+                      { label: 'DRI', value: 87, desc: 'Code quality' },
+                      { label: 'DEF', value: 85, desc: 'Bug fixing' },
+                      { label: 'PHY', value: 89, desc: 'Deadline stamina' },
+                    ].map(s => (
+                      <div key={s.label} title={s.desc}>
+                        <div style={{ fontSize: '1rem', fontWeight: 900, color: '#e04848' }}>{s.value}</div>
+                        <div style={{ fontSize: '0.5rem', letterSpacing: '1px', color: 'rgba(255,255,255,0.35)' }}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
             </InterestCard>
 
             <InterestCard bgColor={interestCardColors.coffee}>
               <InterestTitle>
-                <motion.div
-                  whileHover={{ rotate: [0, -10, 20, -10, 0] }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Coffee
-                    style={{
-                      marginRight: props => props.theme.spacing.sm,
-                      color: props => props.theme.colors.primary
-                    }}
-                    size={20}
-                  />
+                <motion.div whileHover={{ rotate: [0, -10, 20, -10, 0] }} transition={{ duration: 0.5 }}>
+                  <Coffee style={{ marginRight: props => props.theme.spacing.sm, color: props => props.theme.colors.primary }} size={20} />
                 </motion.div>
                 <span>Coffee</span>
               </InterestTitle>
-              <p>Essential fuel for coding sessions.</p>
+              <p>Espresso is a feature, not a bug. Essential fuel for every coding session.</p>
 
-              {/* Enhanced Coffee Interactive Brewing Station */}
-              <motion.div
-                style={{
-                  backgroundColor: 'rgba(103, 65, 35, 0.3)',
-                  borderRadius: '12px',
-                  padding: '16px 12px',
-                  marginTop: '16px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  border: '2px solid rgba(139, 69, 19, 0.4)'
-                }}
-              >
-                <div style={{ textAlign: 'center', marginBottom: '16px', fontWeight: 'bold' }}>
-                  Virtual Coffee Brewing Station
+              <div style={{ marginTop: '16px' }}>
+                {/* Strength selector */}
+                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginBottom: '14px' }}>
+                  {['espresso', 'medium', 'long'].map(s => (
+                    <motion.button
+                      key={s}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setCoffeeStrength(s)}
+                      style={{
+                        padding: '4px 12px', borderRadius: '20px', border: 'none',
+                        fontSize: '0.62rem', letterSpacing: '1px', textTransform: 'uppercase',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        background: coffeeStrength === s ? 'linear-gradient(135deg,#6b3a2a,#8b4513)' : 'rgba(255,255,255,0.07)',
+                        color: coffeeStrength === s ? '#f5deb3' : 'rgba(255,255,255,0.4)',
+                        boxShadow: coffeeStrength === s ? '0 0 10px rgba(139,69,19,0.5)' : 'none',
+                      }}
+                    >{s}</motion.button>
+                  ))}
                 </div>
 
-                {/* Coffee Machine */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  height: '120px',
-                  marginBottom: '16px'
-                }}>
-                  {/* Coffee Machine Body */}
-                  <div style={{
-                    width: '80px',
-                    height: '100px',
-                    backgroundColor: '#222',
-                    borderRadius: '8px 8px 4px 4px',
-                    position: 'relative'
-                  }}>
-                    {/* Machine Display */}
+                {/* Machine graphic */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+                  <div style={{ position: 'relative', width: '120px' }}>
+                    {/* Body */}
                     <div style={{
-                      position: 'absolute',
-                      top: '15px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '50px',
-                      height: '20px',
-                      backgroundColor: '#333',
-                      borderRadius: '4px',
-                      border: '2px solid #444',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      fontSize: '0.8rem',
-                      color: '#00ff00'
+                      width: '100px', height: '80px', margin: '0 auto',
+                      background: 'linear-gradient(160deg,#2a2a2a 0%,#1a1a1a 50%,#3a3a3a 100%)',
+                      borderRadius: '12px 12px 4px 4px', position: 'relative',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.07)',
                     }}>
-                      {coffeeCount}
+                      {/* Pressure gauge */}
+                      <div style={{
+                        position: 'absolute', top: '10px', left: '10px',
+                        width: '20px', height: '20px', borderRadius: '50%',
+                        background: 'radial-gradient(circle at 40% 40%,#444,#1a1a1a)',
+                        border: '2px solid #555',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <motion.div
+                          animate={{ rotate: brewing ? [0, 45, 60, 45] : [0, 8, 0] }}
+                          transition={{ duration: brewing ? 1.4 : 3, repeat: Infinity }}
+                          style={{ width: '8px', height: '1.5px', background: '#e04848', borderRadius: '1px', transformOrigin: 'left center' }}
+                        />
+                      </div>
+                      {/* LED */}
+                      <motion.div
+                        animate={{ opacity: brewing ? [0.5, 1, 0.5] : 1 }}
+                        transition={{ duration: 0.5, repeat: brewing ? Infinity : 0 }}
+                        style={{
+                          position: 'absolute', top: '10px', right: '10px',
+                          width: '8px', height: '8px', borderRadius: '50%',
+                          background: brewing ? '#ff6b35' : '#00ff88',
+                          boxShadow: brewing ? '0 0 8px #ff6b35' : '0 0 8px #00ff88',
+                        }}
+                      />
+                      {/* Display */}
+                      <div style={{
+                        position: 'absolute', top: '14px', left: '50%', transform: 'translateX(-50%)',
+                        background: '#0a1628', borderRadius: '4px',
+                        padding: '3px 6px', border: '1px solid #333',
+                        fontSize: '0.55rem', color: brewing ? '#ff6b35' : '#00ff88',
+                        fontFamily: 'monospace', letterSpacing: '1px', whiteSpace: 'nowrap',
+                      }}>
+                        {brewing ? 'BREWING' : coffeeStrength === 'espresso' ? '25ml' : coffeeStrength === 'medium' ? '60ml' : '120ml'}
+                      </div>
+                      {/* Portafilter */}
+                      <div style={{
+                        position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)',
+                        width: '52px', height: '14px',
+                        background: 'linear-gradient(to bottom,#444,#2a2a2a)',
+                        borderRadius: '0 0 20px 20px', border: '1px solid rgba(255,255,255,0.08)',
+                      }}>
+                        {[0, 1, 2].map(i => (
+                          <motion.div key={i}
+                            animate={brewing ? { height: ['0px', '14px', '0px'], opacity: [0, 1, 0] } : { height: '0px', opacity: 0 }}
+                            transition={{ duration: 0.55, delay: i * 0.15, repeat: brewing ? Infinity : 0 }}
+                            style={{
+                              position: 'absolute', top: '14px', left: `${9 + i * 13}px`,
+                              width: '3px', background: 'linear-gradient(to bottom,#3E2723,#1a0f00)',
+                              borderRadius: '2px',
+                            }}
+                          />
+                        ))}
+                      </div>
                     </div>
 
-                    {/* Coffee Spout */}
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '0',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '20px',
-                      height: '15px',
-                      backgroundColor: '#111',
-                      borderRadius: '0 0 5px 5px'
-                    }}></div>
+                    {/* Steam wisps */}
+                    {brewing && [0, 1, 2].map(i => (
+                      <motion.div key={`st${i}`}
+                        initial={{ opacity: 0, y: 0 }}
+                        animate={{ opacity: [0, 0.5, 0], y: -28, x: (i - 1) * 7 }}
+                        transition={{ duration: 1.1, delay: i * 0.25, repeat: Infinity }}
+                        style={{
+                          position: 'absolute', top: '2px', left: '50%',
+                          width: '5px', height: '5px', borderRadius: '50%',
+                          background: 'rgba(255,255,255,0.35)', filter: 'blur(3px)',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                    ))}
                   </div>
+                </div>
 
-                  {/* Coffee Cup */}
+                {/* Cup - clickable */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setCoffeeCount(count => count + 1)}
+                    onClick={brewCoffee}
                     style={{
-                      position: 'absolute',
-                      bottom: '0',
-                      width: '60px',
-                      height: '70px',
-                      borderRadius: '5px 5px 20px 20px',
-                      background: 'linear-gradient(to right, #b98b56, #7d5a3c)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'flex-end',
-                      alignItems: 'center',
-                      overflow: 'hidden'
+                      width: '64px', height: '56px',
+                      background: 'linear-gradient(160deg,#f5f5f0,#e8e0d0)',
+                      borderRadius: '3px 3px 16px 16px',
+                      position: 'relative', cursor: brewing ? 'wait' : 'pointer',
+                      overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
                     }}
                   >
-                    {/* Cup Handle */}
+                    {/* Handle */}
                     <div style={{
-                      position: 'absolute',
-                      right: '-15px',
-                      top: '20px',
-                      width: '15px',
-                      height: '30px',
-                      borderRadius: '0 15px 15px 0',
-                      borderTop: '5px solid #7d5a3c',
-                      borderRight: '5px solid #7d5a3c',
-                      borderBottom: '5px solid #7d5a3c'
-                    }}></div>
-
-                    {/* Coffee Level */}
+                      position: 'absolute', right: '-10px', top: '12px',
+                      width: '12px', height: '24px',
+                      border: '3px solid #e0d8c8', borderLeft: 'none',
+                      borderRadius: '0 30px 30px 0',
+                    }} />
+                    {/* Coffee fill */}
                     <motion.div
-                      initial={{ height: 0 }}
-                      animate={{
-                        height: coffeeCount > 0 ? `${Math.min(coffeeCount * 7, 50)}px` : 0
-                      }}
-                      transition={{ type: 'spring', damping: 10 }}
+                      animate={{ height: coffeeCount > 0 ? `${Math.min(coffeeCount * (coffeeStrength === 'espresso' ? 6 : coffeeStrength === 'medium' ? 9 : 12), 48)}px` : '0px' }}
+                      transition={{ type: 'spring', damping: 12 }}
                       style={{
-                        width: '100%',
-                        backgroundColor: '#3E2723',
-                        borderRadius: '0 0 15px 15px'
+                        position: 'absolute', bottom: 0, left: 0, right: 0,
+                        background: coffeeStrength === 'espresso'
+                          ? 'linear-gradient(to top,#1a0800,#3E2723)'
+                          : coffeeStrength === 'medium'
+                            ? 'linear-gradient(to top,#2d1500,#5D4037)'
+                            : 'linear-gradient(to top,#3d2000,#795548)',
+                        borderRadius: '0 0 13px 13px',
                       }}
-                    >
-                      {/* Coffee Steam Animation */}
-                      {coffeeCount > 0 && (
-                        <div style={{ position: 'relative' }}>
-                          <motion.div
-                            initial={{ opacity: 0, y: 0 }}
-                            animate={{
-                              opacity: [0, 0.7, 0],
-                              y: -20
-                            }}
-                            transition={{ duration: 2, repeat: Infinity, repeatType: 'loop' }}
-                            style={{
-                              position: 'absolute',
-                              left: '10px',
-                              top: '-20px',
-                              color: 'white',
-                              fontSize: '1.2rem',
-                              filter: 'blur(2px)'
-                            }}
-                          >
-                            ~
-                          </motion.div>
-                          <motion.div
-                            initial={{ opacity: 0, y: 0 }}
-                            animate={{
-                              opacity: [0, 0.7, 0],
-                              y: -15
-                            }}
-                            transition={{ duration: 1.5, delay: 0.5, repeat: Infinity, repeatType: 'loop' }}
-                            style={{
-                              position: 'absolute',
-                              left: '30px',
-                              top: '-20px',
-                              color: 'white',
-                              fontSize: '1.2rem',
-                              filter: 'blur(2px)'
-                            }}
-                          >
-                            ~
-                          </motion.div>
-                        </div>
-                      )}
-                    </motion.div>
+                    />
+                    {/* Foam layer */}
+                    {coffeeCount > 0 && (
+                      <motion.div
+                        animate={{ opacity: [0.6, 1, 0.6] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        style={{
+                          position: 'absolute',
+                          bottom: Math.min(coffeeCount * (coffeeStrength === 'espresso' ? 6 : coffeeStrength === 'medium' ? 9 : 12), 48),
+                          left: 2, right: 2, height: '4px',
+                          background: 'rgba(220,185,120,0.65)', borderRadius: '4px',
+                        }}
+                      />
+                    )}
+                    {/* Tap hint */}
+                    {coffeeCount === 0 && !brewing && (
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '0.52rem', color: 'rgba(0,0,0,0.3)',
+                        letterSpacing: '1px', textAlign: 'center', lineHeight: 1.4,
+                      }}>TAP<br />TO<br />BREW</div>
+                    )}
                   </motion.div>
                 </div>
 
+                {/* Stats bar */}
                 <div style={{
-                  textAlign: 'center',
-                  fontSize: '0.8rem',
-                  marginBottom: '8px'
+                  display: 'flex', justifyContent: 'space-between',
+                  background: 'rgba(0,0,0,0.2)', borderRadius: '8px',
+                  padding: '7px 12px', fontSize: '0.72rem', marginBottom: '8px',
                 }}>
-                  <strong>Click the cup to brew!</strong>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    ☕ <strong style={{ color: 'rgba(255,255,255,0.85)' }}>{coffeeCount}</strong> cups
+                  </span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    ⚡ <strong style={{ color: coffeeCount > 7 ? '#e04848' : 'rgba(255,255,255,0.85)' }}>{coffeeCount * 95}mg</strong>
+                  </span>
                 </div>
 
-                {/* Coffee Stats */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  backgroundColor: 'rgba(0,0,0,0.2)',
-                  padding: '8px',
-                  borderRadius: '4px',
-                  fontSize: '0.8rem'
-                }}>
-                  <div>Cups brewed: <strong>{coffeeCount}</strong></div>
-                  <div>Caffeine: <strong>{coffeeCount * 95}mg</strong></div>
-                </div>
-
-                {/* Coffee Messages */}
+                {/* Message */}
                 {coffeeCount > 0 && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    transition={{ delay: 0.3 }}
+                    key={coffeeCount}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
                     style={{
-                      marginTop: '12px',
-                      padding: '8px',
-                      backgroundColor: 'rgba(0,0,0,0.2)',
-                      borderRadius: '4px',
-                      fontSize: '0.85rem',
-                      fontStyle: 'italic'
+                      fontSize: '0.75rem', fontStyle: 'italic',
+                      color: 'rgba(255,255,255,0.5)', textAlign: 'center',
+                      padding: '6px', background: 'rgba(0,0,0,0.15)', borderRadius: '6px',
                     }}
                   >
-                    {coffeeCount === 1 && "First cup of the day! Starting the engines... ☀️"}
-                    {coffeeCount === 2 && "Getting warmed up. Ideas starting to flow."}
-                    {coffeeCount === 3 && "Now we're talking! Perfect coding momentum."}
-                    {coffeeCount === 4 && "Fingers flying across the keyboard now!"}
-                    {coffeeCount === 5 && "Reaching optimal coding velocity..."}
-                    {coffeeCount > 5 && coffeeCount <= 7 && "Is the code writing itself or is that the caffeine talking?"}
-                    {coffeeCount > 7 && coffeeCount <= 10 && "I can hear colors and see sounds now. Debugging is a breeze!"}
-                    {coffeeCount > 10 && "Okay, maybe we should switch to water now... My code is starting to look like hieroglyphics! 😅"}
+                    {coffeeCount === 1 && "First cup. Engines warming... ☀️"}
+                    {coffeeCount === 2 && "Getting into the zone 🎯"}
+                    {coffeeCount === 3 && "Peak flow state achieved 🚀"}
+                    {coffeeCount === 4 && "Fingers flying across the keyboard!"}
+                    {coffeeCount === 5 && "Reaching optimal velocity..."}
+                    {coffeeCount > 5 && coffeeCount <= 7 && "Is the code writing itself? 🤔"}
+                    {coffeeCount > 7 && coffeeCount <= 10 && "I can see through the bugs now 👁️"}
+                    {coffeeCount > 10 && "Maybe water next time? 😅"}
                   </motion.div>
                 )}
-              </motion.div>
+              </div>
             </InterestCard>
           </CardGrid>
 

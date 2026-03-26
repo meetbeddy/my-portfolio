@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import SideNav from "./components/layouts/SideNav";
+import MobileNav from "./components/layouts/MobileNav";
 import HomePage from "./components/pages/home/HomePage";
 import Contact from "./components/pages/contact/Contact";
 import About from "./components/pages/about/Index";
@@ -12,6 +13,7 @@ import Projects from "./components/pages/work/Work";
 import CursorGlow from "./components/shared/CursorGlow";
 // Lazy-load game so Three.js (~600 KB) stays out of the main bundle
 const AsteroidGame = lazy(() => import("./components/pages/game/AsteroidGame"));
+const Background   = lazy(() => import("./components/shared/Background"));
 
 const LoadingScreen = styled.div`
   position: fixed;
@@ -24,9 +26,10 @@ const LoadingScreen = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  transition: opacity 0.5s ease;
-  opacity: ${props => props.isLoading ? 1 : 0};
-  pointer-events: ${props => props.isLoading ? 'all' : 'none'};
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+  opacity: ${props => props.$isLoading ? 1 : 0};
+  visibility: ${props => props.$isLoading ? 'visible' : 'hidden'};
+  pointer-events: none;
 `;
 
 const LoadingContent = styled.div`
@@ -36,17 +39,20 @@ const LoadingContent = styled.div`
   h2 {
     margin-bottom: ${props => props.theme.spacing.xl};
     font-size: ${props => props.theme.typography.fontSizes.xl};
-    letter-spacing: 2px;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-weight: 800;
   }
   
   .spinner {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     margin: 0 auto;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(224, 72, 72, 0.1);
     border-radius: 50%;
-    border-top-color: ${props => props.theme.colors.primary};
-    animation: spin 1s ease-in-out infinite;
+    border-top: 2px solid ${props => props.theme.colors.primary};
+    animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     
     @keyframes spin {
       to { transform: rotate(360deg); }
@@ -78,127 +84,52 @@ const AnimationRoutes = () => {
   );
 }
 
+// --- DYNAMIC TITLES ---
+// --- DYNAMIC TITLES ---
+const PageTitleHandler = () => {
+  const location = useLocation();
+  useEffect(() => {
+    const path = location.pathname.split("/").filter(Boolean).pop();
+    const pageName = path ? path.charAt(0).toUpperCase() + path.slice(1) : "Home";
+    document.title = `${pageName} | Meet Beddy`;
+  }, [location]);
+  return null;
+};
+
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const ref = useRef(null);
 
   useEffect(() => {
-    // Show loading screen
-    setIsLoading(true);
-
-    const threeRef = ref.current;
-    if (!threeRef) return;
-
-    // THREE.js Scene Setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    camera.position.set(0, 0, 2); // Better initial position
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    ref.current.appendChild(renderer.domElement);
-
-    // Create Sphere
-    const geometry = new THREE.SphereGeometry(0.5, 64, 64);
-    const material = new THREE.MeshStandardMaterial({
-      metalness: 0.7,
-      roughness: 0.2,
-      color: new THREE.Color(0x292929),
-    });
-
-    const sphere = new THREE.Mesh(geometry, material);
-    scene.add(sphere);
-
-    // Lighting
-    const pointLight = new THREE.PointLight(0xffffff, 1);
-    pointLight.position.set(2, 3, 4);
-    scene.add(pointLight);
-
-    const redLight = new THREE.PointLight(0xff0000, 1);
-    redLight.position.set(-1.86, 1, -1.65);
-    scene.add(redLight);
-
-    const softLight = new THREE.PointLight(0xe1fff, 1);
-    softLight.position.set(2.13, 1, 0.65);
-    scene.add(softLight);
-
-    // Handle Window Resize
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    // Mouse Interaction Variables
-    let mouseX = 0;
-    let mouseY = 0;
-    let targetX = 0;
-    let targetY = 0;
-    const windowHalfX = window.innerWidth / 2;
-    const windowHalfY = window.innerHeight / 2;
-
-    const onMouseMove = (event) => {
-      mouseX = (event.clientX - windowHalfX) / 50; // Reduce sensitivity
-      mouseY = (event.clientY - windowHalfY) / 50;
-    };
-    document.addEventListener("mousemove", onMouseMove);
-
-    // Animation Loop
-    const clock = new THREE.Clock();
-    const animate = () => {
-      const elapsedTime = clock.getElapsedTime();
-
-      // Smoothly interpolate rotation
-      targetX += (mouseX - targetX) * 0.1;
-      targetY += (mouseY - targetY) * 0.1;
-
-      sphere.rotation.y = targetX; // Left/Right movement
-      sphere.rotation.x = targetY; // Up/Down movement
-      sphere.rotation.z = 0.5 * elapsedTime; // Continuous spin effect
-
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    };
-    animate();
-
-    // Hide loading quickly — no need for a long artificial delay
-    setTimeout(() => {
+    // Ensure loading screen shows for at least a moment to prevent flicker
+    const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 200);
+    }, 600);
 
-    // Cleanup Function
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      document.removeEventListener("mousemove", onMouseMove);
-      threeRef.removeChild(renderer.domElement);
-      renderer.dispose();
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   return (
     <Router>
+      <PageTitleHandler />
       <CursorGlow />
-      <LoadingScreen isLoading={isLoading}>
+      
+      <LoadingScreen $isLoading={isLoading}>
         <LoadingContent>
-          <h2>Loading Experience</h2>
+          <h2>Meet Beddy</h2>
           <div className="spinner"></div>
         </LoadingContent>
       </LoadingScreen>
 
-      <div ref={ref} className="App">
+      <div className="App">
+        <Suspense fallback={null}>
+          <Background />
+        </Suspense>
         <SideNav />
+        <MobileNav />
         <AnimationRoutes />
       </div>
     </Router>
   );
 }
 
-export default App;
+export default App;

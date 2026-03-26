@@ -3,49 +3,55 @@ import Styled from "styled-components";
 import { motion } from "framer-motion";
 
 const Styles = Styled(motion.div)`
-display:inline-flex;
-flex:wrap;
-width:100%;
-margin-top:10vh;
-justify-content: space-evenly
-border-bottom: 3px solid red;
-@media (max-width:768px){
-  align-content:center;
-  margin-top:0;
-}
-ul{
-  padding:0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 6vh;
   justify-content: space-evenly;
-}
-ul li{
-  display:inline-block;
-  width:auto;
-	margin: 3px;
-  padding: 0; 
-  justify-content: space-evenly;
-}
+  border-bottom: 3px solid #e04848;
 
-li button{
-	display: block;
-	list-style-type: none;
-  text-decoration: none;
-  background-color:transparent;
-  color: #e04848;
-  border: 0.1em solid #e04848;
-    padding:8px 16px;
-    text-transform:uppercase;
+  @media (max-width: 768px) {
+    align-content: center;
+    margin-top: 0;
+  }
+
+  ul {
+    padding: 0;
+    justify-content: space-evenly;
+  }
+
+  ul li {
+    display: inline-block;
+    width: auto;
+    margin: 3px;
+    padding: 0;
+    justify-content: space-evenly;
+  }
+
+  li button {
+    display: block;
+    list-style-type: none;
+    text-decoration: none;
+    background-color: transparent;
+    color: #e04848;
+    border: 0.1em solid #e04848;
+    padding: 8px 16px;
+    text-transform: uppercase;
     transition: all 0.15s;
-  :hover{
-     text-shadow: 0 0 2em rgba(255,255,255,1);
-     color: white;
-     border-color:#FFFFFF;
-    }
-:active{
- box-shadow:inset 0 0.6em 2em -0.3em rgba(0,0,0,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
-color:#FFFFFF;
-}
+    cursor: pointer;
 
-    
+    &:hover {
+      text-shadow: 0 0 2em rgba(255, 255, 255, 1);
+      color: white;
+      border-color: #ffffff;
+    }
+
+    &:active {
+      box-shadow: inset 0 0.6em 2em -0.3em rgba(0, 0, 0, 0.15),
+        inset 0 0 0em 0.05em rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+  }
 `;
 
 class SkillsCard extends Component {
@@ -55,40 +61,43 @@ class SkillsCard extends Component {
     descriptions: [
       {
         id: "html",
-        text: "some text about my hml skills",
+        text: "Strong command of semantic HTML5 — building accessible, well-structured markup that's both machine and human readable.",
       },
       {
         id: "css",
-        text: "some text about my css skills",
+        text: "Proficient in CSS3, Flexbox, Grid, animations, and responsive design. Experienced with styled-components and CSS Modules.",
       },
       {
         id: "javascript",
-        text: "some text about my javascript skills",
+        text: "4+ years building production applications in JavaScript — from vanilla DOM manipulation to complex async workflows.",
       },
-      { id: "react", text: "some text about my react skills", key: 3 },
       {
-        id: "git",
-        text: "some text about my  skills",
+        id: "react",
+        text: "Expert-level React developer. Hooks, Context API, Redux Toolkit, performance optimisation, and component design patterns.",
+      },
+      {
+        id: "angular",
+        text: "3 years building enterprise Angular applications — RxJS, reactive forms, Angular Material, lazy modules, and NgRx.",
+      },
+      {
+        id: "typescript",
+        text: "4 years of TypeScript across full-stack projects. Strict mode, generics, decorators, and interface-driven design.",
       },
       {
         id: "nodejs",
-        text: "some text about my node skills",
+        text: "3 years building RESTful APIs and microservices with Node.js, Express.js — auth, middleware, and scalable architecture.",
       },
       {
-        id: "wordpress",
-        text: "some text about my wordpress skills",
+        id: "nestjs",
+        text: "2 years building enterprise-grade NestJS APIs — dependency injection, guards, interceptors, TypeORM, and modular architecture.",
+      },
+      {
+        id: "mongodb",
+        text: "4 years designing MongoDB schemas, aggregation pipelines, and optimised queries using Mongoose for production apps.",
       },
       {
         id: "git",
-        text: "some text about my git skills",
-      },
-      {
-        id: "redux",
-        text: "some text about my git skills",
-      },
-      {
-        id: "bootstrap",
-        text: "some text about my bootstrap skills",
+        text: "Proficient with Git — branching strategies, pull requests, code reviews, and collaborative workflows on GitHub.",
       },
     ],
   };
@@ -99,6 +108,7 @@ class SkillsCard extends Component {
     this.handleShowDescription(id);
     this.setState({ isShown: "true" });
   };
+
   handleShowDescription = (id) => {
     const { descriptions } = this.state;
     let filteredDescription = descriptions.filter(
@@ -115,67 +125,81 @@ class SkillsCard extends Component {
         <Styles>
           <ul>
             <li>
-              <button id="html" href="#html" onClick={this.handleClick}>
-                html{" "}
+              <button id="html" onClick={this.handleClick}>
+                HTML5{" "}
                 <motion.i
                   className="fab fa-html5 fa-lg"
                   whileHover={{ scale: 1.5 }}
-                ></motion.i>
+                />
               </button>
             </li>
             <li>
               <button id="css" onClick={this.handleClick}>
-                css
+                CSS3{" "}
                 <motion.i
                   className="fab fa-css3-alt fa-lg"
                   whileHover={{ scale: 1.5 }}
-                ></motion.i>
+                />
               </button>
             </li>
             <li>
               <button id="javascript" onClick={this.handleClick}>
-                javascript
+                JavaScript{" "}
                 <motion.i
                   className="fab fa-js-square fa-lg"
                   whileHover={{ scale: 1.5 }}
-                ></motion.i>
+                />
               </button>
             </li>
             <li>
               <button id="react" onClick={this.handleClick}>
-                React
+                React{" "}
                 <motion.i
                   className="fab fa-react fa-lg"
                   whileHover={{ scale: 1.5 }}
-                ></motion.i>
+                />
+              </button>
+            </li>
+            <li>
+              <button id="angular" onClick={this.handleClick}>
+                Angular{" "}
+                <motion.i
+                  className="fab fa-angular fa-lg"
+                  whileHover={{ scale: 1.5 }}
+                />
+              </button>
+            </li>
+            <li>
+              <button id="typescript" onClick={this.handleClick}>
+                TypeScript
               </button>
             </li>
             <li>
               <button id="nodejs" onClick={this.handleClick}>
-                Node Js
+                Node.js{" "}
                 <motion.i
                   className="fab fa-node-js fa-lg"
                   whileHover={{ scale: 1.5 }}
-                ></motion.i>
+                />
               </button>
             </li>
             <li>
-              <button id="bootstrap" onClick={this.handleClick}>
-                Bootstrap
+              <button id="nestjs" onClick={this.handleClick}>
+                NestJS
               </button>
             </li>
             <li>
-              <button id="redux" onClick={this.handleClick}>
-                Redux
+              <button id="mongodb" onClick={this.handleClick}>
+                MongoDB
               </button>
             </li>
             <li>
               <button id="git" onClick={this.handleClick}>
-                git
+                Git{" "}
                 <motion.i
                   className="fab fa-github fa-lg"
                   whileHover={{ scale: 1.5 }}
-                ></motion.i>
+                />
               </button>
             </li>
           </ul>
@@ -183,14 +207,19 @@ class SkillsCard extends Component {
 
         <span
           style={{
-            fontSize: "1.3em",
+            fontSize: "1.1em",
             textAlign: "justify",
             overflow: "hidden",
             width: "100%",
-            margin: "0 12px 0",
+            margin: "12px 12px 0",
+            lineHeight: "1.6",
+            color: "rgba(255,255,255,0.75)",
+            display: "block",
           }}
         >
-          {/* {isShown && displayText ? <p>{displayText[0].text}</p> : null} */}
+          {isShown === "true" && displayText.length > 0
+            ? <p>{displayText[0].text}</p>
+            : null}
         </span>
       </motion.div>
     );

@@ -832,7 +832,7 @@ const AsteroidGame = () => {
       {phase === 'start' && (
         <Overlay>
           <GameTitle>ASTEROID FIELD</GameTitle>
-          <Sub>THREE.JS EXPERIENCE · OBED BEDDY</Sub>
+          <Sub>THREE.JS EXPERIENCE · MEET BEDDY</Sub>
 
           <ObjBox>
             <ObjTitle>MISSION OBJECTIVES</ObjTitle>

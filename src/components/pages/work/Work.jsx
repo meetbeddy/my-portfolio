@@ -41,15 +41,16 @@ const ProjectCard = styled(motion.div)`
   border-radius: ${props => props.theme.borders.radius.lg};
   overflow: hidden;
   box-shadow: ${props => props.theme.shadows.sm};
-  transition: all 0.3s ease;
+  transition: box-shadow 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
+  perspective: 1000px;
   
   &:hover {
-    box-shadow: ${props => props.theme.shadows.md};
-    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(224, 72, 72, 0.2);
+    z-index: 10;
   }
 `;
 
@@ -402,347 +403,169 @@ const TimelineDate = styled.div`
   gap: ${props => props.theme.spacing.xs};
 `;
 
-// Project data
+// Project data â€” real projects from CV
 const projects = [
   {
-    id: 'ecommerce',
-    title: 'E-commerce Platform',
-    description: 'A full-featured e-commerce platform with product management, cart functionality, and secure checkout process.',
-    shortDescription: 'Full-stack e-commerce solution with seamless user experience',
-    thumbnail: '/api/placeholder/500/300',
+    id: 'coop-platform',
+    title: 'Cooperative Society Platform',
+    description: 'A comprehensive platform for cooperative society management, enabling members to create accounts, perform cooperative tasks, request loans, view balances and transaction histories, and utilise a mini marketplace for item selection and checkout.',
+    shortDescription: 'Full-stack cooperative management system with marketplace and loan features',
+    thumbnail: '/C:/Users/meetb/.gemini/antigravity/brain/83cc10bd-6b12-4a4f-980d-6c79550b5786/coop_platform_screenshot_1774551457023.png',
     featured: true,
     status: 'completed',
     category: 'web',
-    technologies: ['React', 'Node.js', 'MongoDB', 'Stripe API', 'Redux'],
-    role: 'Lead Developer',
+    technologies: ['ReactJS', 'Redux Toolkit', 'ExpressJS', 'MongoDB'],
+    role: 'Full-Stack Developer',
     duration: '4 months',
     year: '2023',
-    demoLink: 'https://example.com/ecommerce',
-    githubLink: 'https://github.com/example/ecommerce',
-    carouselImages: [
-      '/api/placeholder/900/500',
-      '/api/placeholder/900/500',
-      '/api/placeholder/900/500'
-    ],
+    demoLink: null,
+    githubLink: 'https://github.com/meetbeddy',
+    carouselImages: ['/C:/Users/meetb/.gemini/antigravity/brain/83cc10bd-6b12-4a4f-980d-6c79550b5786/coop_platform_screenshot_1774551457023.png'],
     challenges: [
-      'Implementing real-time inventory updates across multiple users',
-      'Optimizing complex product filtering and search',
-      'Building a secure and compliant payment processing flow'
+      'Designing a secure multi-role auth system for members and administrators',
+      'Building real-time balance and transaction tracking across accounts',
+      'Integrating a functional marketplace within the cooperative context'
     ],
     solutions: [
-      'Used WebSocket for real-time data synchronization',
-      'Implemented server-side filtering with efficient indexing',
-      'Integrated Stripe with robust error handling and security measures'
+      'JWT-based authentication with role-based access control',
+      'Efficient MongoDB schemas with proper indexing for transactional data',
+      'Shopping cart and checkout flow integrated with cooperative account system'
     ],
-    testimonial: {
-      quote: "This platform transformed our online business with its intuitive design and robust features.",
-      author: "Client Name, CEO"
-    },
     keyFeatures: [
-      'Advanced product filtering and search',
-      'Real-time inventory management',
-      'Secure payment processing',
-      'User account management with order history',
-      'Admin dashboard with analytics'
+      'Secure user authentication and authorisation',
+      'Loan request and approval workflow',
+      'Balance inquiry and transaction history',
+      'Mini marketplace with cart and checkout',
+      'Redux Toolkit for efficient state management',
+      'Responsive design across all devices'
     ]
   },
   {
-    id: 'cms',
-    title: 'Content Management System',
-    description: 'A custom CMS tailored for media companies to manage articles, multimedia content, and user subscriptions.',
-    shortDescription: 'Specialized CMS for digital media companies',
-    thumbnail: '/api/placeholder/500/300',
-    featured: false,
+    id: 'ican-election',
+    title: 'ICAN Election System',
+    description: 'A secure election platform for an ICAN body, enabling authenticated members to cast votes with real-time results, audit logs, election management, and user management. Demo available on request.',
+    shortDescription: 'Secure real-time election system with admin panel and audit trails',
+    thumbnail: '/C:/Users/meetb/.gemini/antigravity/brain/83cc10bd-6b12-4a4f-980d-6c79550b5786/ican_election_screenshot_1774551476879.png',
+    featured: true,
     status: 'completed',
     category: 'web',
-    technologies: ['React', 'GraphQL', 'PostgreSQL', 'AWS', 'TypeScript'],
-    role: 'Frontend Lead',
+    technologies: ['React', 'TypeScript', 'Redux Toolkit', 'ExpressJS', 'MongoDB'],
+    role: 'Full-Stack Developer',
+    duration: '3 months',
+    year: '2023',
+    demoLink: null,
+    githubLink: 'https://github.com/meetbeddy',
+    carouselImages: ['/C:/Users/meetb/.gemini/antigravity/brain/83cc10bd-6b12-4a4f-980d-6c79550b5786/ican_election_screenshot_1774551476879.png'],
+    challenges: [
+      'Guaranteeing election integrity and preventing duplicate votes',
+      'Displaying real-time results without compromising vote privacy',
+      'Building a comprehensive audit trail for regulatory compliance'
+    ],
+    solutions: [
+      'Robust authentication with one-vote-per-member enforcement',
+      'WebSocket-based real-time updates with aggregated result display',
+      'Full audit logging system tracking every election-related action'
+    ],
+    keyFeatures: [
+      'Authenticated member voting system',
+      'Real-time election results display',
+      'Comprehensive audit log system',
+      'Admin panel for election management',
+      'User management and account controls',
+      'TypeScript throughout for type safety'
+    ]
+  },
+  {
+    id: 'fenix-vms',
+    title: 'FENIX VMS',
+    description: 'A multi-tenant vehicle license registration and renewal system, streamlining vehicle licensing for authorities and owners in Nigeria. Supports registration, renewal, change of ownership, revalidation, and direct levy. Demo available on request.',
+    shortDescription: 'Multi-tenant vehicle licensing management system for Nigerian authorities',
+    thumbnail: '/C:/Users/meetb/.gemini/antigravity/brain/83cc10bd-6b12-4a4f-980d-6c79550b5786/fenix_vms_screenshot_1774551496424.png',
+    featured: true,
+    status: 'completed',
+    category: 'web',
+    technologies: ['Angular', 'NestJS'],
+    role: 'Full-Stack Developer',
     duration: '6 months',
-    year: '2022',
-    demoLink: 'https://example.com/cms',
-    githubLink: 'https://github.com/example/cms',
-    carouselImages: [
-      '/api/placeholder/900/500',
-      '/api/placeholder/900/500'
-    ],
-    challenges: [
-      'Creating an intuitive editor for non-technical content creators',
-      'Handling complex content relationships and permissions',
-      'Ensuring fast loading times for media-heavy content'
-    ],
-    solutions: [
-      'Built a customizable WYSIWYG editor with markdown support',
-      'Implemented a flexible role-based access control system',
-      'Utilized AWS CloudFront CDN with optimized asset processing'
-    ],
-    keyFeatures: [
-      'Rich text editor with multimedia support',
-      'Content scheduling and workflow management',
-      'Custom field types and templates',
-      'Analytics dashboard',
-      'Multi-user collaboration tools'
-    ]
-  },
-  {
-    id: 'user-api',
-    title: 'User Management API',
-    description: 'A comprehensive API for user authentication, authorization, and profile management with extensive documentation.',
-    shortDescription: 'Robust user authentication and management system',
-    thumbnail: '/api/placeholder/500/300',
-    featured: false,
-    status: 'completed',
-    category: 'backend',
-    technologies: ['Node.js', 'Express', 'JWT', 'MongoDB', 'Swagger'],
-    role: 'Backend Developer',
-    duration: '3 months',
-    year: '2022',
-    demoLink: null,
-    githubLink: 'https://github.com/example/user-api',
-    carouselImages: [
-      '/api/placeholder/900/500'
-    ],
-    challenges: [
-      'Implementing secure authentication with multiple providers',
-      'Designing a scalable and flexible permission system',
-      'Creating comprehensive yet maintainable documentation'
-    ],
-    solutions: [
-      'Used OAuth 2.0 with JWT for secure authentication flow',
-      'Designed hierarchical role-based access control',
-      'Generated interactive API documentation with Swagger'
-    ],
-    keyFeatures: [
-      'Multi-factor authentication',
-      'Role-based access control',
-      'Social login integration',
-      'Password recovery flows',
-      'Rate limiting and security features'
-    ]
-  },
-  {
-    id: 'payment',
-    title: 'Payment Processing Service',
-    description: 'A microservice handling payment processing, subscriptions, and financial reporting for SaaS applications.',
-    shortDescription: 'Secure payment processing microservice',
-    thumbnail: '/api/placeholder/500/300',
-    featured: false,
-    status: 'completed',
-    category: 'backend',
-    technologies: ['Node.js', 'NestJS', 'PostgreSQL', 'RabbitMQ', 'Stripe API'],
-    role: 'Full Stack Developer',
-    duration: '4 months',
-    year: '2023',
-    demoLink: null,
-    githubLink: 'https://github.com/example/payment-service',
-    carouselImages: [
-      '/api/placeholder/900/500'
-    ],
-    challenges: [
-      'Ensuring payment security and PCI compliance',
-      'Handling payment failures and retry mechanisms',
-      'Building comprehensive financial reporting'
-    ],
-    solutions: [
-      'Implemented tokenization and encryption for sensitive data',
-      'Created a robust state machine for payment lifecycle',
-      'Designed flexible reporting system with data export options'
-    ],
-    keyFeatures: [
-      'Multiple payment method support',
-      'Subscription management',
-      'Automatic invoicing',
-      'Financial reporting',
-      'Webhook integrations'
-    ]
-  },
-  {
-    id: 'content-api',
-    title: 'Content Delivery API',
-    description: 'A high-performance API for delivering content across multiple platforms with caching and CDN integration.',
-    shortDescription: 'Scalable content delivery for multi-platform applications',
-    thumbnail: '/api/placeholder/500/300',
-    featured: false,
-    status: 'in-progress',
-    category: 'backend',
-    technologies: ['NestJS', 'TypeScript', 'Redis', 'AWS', 'Docker'],
-    role: 'Backend Developer',
-    duration: 'Ongoing',
     year: '2024',
     demoLink: null,
-    githubLink: 'https://github.com/example/content-api',
-    carouselImages: [
-      '/api/placeholder/900/500'
-    ],
+    githubLink: 'https://github.com/meetbeddy',
+    carouselImages: ['/C:/Users/meetb/.gemini/antigravity/brain/83cc10bd-6b12-4a4f-980d-6c79550b5786/fenix_vms_screenshot_1774551496424.png'],
     challenges: [
-      'Optimizing content delivery for different devices and connections',
-      'Implementing efficient caching strategies',
-      'Ensuring high availability under varying loads'
+      'Designing a scalable multi-tenant architecture for multiple licensing authorities',
+      'Handling complex ownership transfer and revalidation workflows',
+      'Ensuring data security and compliance for a government-grade system'
     ],
     solutions: [
-      'Created dynamic content transformation pipelines',
-      'Implemented multi-level caching with invalidation strategies',
-      'Designed auto-scaling infrastructure with containerization'
+      'Tenant isolation with shared schema and row-level access control',
+      'State-machine-based workflow engine for ownership and registration processes',
+      'NestJS guards, interceptors, and validation pipes for robust security'
     ],
     keyFeatures: [
-      'Content transformation and optimization',
-      'Multi-region deployment',
-      'Intelligent caching',
-      'Real-time analytics',
-      'Bandwidth optimization'
-    ]
-  },
-  {
-    id: 'design-system',
-    title: 'Design System',
-    description: 'A comprehensive design system with reusable components, documentation, and integration with popular frameworks.',
-    shortDescription: 'Unified design system for consistent user experiences',
-    thumbnail: '/api/placeholder/500/300',
-    featured: true,
-    status: 'completed',
-    category: 'ui',
-    technologies: ['React', 'Storybook', 'Styled Components', 'TypeScript', 'Figma'],
-    role: 'UI Developer',
-    duration: '5 months',
-    year: '2023',
-    demoLink: 'https://example.com/design-system',
-    githubLink: 'https://github.com/example/design-system',
-    carouselImages: [
-      '/api/placeholder/900/500',
-      '/api/placeholder/900/500',
-      '/api/placeholder/900/500'
-    ],
-    challenges: [
-      'Creating components flexible enough for diverse applications',
-      'Maintaining consistency across different platforms',
-      'Balancing customization options with design coherence'
-    ],
-    solutions: [
-      'Built a theme-based architecture with robust component APIs',
-      'Created unified design tokens and styling principles',
-      'Implemented comprehensive documentation and usage examples'
-    ],
-    keyFeatures: [
-      'Comprehensive component library',
-      'Theme customization',
-      'Accessibility compliance',
-      'Interactive documentation',
-      'Design token management'
-    ]
-  },
-  {
-    id: 'search-opt',
-    title: 'E-commerce Search Optimization',
-    description: 'Enhanced search functionality for e-commerce platforms with advanced filtering, product recommendations, and analytics.',
-    shortDescription: 'Intelligent search system for improved product discovery',
-    thumbnail: '/api/placeholder/500/300',
-    featured: false,
-    status: 'completed',
-    category: 'other',
-    technologies: ['Elasticsearch', 'Node.js', 'React', 'Analytics API', 'Machine Learning'],
-    role: 'Search Specialist',
-    duration: '3 months',
-    year: '2022',
-    demoLink: null,
-    githubLink: 'https://github.com/example/search-optimization',
-    carouselImages: [
-      '/api/placeholder/900/500'
-    ],
-    challenges: [
-      'Improving search relevance for diverse product catalogs',
-      'Handling typos and language variations effectively',
-      'Balancing performance with feature richness'
-    ],
-    solutions: [
-      'Implemented learning-to-rank algorithms with user feedback',
-      'Created fuzzy matching with language-specific configurations',
-      'Optimized index structures and query patterns'
-    ],
-    keyFeatures: [
-      'Intelligent typo correction',
-      'Personalized search results',
-      'Advanced filtering capabilities',
-      'Search analytics dashboard',
-      'Automated relevance tuning'
-    ]
-  },
-  {
-    id: 'realtime',
-    title: 'Real-time Data Processing',
-    description: 'A system for processing and visualizing real-time data from IoT devices with analytics and alerting capabilities.',
-    shortDescription: 'IoT data processing and visualization platform',
-    thumbnail: '/api/placeholder/500/300',
-    featured: false,
-    status: 'concept',
-    category: 'other',
-    technologies: ['Kafka', 'Node.js', 'WebSockets', 'Time-Series DB', 'D3.js'],
-    role: 'System Architect',
-    duration: 'Concept',
-    year: '2024',
-    demoLink: null,
-    githubLink: null,
-    carouselImages: [
-      '/api/placeholder/900/500'
-    ],
-    challenges: [
-      'Processing high-volume data streams in real-time',
-      'Creating meaningful visualizations for complex data',
-      'Designing an efficient time-series storage solution'
-    ],
-    solutions: [
-      'Implemented stream processing with windowing techniques',
-      'Created configurable visualization components',
-      'Optimized data storage with downsampling strategies'
-    ],
-    keyFeatures: [
-      'Real-time data ingestion',
-      'Interactive dashboards',
-      'Anomaly detection',
-      'Historical data analysis',
-      'Configurable alerts'
+      'Multi-tenant architecture for licensing authorities',
+      'Vehicle registration and renewal workflows',
+      'Change of ownership processing',
+      'Revalidation and direct levy functionality',
+      'Angular frontend with reactive forms and RxJS',
+      'NestJS scalable and maintainable backend'
     ]
   }
+
 ];
 
-// Data for work experience (for timeline view)
+// Work experience â€” real roles from CV
 const workExperience = [
   {
     id: 'job1',
-    company: 'TechCorp Inc.',
-    position: 'Senior Frontend Developer',
-    period: 'Jan 2022 - Present',
-    description: 'Leading frontend development for enterprise SaaS products, implementing modern React architectures and improving performance.',
+    company: 'Compumetrics Solutions Ltd',
+    position: 'Full-Stack Developer',
+    period: 'Dec 2022 â€“ Present',
+    description: 'Collaborating with a team of software developers to conceptualise and execute applications using React, Angular, and TypeScript for enterprise clients.',
     achievements: [
-      'Redesigned core product UI resulting in 30% improvement in user engagement',
-      'Led migration from legacy codebase to modern React architecture',
-      'Established frontend testing practices increasing code coverage by 45%'
+      'Achieved a 20% reduction in page load times through asset optimisation and lazy loading',
+      'Redesigned user role system from role-based to granular permission-based, improving security at scale',
+      'Contributed to code reviews and best practice adherence, enhancing overall code quality'
     ],
-    technologies: ['React', 'TypeScript', 'Redux', 'Jest', 'Webpack']
+    technologies: ['React', 'Angular', 'TypeScript', 'Node.js', 'Redux']
   },
   {
     id: 'job2',
-    company: 'WebSolutions Ltd.',
-    position: 'Full Stack Developer',
-    period: 'Mar 2020 - Dec 2021',
-    description: 'Developed comprehensive web applications for clients across e-commerce, fintech, and media industries.',
+    company: 'Hero Technology Ltd (EagleApp)',
+    position: 'Full-Stack Developer',
+    period: 'Aug 2022 â€“ Dec 2022',
+    description: 'Led an Agile team in designing and implementing applications in React, Node.js, and Express with a Microservices architecture under the Scrum framework.',
     achievements: [
-      'Built custom e-commerce platform supporting $2M in annual transactions',
-      'Implemented CI/CD pipeline reducing deployment time by 70%',
-      'Optimized database queries resulting in 50% faster page loads'
+      'Led microservices-based application design and implementation',
+      'Mentored junior developers in software best practices',
+      'Participated in code reviews, maintaining high team code quality'
     ],
-    technologies: ['React', 'Node.js', 'MongoDB', 'Docker', 'AWS']
+    technologies: ['React', 'Node.js', 'Express.js', 'Microservices', 'Scrum']
   },
   {
     id: 'job3',
-    company: 'StartupVision',
+    company: '3reen Ltd',
     position: 'Frontend Developer',
-    period: 'Jun 2018 - Feb 2020',
-    description: 'Created interactive UIs for early-stage startups, focusing on MVPs and rapid iteration based on user feedback.',
+    period: 'Nov 2020 â€“ Mar 2021',
+    description: 'Collaborated with designers and developers to build an e-commerce startup store with complex layouts and state management.',
     achievements: [
-      'Developed 5+ MVPs for funded startups',
-      'Created reusable component library used across multiple projects',
-      'Implemented analytics system leading to data-driven UX improvements'
+      'Built complex React layouts with styled-components for an e-commerce startup',
+      'Engineered state management with Redux and React hooks',
+      'Converted Figma prototypes directly into production-ready code'
     ],
-    technologies: ['JavaScript', 'React', 'CSS/SASS', 'Firebase', 'Analytics APIs']
+    technologies: ['React', 'styled-components', 'Redux', 'Figma', 'CSS3']
+  },
+  {
+    id: 'job4',
+    company: 'Freelance',
+    position: 'Web Developer',
+    period: 'Aug 2019',
+    description: 'Worked independently and in teams to build and optimise websites for clients, improving performance and collaborating with designers and stakeholders.',
+    achievements: [
+      'Optimised web performance, decreasing page load times for client sites',
+      'Developed and maintained multiple client websites',
+      'Collaborated with designers, programmers, and clients directly'
+    ],
+    technologies: ['JavaScript', 'HTML5', 'CSS3', 'React', 'Node.js']
   }
 ];
 
@@ -775,7 +598,7 @@ const ProjectDetails = ({ project, onClose }) => {
       >
         <ModalHeader>
           <h2>{project.title}</h2>
-          <ModalCloseButton onClick={onClose}>×</ModalCloseButton>
+          <ModalCloseButton onClick={onClose}>Ã—</ModalCloseButton>
         </ModalHeader>
 
         <ModalBody>
@@ -898,7 +721,7 @@ const ProjectDetails = ({ project, onClose }) => {
               fontStyle: 'italic'
             }}>
               <p style={{ fontSize: '1.1rem', marginBottom: '12px' }}>"{project.testimonial.quote}"</p>
-              <p style={{ textAlign: 'right', fontWeight: '500' }}>— {project.testimonial.author}</p>
+              <p style={{ textAlign: 'right', fontWeight: '500' }}>â€” {project.testimonial.author}</p>
             </div>
           )}
         </ModalBody>
@@ -1040,6 +863,13 @@ const Projects = () => {
                   key={project.id}
                   onClick={() => handleProjectClick(project)}
                   variants={cardVariants}
+                  whileHover={{ 
+                    scale: 1.02, 
+                    rotateY: 8, 
+                    rotateX: -5,
+                    transition: { duration: 0.3 }
+                  }}
+                  className="interactive"
                 >
                   <ProjectImageContainer>
                     <ProjectImage style={{ backgroundImage: `url(${project.thumbnail})` }} />

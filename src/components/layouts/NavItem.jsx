@@ -20,7 +20,6 @@ const IconContainer = styled(motion.div)`
   justify-content: center;
   cursor: pointer;
   position: relative;
-  /* $active uses transient prop — never forwarded to DOM */
   background: ${p => p.$active
     ? 'linear-gradient(135deg, #e04848 0%, #b52020 100%)'
     : 'rgba(255, 255, 255, 0.06)'};
@@ -42,17 +41,8 @@ const IconContainer = styled(motion.div)`
   &:hover i {
     color: #fff;
   }
-
-  @media (max-width: 768px) {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-
-    i { font-size: 1rem; }
-  }
 `;
 
-/* Active dot indicator (desktop only — little glowing dot below icon) */
 const ActiveDot = styled(motion.span)`
   position: absolute;
   bottom: -10px;
@@ -63,10 +53,6 @@ const ActiveDot = styled(motion.span)`
   border-radius: 50%;
   background: #e04848;
   box-shadow: 0 0 6px rgba(224, 72, 72, 0.8);
-
-  @media (max-width: 768px) {
-    display: none;
-  }
 `;
 
 const NavLabel = styled(motion.div)`
@@ -86,18 +72,6 @@ const NavLabel = styled(motion.div)`
   border-left: 2px solid #e04848;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   z-index: 300;
-
-  /* Mobile: label appears above the icon */
-  @media (max-width: 768px) {
-    left: 50%;
-    top: auto;
-    bottom: calc(100% + 10px);
-    transform: translateX(-50%);
-    border-left: none;
-    border-bottom: 2px solid #e04848;
-    font-size: 0.7rem;
-    padding: 4px 10px;
-  }
 `;
 
 const labelVariantsDesktop = {
@@ -106,19 +80,13 @@ const labelVariantsDesktop = {
   exit:    { opacity: 0, x: -6, transition: { duration: 0.1 } },
 };
 
-const labelVariantsMobile = {
-  hidden:  { opacity: 0, y: 6 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.15, ease: "easeOut" } },
-  exit:    { opacity: 0, y: 4, transition: { duration: 0.1 } },
-};
-
 const dotVariants = {
   hidden:  { scale: 0, opacity: 0 },
   visible: { scale: 1, opacity: 1, transition: { duration: 0.2, ease: "backOut" } },
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
-const NavItem = ({ active, icon, path, name, variants, isMobile }) => {
+
+const NavItem = ({ active, icon, path, name, variants }) => {
   const [showLabel, setShowLabel] = useState(false);
 
   return (
@@ -129,21 +97,17 @@ const NavItem = ({ active, icon, path, name, variants, isMobile }) => {
         style={{ display: "block", textDecoration: "none" }}
         onMouseEnter={() => setShowLabel(true)}
         onMouseLeave={() => setShowLabel(false)}
-        onFocus={()  => setShowLabel(true)}
-        onBlur={()   => setShowLabel(false)}
       >
         <IconContainer
           $active={active}
-          whileHover={{ scale: 1.1, boxShadow: "0 6px 20px rgba(224,72,72,0.4)" }}
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.9 }}
         >
           <i className={icon} />
         </IconContainer>
       </Link>
 
-      {/* Glowing dot below active icon (desktop only) */}
       <AnimatePresence>
-        {active && !isMobile && (
+        {active && (
           <ActiveDot
             key="dot"
             variants={dotVariants}
@@ -154,11 +118,10 @@ const NavItem = ({ active, icon, path, name, variants, isMobile }) => {
         )}
       </AnimatePresence>
 
-      {/* Hover label */}
       <AnimatePresence>
         {showLabel && (
           <NavLabel
-            variants={isMobile ? labelVariantsMobile : labelVariantsDesktop}
+            variants={labelVariantsDesktop}
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -170,5 +133,6 @@ const NavItem = ({ active, icon, path, name, variants, isMobile }) => {
     </StyledNavItem>
   );
 };
+
 
 export default NavItem;

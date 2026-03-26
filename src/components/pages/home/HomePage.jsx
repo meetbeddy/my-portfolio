@@ -241,9 +241,20 @@ const HomePage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2.5, duration: 0.8 }}
+            style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}
           >
             <Link to="/about" style={{ textDecoration: 'none' }}>
               <StyledButton>Learn More</StyledButton>
+            </Link>
+            <Link to="/play" style={{ textDecoration: 'none' }}>
+              <StyledButton style={{ 
+                background: 'rgba(255, 255, 255, 0.05)', 
+                border: '1px solid rgba(224, 72, 72, 0.4)',
+                backdropFilter: 'blur(10px)'
+              }}>
+                <i className="fa fa-gamepad" style={{ marginRight: '8px' }} />
+                Play Game
+              </StyledButton>
             </Link>
           </ButtonContainer>
         </GlassCard>
