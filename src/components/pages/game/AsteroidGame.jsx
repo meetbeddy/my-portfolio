@@ -323,6 +323,29 @@ const LaunchBtn = styled.button`
 `;
 const HighScore = styled.div`font-size:.9rem;color:rgba(255,255,255,.5);letter-spacing:2px;`;
 const FinalScore = styled.div`font-size:1.4rem;color:#e04848;letter-spacing:3px;`;
+const SectorFlash = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  background: ${p => p.$color};
+  opacity: ${p => p.$opacity};
+  transition: opacity 0.6s ease;
+  mix-blend-mode: screen;
+`;
+
+const SectorVignette = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+  background: radial-gradient(ellipse at center,
+    transparent 30%,
+    ${p => p.$color}33 70%,
+    ${p => p.$color}88 100%
+  );
+  transition: background 2s ease;
+`;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MAX_HP = 100;
@@ -337,6 +360,14 @@ const PUPS = {
   repair: { color: 0x80ff80, hex: '#80ff80', label: 'REPAIR KIT', dur: 0 },
 };
 
+const SECTOR_PALETTES = [
+  { star: 0xffffff, ambient: 0x223344, fog: '#0a0a1a', accent: '#ffffff' }, // Sector 1 — white/blue
+  { star: 0x00ffff, ambient: 0x003344, fog: '#001a1a', accent: '#00ffff' }, // Sector 2 — cyan
+  { star: 0xff00ff, ambient: 0x330033, fog: '#1a001a', accent: '#ff00ff' }, // Sector 3 — magenta
+  { star: 0xffff00, ambient: 0x333300, fog: '#1a1a00', accent: '#ffff00' }, // Sector 4 — yellow
+  { star: 0x00ff88, ambient: 0x003322, fog: '#001a0e', accent: '#00ff88' }, // Sector 5 — green
+  { star: 0xff4444, ambient: 0x330011, fog: '#1a0005', accent: '#ff4444' }, // Sector 6 — red
+];
 // ─── Asteroid types — now with damage ────────────────────────────────────────
 // damage: how many HP the player loses on collision
 // hitsToDie: how many bullet hits to destroy
@@ -507,6 +538,8 @@ const AsteroidGame = () => {
   const [bossMaxHP, setBossMaxHP] = useState(1);
   const [bossWarningVisible, setBossWarningVisible] = useState(false);
   const [dangerZoneBonus, setDangerZoneBonus] = useState(false);
+  const [sectorFlash, setSectorFlash] = useState({ color: '#ffffff', opacity: 0 });
+  const [sectorVignette, setSectorVignette] = useState('#0a0a1a');
 
   const finalScore = useRef(0);
   const highScore = useRef(Number(sessionStorage.getItem('hs') || 0));
@@ -591,6 +624,7 @@ const AsteroidGame = () => {
     const aspect = mount.clientWidth / mount.clientHeight;
     const cam = new THREE.PerspectiveCamera(60, aspect, 0.1, 100);
     cam.position.set(0, 0, 15);
+    scene.fog = new THREE.FogExp2('#0a0a1a', 0.006);
 
     const halfH = Math.tan(THREE.MathUtils.degToRad(30)) * 15;
     const halfW = halfH * aspect;
@@ -1159,11 +1193,18 @@ const AsteroidGame = () => {
           setTimeout(() => setSectorClearAnim(null), 600);
           setPhase('warp');
           setTimeout(() => setPhase('playing'), 1800);
-          const sectorColors = [0xffffff, 0x00ffff, 0xff00ff, 0xffff00, 0x00ff00, 0xff4444];
-          starField.material.color.setHex(sectorColors[(newSector - 1) % sectorColors.length]);
-          ambientLight.color.setHex(sectorColors[(newSector - 1) % sectorColors.length]);
-          ambientLight.intensity = 0.4;
-          setTimeout(() => { ambientLight.intensity = 1.2; }, 1000);
+          const palette = SECTOR_PALETTES[(newSector - 1) % SECTOR_PALETTES.length];
+          setSectorFlash({ color: palette.accent, opacity: 0.7 });
+          setTimeout(() => setSectorFlash({ color: palette.accent, opacity: 0 }), 400);
+          setSectorVignette(palette.accent);
+          starField.material.color.setHex(palette.star);
+          ambientLight.color.setHex(palette.ambient);
+          ambientLight.intensity = 0.2; // dim during warp
+          setTimeout(() => { ambientLight.intensity = 1.2; }, 1800);
+
+          // Add scene fog
+          scene.fog = new THREE.FogExp2(palette.fog, 0.012);
+          setTimeout(() => { scene.fog = new THREE.FogExp2(palette.fog, 0.006); }, 1800);
           return;
         }
       }
@@ -1545,6 +1586,9 @@ const AsteroidGame = () => {
 
       <BackBtn to="/">← PORTFOLIO</BackBtn>
       <CanvasMount ref={mountRef} />
+
+      <SectorVignette $color={sectorVignette} />
+      <SectorFlash $color={sectorFlash.color} $opacity={sectorFlash.opacity} />
 
       {/* Danger zone overlay — shown during gameplay */}
       {phase === 'playing' && <DangerZone />}
