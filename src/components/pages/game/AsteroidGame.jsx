@@ -141,13 +141,32 @@ const PUPS = {
   shield: { color: 0x4880e0, hex: '#4880e0', label: 'SHIELD', dur: 10000 },
   rapid: { color: 0x48e080, hex: '#48e080', label: 'RAPID FIRE', dur: 8000 },
   bigbullet: { color: 0xffb74d, hex: '#ffb74d', label: 'BIG SHOT', dur: 8000 },
+  spread: { color: 0xc048e0, hex: '#c048e0', label: 'SPREAD', dur: 8000 },
+  laser: { color: 0x48e0e0, hex: '#48e0e0', label: 'LASER', dur: 6000 },
+  bomb: { color: 0xe02048, hex: '#e02048', label: 'SMART BOMB', dur: 0 },
 };
 
 // ✅ FIX 1: Correct colour construction — use THREE.Color properly, not raw floats
+const ASTEROID_TYPES = [
+  // Rocky (common) — grey, matte
+  { weight: 5, matProps: (size) => ({ color: new THREE.Color('#595968'), roughness: 0.92, metalness: 0.05 }), emissive: null, ptsMult: 1 },
+  // Metallic (uncommon) — dark gold sheen
+  { weight: 3, matProps: (size) => ({ color: new THREE.Color('#8a7a50'), roughness: 0.35, metalness: 0.88 }), emissive: null, ptsMult: 1 },
+  // Crystal (rare) — glowing blue-white shard
+  { weight: 2, matProps: (size) => ({ color: new THREE.Color('#9aaeff'), roughness: 0.15, metalness: 0.6 }), emissive: new THREE.Color('#3355bb'), ptsMult: 2 },
+];
+
+const pickAsteroidType = () => {
+  const total = ASTEROID_TYPES.reduce((s, t) => s + t.weight, 0);
+  let r = Math.random() * total;
+  for (const t of ASTEROID_TYPES) { r -= t.weight; if (r <= 0) return t; }
+  return ASTEROID_TYPES[0];
+};
+
 const asteroidConfig = (size) => {
-  if (size > 0.85) return { pts: 5, color: new THREE.Color('#595968') }; // large — dark grey
-  if (size > 0.52) return { pts: 10, color: new THREE.Color('#8888a3') }; // medium
-  return { pts: 20, color: new THREE.Color('#ccd0f5') }; // small — bright
+  if (size > 0.85) return { pts: 5 };
+  if (size > 0.52) return { pts: 10 };
+  return { pts: 20 };
 };
 
 // ─── Sound Hooks (Web Audio API) ─────────────────────────────────────────────
@@ -181,7 +200,44 @@ const SFX = {
   graze: ctx => playTone(ctx, { freq: 1200, type: 'sine', gain: 0.12, dur: 0.07, decay: 0.06 }),
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Synthwave Audio ──────────────────────────────────────────────────────────
+const startSynthwave = (ctx) => {
+  if (!ctx || ctx.state === 'suspended') return null;
+  try {
+    // Bassline pattern (root, 5th, root, octave)
+    const notes = [55, 82.5, 55, 110, 55, 82.5, 110, 82.5]; // A1, E2, A1, A2
+    let step = 0;
+    const bpm = 128;
+    const stepDur = (60 / bpm) / 2; // 8th notes
+
+    const playNote = () => {
+      if (!ctx || ctx.state === 'closed') return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 800;
+
+      osc.type = 'sawtooth';
+      osc.frequency.value = notes[step % notes.length];
+      const t = ctx.currentTime;
+      gain.gain.setValueAtTime(0.06, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + stepDur * 0.85);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + stepDur);
+      step++;
+    };
+
+    playNote();
+    const interval = setInterval(playNote, stepDur * 1000);
+    return interval;
+  } catch { return null; }
+};
+
 const AsteroidGame = () => {
   const mountRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -196,10 +252,15 @@ const AsteroidGame = () => {
   const [popups, setPopups] = useState([]);
   const [shaking, setShaking] = useState(false);
   const [grazeMsg, setGrazeMsg] = useState(null);
+  const [paused, setPaused] = useState(false);
+  const [gameStats, setGameStats] = useState({ grazesTotal: 0, asteroidsDestroyed: 0, timeSurvived: 0, maxCombo: 0 });
 
   const finalScore = useRef(0);
   const highScore = useRef(Number(sessionStorage.getItem('hs') || 0));
   const popupId = useRef(0);
+  const gameStartTime = useRef(0);
+  const statsRef = useRef({ grazesTotal: 0, asteroidsDestroyed: 0, maxCombo: 0 });
+  const synthIntervalRef = useRef(null);
 
   // ── Audio unlock on first interaction ───────────────────────────────────
   const unlockAudio = useCallback(() => {
@@ -217,6 +278,31 @@ const AsteroidGame = () => {
     setTimeout(() => setPopups(ps => ps.filter(p => p.id !== id)), 950);
   };
 
+  const togglePause = useCallback(() => {
+    setPaused(prev => !prev);
+  }, []);
+
+  const startGame = (withWarp = false) => {
+    unlockAudio();
+    finalScore.current = 0;
+    gameStartTime.current = Date.now();
+    statsRef.current = { grazesTotal: 0, asteroidsDestroyed: 0, maxCombo: 0 };
+    setScore(0); setLives(3); setActivePUps({});
+    setCombo(0); setPopups([]); setShaking(false); setGrazeMsg(null); setPaused(false);
+    setGameStats({ grazesTotal: 0, asteroidsDestroyed: 0, timeSurvived: 0, maxCombo: 0 });
+    // Start synthwave loop after a short delay (audio context needs to unlock first)
+    if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
+    setTimeout(() => {
+      synthIntervalRef.current = startSynthwave(audioCtxRef.current);
+    }, 500);
+    if (withWarp) {
+      setPhase('warp');
+      setTimeout(() => setPhase('playing'), 1800);
+    } else {
+      setPhase('playing');
+    }
+  };
+
   // ✅ FIX 4: Screen shake — toggle class, re-trigger via key
   const triggerShake = useCallback(() => {
     setShaking(false);
@@ -231,17 +317,10 @@ const AsteroidGame = () => {
     setTimeout(() => setGrazeMsg(g => g?.id === id ? null : g), 820);
   }, []);
 
-  const startGame = () => {
-    unlockAudio();
-    finalScore.current = 0;
-    setScore(0); setLives(3); setActivePUps({});
-    setCombo(0); setPopups([]); setShaking(false); setGrazeMsg(null);
-    setPhase('playing');
-  };
 
   // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== 'playing') return;
+    if (phase !== 'playing' && phase !== 'warp') return;
     const mount = mountRef.current;
     if (!mount) return;
 
@@ -336,15 +415,17 @@ const AsteroidGame = () => {
     // ── Game State ────────────────────────────────────────────────────────
     const gs = {
       running: true, livesLeft: 3,
-      bullets: [], asteroids: [], particles: [], powerups: [],
+      bullets: [], asteroids: [], particles: [], powerups: [], ufos: [],
       keys: {}, mouse: { x: 0, y: -B.y + 2 }, touchActive: false,
-      lastShot: 0, lastSpawn: 0, lastPowerUp: 0,
+      lastShot: 0, lastSpawn: 0, lastPowerUp: 0, lastUfoSpawn: 0,
       // ✅ FIX 3: Dynamic difficulty — wave-based breathing pattern
       waveTimer: 0, wavePhase: 0, // 0=normal 1=surge 2=calm
       spawnInterval: 2200, diffMult: 1,
       shield: false, shieldExpires: 0,
       rapid: false, rapidExpires: 0,
       bigbullet: false, bigbulletExpires: 0,
+      spread: false, spreadExpires: 0,
+      laser: false, laserExpires: 0,
       lastHitTime: 0, comboCount: 0,
       // Graze state — one graze per asteroid
       grazedIds: new Set(),
@@ -360,24 +441,62 @@ const AsteroidGame = () => {
 
     const trackMesh = (mesh) => { disposables.push(mesh); return mesh; };
 
-    const makeBullet = (angleOffset = 0) => {
+    // ── Thruster Trail ─────────────────────────────────────────────────────
+    const trailGeo = new THREE.SphereGeometry(0.07, 4, 4);
+    const trailParticles = [];
+    let lastTrailPos = { x: 0, y: 0 };
+
+    const emitTrail = () => {
+      const TRAIL_COLORS = [0xff8800, 0xff4400, 0xff2200];
+      const color = TRAIL_COLORS[Math.floor(Math.random() * TRAIL_COLORS.length)];
+      const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8 });
+      particleMats.push(mat);
+      const m = new THREE.Mesh(trailGeo, mat);
+      m.position.copy(engineMesh.getWorldPosition(new THREE.Vector3()));
+      m.position.x += (Math.random() - 0.5) * 0.12;
+      m.position.z += (Math.random() - 0.5) * 0.15;
+      scene.add(m);
+      trailParticles.push({ mesh: m, life: 1, vy: -(Math.random() * 0.04 + 0.01) });
+    };
+
+    const makeBullet = (angleOffset = 0, isLaser = gs.laser) => {
       const size = gs.bigbullet ? .28 : .12;
-      const color = gs.bigbullet ? 0xffb74d : 0xff5500;
-      const geo = new THREE.SphereGeometry(size, 8, 8);
-      const mat = new THREE.MeshBasicMaterial({ color });
-      const mesh = trackMesh(new THREE.Mesh(geo, mat));
+      const color = isLaser ? 0x48e0e0 : gs.bigbullet ? 0xffb74d : 0xff5500;
+      
+      let geo, mat, mesh, bLight;
+      if (isLaser) {
+        geo = new THREE.CylinderGeometry(0.08, 0.08, 1.8, 8);
+        mat = new THREE.MeshBasicMaterial({ color });
+        mesh = trackMesh(new THREE.Mesh(geo, mat));
+        bLight = new THREE.PointLight(color, 4, 6);
+      } else {
+        geo = new THREE.SphereGeometry(size, 8, 8);
+        mat = new THREE.MeshBasicMaterial({ color });
+        mesh = trackMesh(new THREE.Mesh(geo, mat));
+        bLight = new THREE.PointLight(color, gs.bigbullet ? 4 : 2.5, gs.bigbullet ? 6 : 4);
+      }
+      
       mesh.position.copy(shipGroup.position);
       mesh.position.y += .9;
       const rad = THREE.MathUtils.degToRad(angleOffset);
-      const bLight = new THREE.PointLight(color, gs.bigbullet ? 4 : 2.5, gs.bigbullet ? 6 : 4);
+      mesh.rotation.z = -rad;
       mesh.add(bLight);
       scene.add(mesh);
-      gs.bullets.push({ mesh, vx: Math.sin(rad) * 0.18, vy: 0.32, big: gs.bigbullet, geo, mat });
+      gs.bullets.push({ 
+        mesh, 
+        vx: Math.sin(rad) * (isLaser ? 0.5 : 0.18), 
+        vy: isLaser ? 0.7 : 0.32, 
+        big: gs.bigbullet, 
+        pierce: isLaser,
+        geo, mat 
+      });
     };
 
     const shoot = () => {
       SFX.shoot(audioCtxRef.current);
-      if (gs.rapid) {
+      if (gs.spread) {
+        makeBullet(-24); makeBullet(-12); makeBullet(0); makeBullet(12); makeBullet(24);
+      } else if (gs.rapid) {
         makeBullet(-16); makeBullet(0); makeBullet(16);
       } else {
         makeBullet(0);
@@ -387,14 +506,36 @@ const AsteroidGame = () => {
     const makeAsteroid = () => {
       const size = .35 + Math.random() * .78;
       const cfg = asteroidConfig(size);
-      const geo = new THREE.IcosahedronGeometry(size, Math.random() > .5 ? 1 : 0);
-      const mat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: .85, metalness: .15 });
+      const type = pickAsteroidType();
+      const matProps = type.matProps(size);
+      const detail = Math.random() > .5 ? 1 : 0;
+      
+      // Crystal asteroids use Box/Octahedron for a sharper look
+      let geo;
+      if (type === ASTEROID_TYPES[2]) {
+        geo = new THREE.OctahedronGeometry(size, detail);
+      } else {
+        geo = new THREE.IcosahedronGeometry(size, detail);
+      }
+      
+      const mat = new THREE.MeshStandardMaterial({
+        ...matProps,
+        emissive: type.emissive || new THREE.Color('#000000'),
+        emissiveIntensity: type.emissive ? 0.45 : 0,
+      });
       const mesh = trackMesh(new THREE.Mesh(geo, mat));
       mesh.position.set((Math.random() - .5) * B.x * 1.8, B.y + size + .5, (Math.random() - .5) * 1.5);
       mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+      
+      // Crystal asteroids glow
+      if (type.emissive) {
+        const glow = new THREE.PointLight(matProps.color, 1.5, 4);
+        mesh.add(glow);
+      }
+      
       scene.add(mesh);
       gs.asteroids.push({
-        mesh, size, pts: cfg.pts, geo, mat,
+        mesh, size, pts: cfg.pts * type.ptsMult, geo, mat,
         id: Math.random().toString(36).slice(2),
         vy: -(0.022 + Math.random() * 0.011) * gs.diffMult,
         rx: (Math.random() - .5) * .016,
@@ -415,6 +556,40 @@ const AsteroidGame = () => {
       gs.powerups.push({ mesh, type, vy: -0.016, geo, mat });
     };
 
+    const makeUfo = () => {
+      const g = new THREE.Group();
+      
+      // UFO Base
+      const geo1 = new THREE.SphereGeometry(0.7, 16, 8);
+      geo1.scale(1, 0.25, 1);
+      const mat1 = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.1 });
+      const mesh1 = trackMesh(new THREE.Mesh(geo1, mat1));
+      
+      // UFO Cockpit
+      const geo2 = new THREE.SphereGeometry(0.4, 16, 8);
+      geo2.scale(1, 0.7, 1);
+      const mat2 = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+      const mesh2 = trackMesh(new THREE.Mesh(geo2, mat2));
+      mesh2.position.y = 0.2;
+      
+      const uLight = new THREE.PointLight(0x00ffff, 3, 5);
+      
+      g.add(mesh1);
+      g.add(mesh2);
+      g.add(uLight);
+      
+      const fromLeft = Math.random() > 0.5;
+      g.position.set(fromLeft ? -B.x - 2 : B.x + 2, B.y - 1 - Math.random() * (B.y - 1), 0);
+      scene.add(g);
+      
+      // We push meshes so we can track and delete them if needed, but removeMesh handles the Group just fine usually
+      gs.ufos.push({
+        mesh: g,
+        vx: (fromLeft ? 1 : -1) * (0.05 + Math.random() * 0.04),
+        pts: 100
+      });
+    };
+
     const explode = (pos, color = 0xff5500, count = 14) => {
       const particleCount = mount.clientWidth < 768 ? Math.floor(count * 0.6) : count;
       for (let i = 0; i < particleCount; i++) {
@@ -431,10 +606,24 @@ const AsteroidGame = () => {
         scene.add(m);
         gs.particles.push({ mesh: m, vel, life: 1, mat });
       }
+
+      // ── Energy Ring: expanding torus that fades out ────────────────
+      const ringGeo = new THREE.TorusGeometry(0.1, 0.04, 6, 24);
+      const ringMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 });
+      particleMats.push(ringMat);
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.copy(pos);
+      ring.rotation.x = Math.PI / 2;
+      scene.add(ring);
+      gs.particles.push({ mesh: ring, vel: new THREE.Vector3(0, 0, 0), life: 1, mat: ringMat, isRing: true, scale: 0.1 });
     };
 
     // ── Input ─────────────────────────────────────────────────────────────
-    const onKeyDown = e => { gs.keys[e.code] = true; unlockAudio(); };
+    const onKeyDown = e => {
+      gs.keys[e.code] = true;
+      unlockAudio();
+      if (e.code === 'Escape') togglePause();
+    };
     const onKeyUp = e => { gs.keys[e.code] = false; };
 
     const onMouseMove = e => {
@@ -451,28 +640,41 @@ const AsteroidGame = () => {
       if (gs.running) { shoot(); }
     };
 
-    // ✅ FIX 6: Touch / mobile support — move + tap-to-shoot
+    // ✅ Relative Touch Joystick — drag anywhere to move ship, tap to shoot
+    let touchOrigin = null; // { clientX, clientY, shipX, shipY }
+
     const onTouchMove = e => {
       e.preventDefault();
-      unlockAudio();
+      if (!touchOrigin) return;
       const t = e.touches[0];
-      const w = screenToWorld(t.clientX, t.clientY);
-      gs.mouse.x = w.x;
-      gs.mouse.y = THREE.MathUtils.clamp(w.y, -B.y + .5, B.y - .5);
+      const dx = t.clientX - touchOrigin.clientX;
+      const dy = t.clientY - touchOrigin.clientY;
+      // Convert pixel delta to world units (approx)
+      const worldW = B.x * 2;
+      const pxW = mount.clientWidth;
+      const scale = worldW / pxW;
+      gs.mouse.x = THREE.MathUtils.clamp(touchOrigin.shipX + dx * scale, -B.x + .5, B.x - .5);
+      gs.mouse.y = THREE.MathUtils.clamp(touchOrigin.shipY - dy * scale, -B.y + .5, B.y - .5);
       gs.touchActive = true;
     };
 
     const onTouchStart = e => {
       e.preventDefault();
-      lastTouchTime = Date.now(); // Fix 4: stamp time so onClick ignores the ghost event
+      lastTouchTime = Date.now();
       unlockAudio();
       const t = e.touches[0];
-      const w = screenToWorld(t.clientX, t.clientY);
-      gs.mouse.x = w.x;
-      gs.mouse.y = THREE.MathUtils.clamp(w.y, -B.y + .5, B.y - .5);
+      // Record the finger origin and current ship world position
+      touchOrigin = {
+        clientX: t.clientX,
+        clientY: t.clientY,
+        shipX: shipGroup.position.x,
+        shipY: shipGroup.position.y,
+      };
       gs.touchActive = true;
       if (gs.running) shoot();
     };
+
+    const onTouchEnd = () => { touchOrigin = null; };
 
     const onResize = () => {
       cam.aspect = mount.clientWidth / mount.clientHeight;
@@ -486,18 +688,40 @@ const AsteroidGame = () => {
     mount.addEventListener('click', onClick);
     mount.addEventListener('touchstart', onTouchStart, { passive: false });
     mount.addEventListener('touchmove', onTouchMove, { passive: false });
+    mount.addEventListener('touchend', onTouchEnd);
     window.addEventListener('resize', onResize);
 
     // ── Game Loop ─────────────────────────────────────────────────────────
     let raf;
+    let warpStart = phase === 'warp' ? performance.now() : 0;
     // Fix 3: only remove from scene here — cleanup() does the single-pass disposal
     const removeMesh = (mesh) => { scene.remove(mesh); };
 
     const tick = t => {
       uiTick.current++;
-      if (!gs.running) return;
       raf = requestAnimationFrame(tick);
       const now = performance.now();
+
+      // ── Hyperspace Warp ───────────────────────────────────────────────
+      if (phase === 'warp') {
+        if (warpStart === 0) warpStart = now;
+        const elapsed = now - warpStart;
+        const progress = Math.min(elapsed / 1600, 1);
+        // Stretch stars upward, then snap back
+        const stretch = progress < 0.5
+          ? 1 + progress * 30        // ramp up: scale from 1 → 16
+          : 16 - (progress - 0.5) * 30; // snap back: scale 16 → 1
+        starField.scale.set(1, Math.max(1, stretch), 1);
+        renderer.render(scene, cam);
+        return;
+      } else {
+        starField.scale.set(1, 1, 1);
+      }
+
+      if (!gs.running) return;
+
+      // ── Pause gate ────────────────────────────────────────────────────
+      if (paused) { renderer.render(scene, cam); return; }
 
       // ── Ship movement ─────────────────────────────────────────────────
       const spd = .13;
@@ -527,9 +751,24 @@ const AsteroidGame = () => {
       engineMesh.material.color.setHex(Math.random() > .35 ? 0xff8800 : 0xff3300);
       shipGroup.rotation.z = Math.sin(t * .002) * .05;
 
+      // Thruster trail — emit every 2 frames
+      if (uiTick.current % 2 === 0) emitTrail();
+
+      // Update trail particles
+      for (let i = trailParticles.length - 1; i >= 0; i--) {
+        const tp = trailParticles[i];
+        tp.mesh.position.y += tp.vy;
+        tp.mesh.position.x += (Math.random() - 0.5) * 0.015;
+        tp.life -= 0.07;
+        tp.mesh.material.opacity = Math.max(0, tp.life * 0.8);
+        const s = Math.max(0, tp.life);
+        tp.mesh.scale.setScalar(s);
+        if (tp.life <= 0) { removeMesh(tp.mesh); trailParticles.splice(i, 1); }
+      }
+
       // Power-up timing
       const pActive = {};
-      for (const type of ['shield', 'rapid', 'bigbullet']) {
+      for (const type of ['shield', 'rapid', 'bigbullet', 'spread', 'laser']) {
         if (gs[type]) {
           if (now > gs[`${type}Expires`]) { gs[type] = false; }
           else { pActive[type] = Math.ceil((gs[`${type}Expires`] - now) / 1000); }
@@ -578,6 +817,11 @@ const AsteroidGame = () => {
         makePowerUp(); gs.lastPowerUp = t;
       }
 
+      // Spawn UFOs
+      if (gs.lastUfoSpawn === 0 || t - gs.lastUfoSpawn > 20000 + Math.random() * 15000) {
+        makeUfo(); gs.lastUfoSpawn = t;
+      }
+
       // ── Bullets ───────────────────────────────────────────────────────
       for (let i = gs.bullets.length - 1; i >= 0; i--) {
         const b = gs.bullets[i];
@@ -592,10 +836,12 @@ const AsteroidGame = () => {
             SFX.explode(audioCtxRef.current);
             explode(a.mesh.position);
             removeMesh(a.mesh);
-            removeMesh(b.mesh);
+            if (!b.pierce) {
+              removeMesh(b.mesh);
+              hit = true;
+            }
             gs.asteroids.splice(j, 1);
             gs.grazedIds.delete(a.id);
-            hit = true;
 
             // Combo calc
             const timeSinceLast = now - gs.lastHitTime;
@@ -609,6 +855,10 @@ const AsteroidGame = () => {
             if (gs.comboCount >= 3) setCombo(gs.comboCount);
             else setCombo(0);
 
+            // Track stats
+            statsRef.current.asteroidsDestroyed++;
+            if (gs.comboCount > statsRef.current.maxCombo) statsRef.current.maxCombo = gs.comboCount;
+
             const sp = worldToScreen(a.mesh.position.x, a.mesh.position.y);
             const popColor = a.pts === 20 ? '#a0c0ff' : a.pts === 5 ? '#aaa' : '#ffb74d';
             const label = multiplier > 1 ? `+${earned} ×${multiplier}` : `+${earned}`;
@@ -617,7 +867,29 @@ const AsteroidGame = () => {
           }
         }
 
-        if (hit || b.mesh.position.y > B.y + 2) {
+        if (!hit) {
+          for (let k = gs.ufos.length - 1; k >= 0; k--) {
+            const u = gs.ufos[k];
+            const uRadius = b.big ? 1.0 : 0.8;
+            if (b.mesh.position.distanceTo(u.mesh.position) < uRadius) {
+              SFX.explode(audioCtxRef.current);
+              explode(u.mesh.position, 0x00ffff, 25);
+              removeMesh(u.mesh);
+              if (!b.pierce) { removeMesh(b.mesh); hit = true; }
+              gs.ufos.splice(k, 1);
+              
+              const multiplier = gs.comboCount >= 3 ? gs.comboCount : 1;
+              const earned = u.pts * multiplier;
+              localScore += earned;
+              setScore(localScore);
+              const sp = worldToScreen(u.mesh.position.x, u.mesh.position.y);
+              addPopup(sp.x, sp.y, `+${earned} UFO!`, '#00ffff', true);
+              break;
+            }
+          }
+        }
+
+        if (hit || b.mesh.position.y > B.y + 2 || b.mesh.position.x < -B.x - 2 || b.mesh.position.x > B.x + 2) {
           if (!hit) removeMesh(b.mesh);
           gs.bullets.splice(i, 1);
         }
@@ -646,6 +918,7 @@ const AsteroidGame = () => {
           setScore(localScore);
           SFX.graze(audioCtxRef.current);
           showGraze(grazePts);
+          statsRef.current.grazesTotal++;
         }
 
         // Collision
@@ -696,8 +969,56 @@ const AsteroidGame = () => {
               highScore.current = localScore;
               sessionStorage.setItem('hs', localScore);
             }
+            clearInterval(synthIntervalRef.current);
+            const timeSurvived = Math.floor((Date.now() - gameStartTime.current) / 1000);
+            setGameStats({ ...statsRef.current, timeSurvived });
             setPhase('over'); return;
           }
+        }
+      }
+
+      // ── UFOs ──────────────────────────────────────────────────────────
+      for (let i = gs.ufos.length - 1; i >= 0; i--) {
+        const u = gs.ufos[i];
+        u.mesh.position.x += u.vx;
+        u.mesh.rotation.y += 0.05;
+        
+        if (u.mesh.position.distanceTo(shipGroup.position) < 1.4) {
+          if (gs.shield) {
+            SFX.explode(audioCtxRef.current);
+            explode(u.mesh.position, 0x00ffff, 15);
+            removeMesh(u.mesh);
+            gs.ufos.splice(i, 1);
+            gs.shield = false;
+            const sp = worldToScreen(shipGroup.position.x, shipGroup.position.y);
+            addPopup(sp.x, sp.y, 'SHIELD BLOCKED', '#4880e0', true);
+            continue;
+          }
+          SFX.hit(audioCtxRef.current);
+          triggerShake();
+          explode(shipGroup.position, 0xe04848, 20);
+          removeMesh(u.mesh);
+          gs.ufos.splice(i, 1);
+          gs.comboCount = 0; setCombo(0);
+          localLives--; setLives(localLives);
+          if (localLives <= 0) {
+            gs.running = false;
+            finalScore.current = localScore;
+            if (localScore > highScore.current) {
+              highScore.current = localScore;
+              sessionStorage.setItem('hs', localScore);
+            }
+            clearInterval(synthIntervalRef.current);
+            const timeSurvived = Math.floor((Date.now() - gameStartTime.current) / 1000);
+            setGameStats({ ...statsRef.current, timeSurvived });
+            setPhase('over'); return;
+          }
+          continue;
+        }
+
+        if ((u.vx > 0 && u.mesh.position.x > B.x + 2) || (u.vx < 0 && u.mesh.position.x < -B.x - 2)) {
+          removeMesh(u.mesh);
+          gs.ufos.splice(i, 1);
         }
       }
 
@@ -708,13 +1029,29 @@ const AsteroidGame = () => {
         p.mesh.rotation.y += .03;
         p.mesh.rotation.x += .02;
         if (p.mesh.position.distanceTo(shipGroup.position) < 1.05) {
-          gs[p.type] = true;
-          gs[`${p.type}Expires`] = now + PUPS[p.type].dur;
           SFX.powerup(audioCtxRef.current);
           const sp = worldToScreen(p.mesh.position.x, p.mesh.position.y);
           addPopup(sp.x, sp.y, PUPS[p.type].label, PUPS[p.type].hex, true);
           removeMesh(p.mesh);
           gs.powerups.splice(i, 1);
+
+          if (p.type === 'bomb') {
+            triggerShake();
+            explode(shipGroup.position, 0xe02048, 40);
+            
+            for (let j = gs.asteroids.length - 1; j >= 0; j--) {
+              const a = gs.asteroids[j];
+              explode(a.mesh.position, 0xff5500, 8);
+              removeMesh(a.mesh);
+              localScore += a.pts * (gs.comboCount || 1);
+            }
+            setScore(localScore);
+            gs.asteroids = [];
+            continue;
+          }
+
+          gs[p.type] = true;
+          gs[`${p.type}Expires`] = now + PUPS[p.type].dur;
           continue;
         }
         if (p.mesh.position.y < -B.y - 2) { removeMesh(p.mesh); gs.powerups.splice(i, 1); }
@@ -723,10 +1060,18 @@ const AsteroidGame = () => {
       // ── Particles ─────────────────────────────────────────────────────
       for (let i = gs.particles.length - 1; i >= 0; i--) {
         const p = gs.particles[i];
-        p.mesh.position.add(p.vel);
-        p.vel.multiplyScalar(.88);
-        p.life -= .045;
-        p.mesh.material.opacity = Math.max(0, p.life);
+        if (p.isRing) {
+          // Expand the ring outward and fade
+          p.scale = (p.scale || 0.1) + 0.18;
+          p.mesh.scale.setScalar(p.scale);
+          p.life -= 0.055;
+          p.mesh.material.opacity = Math.max(0, p.life);
+        } else {
+          p.mesh.position.add(p.vel);
+          p.vel.multiplyScalar(.88);
+          p.life -= .045;
+          p.mesh.material.opacity = Math.max(0, p.life);
+        }
         if (p.life <= 0) { removeMesh(p.mesh); gs.particles.splice(i, 1); }
       }
 
@@ -745,6 +1090,7 @@ const AsteroidGame = () => {
       mount.removeEventListener('click', onClick);
       mount.removeEventListener('touchstart', onTouchStart);
       mount.removeEventListener('touchmove', onTouchMove);
+      mount.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('resize', onResize);
 
       // Fix 3: single-pass disposal — use a Set so shared geometries are disposed only once
@@ -781,7 +1127,7 @@ const AsteroidGame = () => {
         audioCtxRef.current = null;
       }
     };
-  }, [phase, triggerShake, showGraze, unlockAudio]);
+  }, [phase, triggerShake, showGraze, unlockAudio, paused, togglePause]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -829,9 +1175,19 @@ const AsteroidGame = () => {
               {activePUps.shield && <Pill $c="#4880e0">SHIELD {activePUps.shield}s</Pill>}
               {activePUps.rapid && <Pill $c="#48e080">RAPID {activePUps.rapid}s</Pill>}
               {activePUps.bigbullet && <Pill $c="#ffb74d">BIG SHOT {activePUps.bigbullet}s</Pill>}
+              {activePUps.spread && <Pill $c="#c048e0">SPREAD {activePUps.spread}s</Pill>}
+              {activePUps.laser && <Pill $c="#48e0e0">LASER {activePUps.laser}s</Pill>}
             </PowerBar>
           )}
         </>
+      )}
+
+      {/* Hyperspace Warp overlay */}
+      {phase === 'warp' && (
+        <Overlay style={{ background: 'transparent', backdropFilter: 'none', pointerEvents: 'none' }}>
+          <GameTitle style={{ fontSize: 'clamp(1.8rem,6vw,2.4rem)', letterSpacing: '10px', opacity: 0.9 }}>ENTERING WARP</GameTitle>
+          <Sub style={{ letterSpacing: '6px', opacity: 0.7 }}>PREPARE FOR LAUNCH</Sub>
+        </Overlay>
       )}
 
       {/* Start screen */}
@@ -854,8 +1210,11 @@ const AsteroidGame = () => {
 
           <Legend>
             <LItem $c="#4880e0">SHIELD — absorbs one hit (10s)</LItem>
-            <LItem $c="#48e080">RAPID + triple spread shot (8s)</LItem>
-            <LItem $c="#ffb74d">BIG SHOT — wide bullets (8s)</LItem>
+            <LItem $c="#48e080">RAPID — fast 3-way fire (8s)</LItem>
+            <LItem $c="#ffb74d">BIG SHOT — double size (8s)</LItem>
+            <LItem $c="#c048e0">SPREAD — wide 5-way fire (8s)</LItem>
+            <LItem $c="#48e0e0">LASER — piercing beam (6s)</LItem>
+            <LItem $c="#e02048">SMART BOMB — destroys all (instant)</LItem>
           </Legend>
 
           <CtrlRow>
@@ -864,7 +1223,7 @@ const AsteroidGame = () => {
           </CtrlRow>
           {highScore.current > 0 &&
             <HighScore>BEST: {String(highScore.current).padStart(6, '0')}</HighScore>}
-          <LaunchBtn onClick={startGame}>LAUNCH ▶</LaunchBtn>
+          <LaunchBtn onClick={() => startGame(true)}>LAUNCH ▶</LaunchBtn>
         </Overlay>
       )}
 
@@ -873,11 +1232,28 @@ const AsteroidGame = () => {
         <Overlay>
           <GameTitle style={{ fontSize: 'clamp(1.8rem,6vw,2.6rem)' }}>GAME OVER</GameTitle>
           <FinalScore>SCORE: {String(finalScore.current).padStart(6, '0')}</FinalScore>
+          
+          <ObjBox style={{ marginTop: '.5rem', marginBottom: '.5rem' }}>
+            <ObjTitle>PERFORMANCE STATS</ObjTitle>
+            <ObjRow $vc="#a0c0ff"><span>Asteroids Destroyed</span> <span className="v">{gameStats.asteroidsDestroyed}</span></ObjRow>
+            <ObjRow $vc="#ffb74d"><span>Max Combo</span> <span className="v">{gameStats.maxCombo}×</span></ObjRow>
+            <ObjRow $vc="#e04848"><span>Time Survived</span> <span className="v">{gameStats.timeSurvived}s</span></ObjRow>
+            <ObjRow $vc="#48e080"><span>Danger Grazes</span> <span className="v">{gameStats.grazesTotal}</span></ObjRow>
+          </ObjBox>
+
           {finalScore.current >= highScore.current && finalScore.current > 0 &&
-            <Sub style={{ color: '#ffb74d', opacity: 1 }}>★ NEW HIGH SCORE ★</Sub>}
+            <Sub style={{ color: '#ffb74d', opacity: 1, marginBottom: '.5rem' }}>★ NEW HIGH SCORE ★</Sub>}
           {highScore.current > 0 &&
             <HighScore>BEST: {String(highScore.current).padStart(6, '0')}</HighScore>}
-          <LaunchBtn onClick={startGame}>PLAY AGAIN ▶</LaunchBtn>
+          <LaunchBtn onClick={() => startGame(true)}>PLAY AGAIN ▶</LaunchBtn>
+        </Overlay>
+      )}
+
+      {/* Pause Overlay */}
+      {paused && phase === 'playing' && (
+        <Overlay style={{ background: 'rgba(6,6,18,0.7)' }}>
+          <GameTitle style={{ fontSize: '2rem', letterSpacing: '8px' }}>PAUSED</GameTitle>
+          <LaunchBtn onClick={togglePause} style={{ marginTop: '2rem' }}>RESUME ▶</LaunchBtn>
         </Overlay>
       )}
     </Wrapper>
