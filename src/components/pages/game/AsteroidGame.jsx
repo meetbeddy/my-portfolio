@@ -359,6 +359,8 @@ const AsteroidGame = () => {
       };
     };
 
+    const dist2D = (p1, p2) => Math.hypot(p1.x - p2.x, p1.y - p2.y);
+
     // ── Lights ────────────────────────────────────────────────────────────
     const ambientLight = new THREE.AmbientLight(0x223344, 1.2);
     scene.add(ambientLight);
@@ -832,7 +834,7 @@ const AsteroidGame = () => {
         for (let j = gs.asteroids.length - 1; j >= 0; j--) {
           const a = gs.asteroids[j];
           const hr = b.big ? a.size + .3 : a.size + .14;
-          if (b.mesh.position.distanceTo(a.mesh.position) < hr) {
+          if (dist2D(b.mesh.position, a.mesh.position) < hr) {
             SFX.explode(audioCtxRef.current);
             explode(a.mesh.position);
             removeMesh(a.mesh);
@@ -871,7 +873,7 @@ const AsteroidGame = () => {
           for (let k = gs.ufos.length - 1; k >= 0; k--) {
             const u = gs.ufos[k];
             const uRadius = b.big ? 1.0 : 0.8;
-            if (b.mesh.position.distanceTo(u.mesh.position) < uRadius) {
+            if (dist2D(b.mesh.position, u.mesh.position) < uRadius) {
               SFX.explode(audioCtxRef.current);
               explode(u.mesh.position, 0x00ffff, 25);
               removeMesh(u.mesh);
@@ -902,7 +904,7 @@ const AsteroidGame = () => {
         a.mesh.rotation.x += a.rx;
         a.mesh.rotation.y += a.ry;
 
-        const distToShip = a.mesh.position.distanceTo(shipGroup.position);
+        const distToShip = dist2D(a.mesh.position, shipGroup.position);
 
         // ✅ FIX 7: Near-miss graze bonus — band between (hit+0.05) and (hit+0.8)
         const hitRadius = a.size + .5;
@@ -983,7 +985,7 @@ const AsteroidGame = () => {
         u.mesh.position.x += u.vx;
         u.mesh.rotation.y += 0.05;
         
-        if (u.mesh.position.distanceTo(shipGroup.position) < 1.4) {
+        if (dist2D(u.mesh.position, shipGroup.position) < 1.4) {
           if (gs.shield) {
             SFX.explode(audioCtxRef.current);
             explode(u.mesh.position, 0x00ffff, 15);
@@ -1028,7 +1030,7 @@ const AsteroidGame = () => {
         p.mesh.position.y += p.vy;
         p.mesh.rotation.y += .03;
         p.mesh.rotation.x += .02;
-        if (p.mesh.position.distanceTo(shipGroup.position) < 1.05) {
+        if (dist2D(p.mesh.position, shipGroup.position) < 1.05) {
           SFX.powerup(audioCtxRef.current);
           const sp = worldToScreen(p.mesh.position.x, p.mesh.position.y);
           addPopup(sp.x, sp.y, PUPS[p.type].label, PUPS[p.type].hex, true);
