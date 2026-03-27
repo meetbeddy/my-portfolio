@@ -951,6 +951,9 @@ const AsteroidGame = () => {
               highScore.current = localScore;
               sessionStorage.setItem('hs', localScore);
             }
+            clearInterval(synthIntervalRef.current);
+            const timeSurvived = Math.floor((Date.now() - gameStartTime.current) / 1000);
+            setGameStats({ ...statsRef.current, timeSurvived });
             setPhase('over'); return;
           }
           continue;
