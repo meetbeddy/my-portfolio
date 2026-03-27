@@ -532,6 +532,7 @@ const AsteroidGame = () => {
   const startGame = (withWarp = false) => {
     unlockAudio();
     finalScore.current = 0;
+    scoreRef.current = 0;
     gameStartTime.current = Date.now();
     statsRef.current = { grazesTotal: 0, enemiesDestroyed: 0, maxCombo: 0, bossesKilled: 0 };
     lastSectorScore.current = 0;
