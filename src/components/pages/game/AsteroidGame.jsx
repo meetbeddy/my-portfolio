@@ -25,6 +25,33 @@ const grazeFlash = keyframes`
   100%{opacity:0;transform:translateX(-50%) scale(.9)}
 `;
 
+// ─── Sector Transition Keyframes ─────────────────────────────────────────────
+const sectorSlam = keyframes`
+  0%   { opacity:0; transform:translateX(-50%) scaleX(2.4) scaleY(0.3); filter:blur(12px); }
+  35%  { opacity:1; transform:translateX(-50%) scaleX(0.92) scaleY(1.08); filter:blur(0px); }
+  55%  { transform:translateX(-50%) scaleX(1.04) scaleY(0.97); }
+  75%  { transform:translateX(-50%) scaleX(0.98) scaleY(1.01); }
+  100% { opacity:1; transform:translateX(-50%) scaleX(1) scaleY(1); }
+`;
+const sectorSub = keyframes`
+  0%   { opacity:0; transform:translateX(-50%) translateY(12px); letter-spacing:20px; }
+  60%  { opacity:1; transform:translateX(-50%) translateY(0); letter-spacing:6px; }
+  100% { opacity:1; transform:translateX(-50%) translateY(0); letter-spacing:6px; }
+`;
+const scanSweep = keyframes`
+  0%   { top:-4px; opacity:1; }
+  85%  { opacity:1; }
+  100% { top:100%; opacity:0; }
+`;
+const vortexRing = keyframes`
+  0%   { transform:translate(-50%,-50%) scale(0); opacity:0.9; }
+  100% { transform:translate(-50%,-50%) scale(3.5); opacity:0; }
+`;
+const fadeOutUp = keyframes`
+  0%   { opacity:1; transform:translateX(-50%) translateY(0); }
+  100% { opacity:0; transform:translateX(-50%) translateY(-30px); }
+`;
+
 // ─── UI Components ────────────────────────────────────────────────────────────
 const Wrapper = styled.div`
   position:fixed;inset:0;background:#060612;
@@ -67,6 +94,51 @@ const GrazePopup = styled.div`
   color:#ffe082;text-shadow:0 0 16px rgba(255,224,130,.9);
   animation:${grazeFlash} .8s ease-out forwards;white-space:nowrap;
   pointer-events:none;z-index:12;
+`;
+
+// ─── Sector Clear Overlay Components ─────────────────────────────────────────
+const SectorClearOverlay = styled.div`
+  position:absolute;inset:0;pointer-events:none;z-index:50;overflow:hidden;
+`;
+const SectorClearTitle = styled.div`
+  position:absolute;top:36%;left:50%;
+  font-size:clamp(2.2rem,8vw,4rem);font-weight:900;letter-spacing:10px;
+  color:#fff;white-space:nowrap;
+  text-shadow:0 0 30px rgba(255,255,255,0.9),0 0 60px rgba(255,200,100,0.6),0 0 100px rgba(255,100,0,0.4);
+  animation:${sectorSlam} 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+`;
+const SectorClearSub = styled.div`
+  position:absolute;top:calc(36% + clamp(3rem,9vw,5.2rem));left:50%;
+  font-size:clamp(0.75rem,2vw,1rem);font-weight:600;letter-spacing:6px;
+  color:rgba(255,200,100,0.85);white-space:nowrap;
+  text-shadow:0 0 16px rgba(255,180,80,0.7);
+  animation:${sectorSub} 0.7s 0.2s cubic-bezier(0.22,1,0.36,1) both;
+`;
+const SectorClearScore = styled.div`
+  position:absolute;top:calc(36% + clamp(5.2rem,13vw,7.8rem));left:50%;
+  font-size:clamp(0.7rem,1.6vw,0.85rem);font-weight:600;letter-spacing:4px;
+  color:rgba(160,255,160,0.8);white-space:nowrap;
+  text-shadow:0 0 12px rgba(100,255,100,0.5);
+  animation:${p => p.$exit
+    ? css`${fadeOutUp} 0.5s ease forwards`
+    : css`${sectorSub} 0.6s 0.5s cubic-bezier(0.22,1,0.36,1) both`};
+`;
+const ScanLine = styled.div`
+  position:absolute;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,
+    transparent 0%,rgba(255,255,255,0.08) 10%,
+    rgba(255,255,255,0.6) 50%,rgba(255,255,255,0.08) 90%,transparent 100%);
+  box-shadow:0 0 18px 4px rgba(255,255,255,0.25);
+  animation:${scanSweep} ${p => p.$dur || 1.1}s ${p => p.$delay || 0}s linear forwards;
+`;
+const VortexRing = styled.div`
+  position:absolute;left:50%;top:50%;
+  width:120px;height:120px;
+  margin-left:-60px;margin-top:-60px;
+  border-radius:50%;
+  border:2px solid rgba(255,200,100,0.7);
+  box-shadow:0 0 20px rgba(255,180,80,0.4),inset 0 0 20px rgba(255,180,80,0.2);
+  animation:${vortexRing} ${p => p.$dur || 0.8}s ${p => p.$delay || 0}s ease-out forwards;
 `;
 
 const PowerBar = styled.div`
@@ -146,14 +218,10 @@ const PUPS = {
   bomb: { color: 0xe02048, hex: '#e02048', label: 'SMART BOMB', dur: 0 },
 };
 
-// ✅ FIX 1: Correct colour construction — use THREE.Color properly, not raw floats
 const ASTEROID_TYPES = [
-  // Rocky (common) — grey, matte
-  { weight: 5, matProps: (size) => ({ color: new THREE.Color('#595968'), roughness: 0.92, metalness: 0.05 }), emissive: null, ptsMult: 1 },
-  // Metallic (uncommon) — dark gold sheen
-  { weight: 3, matProps: (size) => ({ color: new THREE.Color('#8a7a50'), roughness: 0.35, metalness: 0.88 }), emissive: null, ptsMult: 1 },
-  // Crystal (rare) — glowing blue-white shard
-  { weight: 2, matProps: (size) => ({ color: new THREE.Color('#9aaeff'), roughness: 0.15, metalness: 0.6 }), emissive: new THREE.Color('#3355bb'), ptsMult: 2 },
+  { weight: 5, matProps: () => ({ color: new THREE.Color('#595968'), roughness: 0.92, metalness: 0.05 }), emissive: null, ptsMult: 1 },
+  { weight: 3, matProps: () => ({ color: new THREE.Color('#8a7a50'), roughness: 0.35, metalness: 0.88 }), emissive: null, ptsMult: 1 },
+  { weight: 2, matProps: () => ({ color: new THREE.Color('#9aaeff'), roughness: 0.15, metalness: 0.6 }), emissive: new THREE.Color('#3355bb'), ptsMult: 2 },
 ];
 
 const pickAsteroidType = () => {
@@ -169,8 +237,7 @@ const asteroidConfig = (size) => {
   return { pts: 20 };
 };
 
-// ─── Sound Hooks (Web Audio API) ─────────────────────────────────────────────
-// ✅ FIX 5: Sound hooks — lazy AudioContext (unmuted on first user gesture)
+// ─── Sound ────────────────────────────────────────────────────────────────────
 const createAudio = () => {
   try { return new (window.AudioContext || window.webkitAudioContext)(); }
   catch { return null; }
@@ -198,17 +265,22 @@ const SFX = {
   hit: ctx => playTone(ctx, { freq: 55, type: 'sawtooth', gain: 0.28, dur: 0.25, decay: 0.20 }),
   powerup: ctx => playTone(ctx, { freq: 660, type: 'sine', gain: 0.20, dur: 0.25, decay: 0.12 }),
   graze: ctx => playTone(ctx, { freq: 1200, type: 'sine', gain: 0.12, dur: 0.07, decay: 0.06 }),
+  sectorClear: ctx => {
+    // Rising fanfare — three ascending tones
+    [523, 659, 784].forEach((freq, i) => {
+      setTimeout(() => playTone(ctx, { freq, type: 'sine', gain: 0.28, dur: 0.22, decay: 0.18 }), i * 140);
+    });
+  },
 };
 
-// ─── Synthwave Audio ──────────────────────────────────────────────────────────
+// ─── Synthwave ────────────────────────────────────────────────────────────────
 const startSynthwave = (ctx) => {
   if (!ctx || ctx.state === 'suspended') return null;
   try {
-    // Bassline pattern (root, 5th, root, octave)
-    const notes = [55, 82.5, 55, 110, 55, 82.5, 110, 82.5]; // A1, E2, A1, A2
+    const notes = [55, 82.5, 55, 110, 55, 82.5, 110, 82.5];
     let step = 0;
     const bpm = 128;
-    const stepDur = (60 / bpm) / 2; // 8th notes
+    const stepDur = (60 / bpm) / 2;
 
     const playNote = () => {
       if (!ctx || ctx.state === 'closed') return;
@@ -217,18 +289,13 @@ const startSynthwave = (ctx) => {
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
       filter.frequency.value = 800;
-
       osc.type = 'sawtooth';
       osc.frequency.value = notes[step % notes.length];
       const t = ctx.currentTime;
       gain.gain.setValueAtTime(0.06, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + stepDur * 0.85);
-
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + stepDur);
+      osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+      osc.start(t); osc.stop(t + stepDur);
       step++;
     };
 
@@ -238,11 +305,13 @@ const startSynthwave = (ctx) => {
   } catch { return null; }
 };
 
+// ─── Component ────────────────────────────────────────────────────────────────
 const AsteroidGame = () => {
   const mountRef = useRef(null);
   const audioCtxRef = useRef(null);
   const shakeTimer = useRef(null);
-  const uiTick = useRef(0); // Fix 2: throttle React state updates
+  const uiTick = useRef(0);
+  const sectorClearTimer = useRef(null);
 
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -253,26 +322,24 @@ const AsteroidGame = () => {
   const [shaking, setShaking] = useState(false);
   const [grazeMsg, setGrazeMsg] = useState(null);
   const [paused, setPaused] = useState(false);
-  const [gameStats, setGameStats] = useState({ grazesTotal: 0, asteroidsDestroyed: 0, timeSurvived: 0, maxCombo: 0 });
+  const [gameStats, setGameStats] = useState({ grazesTotal: 0, enemiesDestroyed: 0, timeSurvived: 0, maxCombo: 0 });
   const [sector, setSector] = useState(1);
   const [flash, setFlash] = useState(false);
+  // NEW: cinematic sector-clear overlay state
+  const [sectorClearAnim, setSectorClearAnim] = useState(null);
+  // null | { sector: number, phase: 'in' | 'out' }
 
   const finalScore = useRef(0);
   const highScore = useRef(Number(sessionStorage.getItem('hs') || 0));
   const popupId = useRef(0);
   const gameStartTime = useRef(0);
-  const statsRef = useRef({ grazesTotal: 0, asteroidsDestroyed: 0, maxCombo: 0 });
+  const statsRef = useRef({ grazesTotal: 0, enemiesDestroyed: 0, maxCombo: 0 });
   const synthIntervalRef = useRef(null);
   const lastSectorScore = useRef(0);
 
-  // ── Audio unlock on first interaction ───────────────────────────────────
   const unlockAudio = useCallback(() => {
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = createAudio();
-    }
-    if (audioCtxRef.current?.state === 'suspended') {
-      audioCtxRef.current.resume().catch(() => { });
-    }
+    if (!audioCtxRef.current) audioCtxRef.current = createAudio();
+    if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume().catch(() => { });
   }, []);
 
   const addPopup = (x, y, text, color, big = false) => {
@@ -281,33 +348,26 @@ const AsteroidGame = () => {
     setTimeout(() => setPopups(ps => ps.filter(p => p.id !== id)), 950);
   };
 
-  const togglePause = useCallback(() => {
-    setPaused(prev => !prev);
-  }, []);
+  const togglePause = useCallback(() => setPaused(prev => !prev), []);
 
   const startGame = (withWarp = false) => {
     unlockAudio();
     finalScore.current = 0;
     gameStartTime.current = Date.now();
-    statsRef.current = { grazesTotal: 0, asteroidsDestroyed: 0, maxCombo: 0 };
+    statsRef.current = { grazesTotal: 0, enemiesDestroyed: 0, maxCombo: 0 };
     lastSectorScore.current = 0;
     setScore(0); setLives(3); setActivePUps({}); setSector(1);
-    setCombo(0); setPopups([]); setShaking(false); setGrazeMsg(null); setPaused(false);
-    setGameStats({ grazesTotal: 0, asteroidsDestroyed: 0, timeSurvived: 0, maxCombo: 0 });
-    // Start synthwave loop after a short delay (audio context needs to unlock first)
+    setCombo(0); setPopups([]); setShaking(false); setGrazeMsg(null);
+    setPaused(false); setSectorClearAnim(null);
+    setGameStats({ grazesTotal: 0, enemiesDestroyed: 0, timeSurvived: 0, maxCombo: 0 });
+
     if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
-    setTimeout(() => {
-      synthIntervalRef.current = startSynthwave(audioCtxRef.current);
-    }, 500);
-    if (withWarp) {
-      setPhase('warp');
-      setTimeout(() => setPhase('playing'), 1800);
-    } else {
-      setPhase('playing');
-    }
+    setTimeout(() => { synthIntervalRef.current = startSynthwave(audioCtxRef.current); }, 500);
+
+    if (withWarp) { setPhase('warp'); setTimeout(() => setPhase('playing'), 1800); }
+    else { setPhase('playing'); }
   };
 
-  // ✅ FIX 4: Screen shake — toggle class, re-trigger via key
   const triggerShake = useCallback(() => {
     setShaking(false);
     requestAnimationFrame(() => setShaking(true));
@@ -326,25 +386,19 @@ const AsteroidGame = () => {
     setTimeout(() => setFlash(false), 150);
   }, []);
 
-
   // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'playing' && phase !== 'warp') return;
     const mount = mountRef.current;
     if (!mount) return;
 
-    // ── Renderer ──────────────────────────────────────────────────────────
     const isMobile = mount.clientWidth < 768;
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: !isMobile, // Disable antialias on mobile for performance
-      powerPreference: "high-performance"
-    });
+    const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.setClearColor(0x060612);
     mount.appendChild(renderer.domElement);
 
-    // ── Scene + Camera ────────────────────────────────────────────────────
     const scene = new THREE.Scene();
     const aspect = mount.clientWidth / mount.clientHeight;
     const cam = new THREE.PerspectiveCamera(60, aspect, 0.1, 100);
@@ -362,12 +416,8 @@ const AsteroidGame = () => {
     };
     const worldToScreen = (wx, wy) => {
       const v = new THREE.Vector3(wx, wy, 0).project(cam);
-      return {
-        x: (v.x * 0.5 + 0.5) * mount.clientWidth,
-        y: (-v.y * 0.5 + 0.5) * mount.clientHeight,
-      };
+      return { x: (v.x * 0.5 + 0.5) * mount.clientWidth, y: (-v.y * 0.5 + 0.5) * mount.clientHeight };
     };
-
     const dist2D = (p1, p2) => Math.hypot(p1.x - p2.x, p1.y - p2.y);
 
     // ── Lights ────────────────────────────────────────────────────────────
@@ -425,12 +475,11 @@ const AsteroidGame = () => {
 
     // ── Game State ────────────────────────────────────────────────────────
     const gs = {
-      running: true, livesLeft: 3,
-      bullets: [], asteroids: [], particles: [], powerups: [], ufos: [],
+      running: true, livesLeft: 3, sectorClearing: false,
+      bullets: [], enemyBullets: [], asteroids: [], particles: [], powerups: [], ufos: [],
       keys: {}, mouse: { x: 0, y: -B.y + 2 }, touchActive: false,
       lastShot: 0, lastSpawn: 0, lastPowerUp: 0, lastUfoSpawn: 0,
-      // ✅ FIX 3: Dynamic difficulty — wave-based breathing pattern
-      waveTimer: 0, wavePhase: 0, // 0=normal 1=surge 2=calm
+      waveTimer: 0, wavePhase: 0,
       spawnInterval: 2200, diffMult: 1,
       shield: false, shieldExpires: 0,
       rapid: false, rapidExpires: 0,
@@ -438,24 +487,22 @@ const AsteroidGame = () => {
       spread: false, spreadExpires: 0,
       laser: false, laserExpires: 0,
       lastHitTime: 0, comboCount: 0,
-      // Graze state — one graze per asteroid
       grazedIds: new Set(),
+      // vortex state
+      vortexTime: 0,
     };
     let localScore = 0, localLives = 3;
 
-    // ── Factories ─────────────────────────────────────────────────────────
-    const disposables = [];  // meshes tracked for geometry+material disposal
-    const particleMats = []; // Fix 7: particle materials (shared geo, dispose mats only)
-    // Fix 7: one shared geometry for ALL particles — much cheaper than per-explosion alloc
+    const disposables = [];
+    const particleMats = [];
     const particleGeo = new THREE.SphereGeometry(.08, 4, 4);
-    let lastTouchTime = 0; // Fix 4: ghost-click guard
+    let lastTouchTime = 0;
 
     const trackMesh = (mesh) => { disposables.push(mesh); return mesh; };
 
     // ── Thruster Trail ─────────────────────────────────────────────────────
     const trailGeo = new THREE.SphereGeometry(0.07, 4, 4);
     const trailParticles = [];
-    let lastTrailPos = { x: 0, y: 0 };
 
     const emitTrail = () => {
       const TRAIL_COLORS = [0xff8800, 0xff4400, 0xff2200];
@@ -473,7 +520,6 @@ const AsteroidGame = () => {
     const makeBullet = (angleOffset = 0, isLaser = gs.laser) => {
       const size = gs.bigbullet ? .28 : .12;
       const color = isLaser ? 0x48e0e0 : gs.bigbullet ? 0xffb74d : 0xff5500;
-      
       let geo, mat, mesh, bLight;
       if (isLaser) {
         geo = new THREE.CylinderGeometry(0.08, 0.08, 1.8, 8);
@@ -486,21 +532,13 @@ const AsteroidGame = () => {
         mesh = trackMesh(new THREE.Mesh(geo, mat));
         bLight = new THREE.PointLight(color, gs.bigbullet ? 4 : 2.5, gs.bigbullet ? 6 : 4);
       }
-      
       mesh.position.copy(shipGroup.position);
       mesh.position.y += .9;
       const rad = THREE.MathUtils.degToRad(angleOffset);
       mesh.rotation.z = -rad;
       mesh.add(bLight);
       scene.add(mesh);
-      gs.bullets.push({ 
-        mesh, 
-        vx: Math.sin(rad) * (isLaser ? 0.5 : 0.18), 
-        vy: isLaser ? 0.7 : 0.32, 
-        big: gs.bigbullet, 
-        pierce: isLaser,
-        geo, mat 
-      });
+      gs.bullets.push({ mesh, vx: Math.sin(rad) * (isLaser ? 0.5 : 0.18), vy: isLaser ? 0.7 : 0.32, big: gs.bigbullet, pierce: isLaser, geo, mat });
     };
 
     const shoot = () => {
@@ -508,8 +546,21 @@ const AsteroidGame = () => {
       const angles = [0];
       if (gs.spread) angles.push(-12, 12, -24, 24);
       else if (gs.rapid) angles.push(-15, 15);
-      
       angles.forEach(ang => makeBullet(ang));
+    };
+
+    const makeEnemyBullet = (x, y, angleOffset = 0) => {
+      const geo = new THREE.SphereGeometry(0.18, 8, 8);
+      const color = 0xcc22ff;
+      const mat = new THREE.MeshBasicMaterial({ color });
+      const mesh = trackMesh(new THREE.Mesh(geo, mat));
+      const bLight = new THREE.PointLight(color, 2, 4);
+      mesh.position.set(x, y, 0);
+      const rad = THREE.MathUtils.degToRad(angleOffset);
+      mesh.rotation.z = -rad;
+      mesh.add(bLight);
+      scene.add(mesh);
+      gs.enemyBullets.push({ mesh, vx: Math.sin(rad) * 0.12, vy: -0.22, geo, mat });
     };
 
     const makeAsteroid = () => {
@@ -518,15 +569,9 @@ const AsteroidGame = () => {
       const type = pickAsteroidType();
       const matProps = type.matProps(size);
       const detail = Math.random() > .5 ? 1 : 0;
-      
-      // Crystal asteroids use Box/Octahedron for a sharper look
       let geo;
-      if (type === ASTEROID_TYPES[2]) {
-        geo = new THREE.OctahedronGeometry(size, detail);
-      } else {
-        geo = new THREE.IcosahedronGeometry(size, detail);
-      }
-      
+      if (type === ASTEROID_TYPES[2]) geo = new THREE.OctahedronGeometry(size, detail);
+      else geo = new THREE.IcosahedronGeometry(size, detail);
       const mat = new THREE.MeshStandardMaterial({
         ...matProps,
         emissive: type.emissive || new THREE.Color('#000000'),
@@ -535,13 +580,7 @@ const AsteroidGame = () => {
       const mesh = trackMesh(new THREE.Mesh(geo, mat));
       mesh.position.set((Math.random() - .5) * B.x * 1.8, B.y + size + .5, (Math.random() - .5) * 1.5);
       mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-      
-      // Crystal asteroids glow
-      if (type.emissive) {
-        const glow = new THREE.PointLight(matProps.color, 1.5, 4);
-        mesh.add(glow);
-      }
-      
+      if (type.emissive) mesh.add(new THREE.PointLight(matProps.color, 1.5, 4));
       scene.add(mesh);
       gs.asteroids.push({
         mesh, size, pts: cfg.pts * type.ptsMult, geo, mat,
@@ -549,6 +588,8 @@ const AsteroidGame = () => {
         vy: -(0.022 + Math.random() * 0.011) * gs.diffMult,
         rx: (Math.random() - .5) * .016,
         ry: (Math.random() - .5) * .016,
+        vortexing: false,
+        vortexDelay: 0,
       });
     };
 
@@ -567,42 +608,26 @@ const AsteroidGame = () => {
 
     const makeUfo = () => {
       const g = new THREE.Group();
-      
-      // UFO Base
       const geo1 = new THREE.SphereGeometry(0.7, 16, 8);
       geo1.scale(1, 0.25, 1);
       const mat1 = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.1 });
       const mesh1 = trackMesh(new THREE.Mesh(geo1, mat1));
-      
-      // UFO Cockpit
       const geo2 = new THREE.SphereGeometry(0.4, 16, 8);
       geo2.scale(1, 0.7, 1);
       const mat2 = new THREE.MeshBasicMaterial({ color: 0x00ffff });
       const mesh2 = trackMesh(new THREE.Mesh(geo2, mat2));
       mesh2.position.y = 0.2;
-      
       const uLight = new THREE.PointLight(0x00ffff, 3, 5);
-      
-      g.add(mesh1);
-      g.add(mesh2);
-      g.add(uLight);
-      
+      g.add(mesh1); g.add(mesh2); g.add(uLight);
       const fromLeft = Math.random() > 0.5;
       g.position.set(fromLeft ? -B.x - 2 : B.x + 2, B.y - 1 - Math.random() * (B.y - 1), 0);
       scene.add(g);
-      
-      // We push meshes so we can track and delete them if needed, but removeMesh handles the Group just fine usually
-      gs.ufos.push({
-        mesh: g,
-        vx: (fromLeft ? 1 : -1) * (0.05 + Math.random() * 0.04),
-        pts: 100
-      });
+      gs.ufos.push({ mesh: g, vx: (fromLeft ? 1 : -1) * (0.05 + Math.random() * 0.04), pts: 100 });
     };
 
     const explode = (pos, color = 0xff5500, count = 14) => {
       const particleCount = mount.clientWidth < 768 ? Math.floor(count * 0.6) : count;
       for (let i = 0; i < particleCount; i++) {
-        // Fix 7: reuse shared particleGeo — never track via trackMesh (avoids double-dispose)
         const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 });
         particleMats.push(mat);
         const m = new THREE.Mesh(particleGeo, mat);
@@ -615,8 +640,6 @@ const AsteroidGame = () => {
         scene.add(m);
         gs.particles.push({ mesh: m, vel, life: 1, mat });
       }
-
-      // ── Energy Ring: expanding torus that fades out ────────────────
       const ringGeo = new THREE.TorusGeometry(0.1, 0.04, 6, 24);
       const ringMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 });
       particleMats.push(ringMat);
@@ -628,63 +651,42 @@ const AsteroidGame = () => {
     };
 
     // ── Input ─────────────────────────────────────────────────────────────
-    const onKeyDown = e => {
-      gs.keys[e.code] = true;
-      unlockAudio();
-      if (e.code === 'Escape') togglePause();
-    };
+    const onKeyDown = e => { gs.keys[e.code] = true; unlockAudio(); if (e.code === 'Escape') togglePause(); };
     const onKeyUp = e => { gs.keys[e.code] = false; };
-
     const onMouseMove = e => {
       const w = screenToWorld(e.clientX, e.clientY);
       gs.mouse.x = w.x;
       gs.mouse.y = THREE.MathUtils.clamp(w.y, -B.y + .5, B.y - .5);
       gs.touchActive = false;
     };
-
     const onClick = () => {
-      // Fix 4: ignore ghost click emitted right after touchstart on mobile
       if (Date.now() - lastTouchTime < 500) return;
       unlockAudio();
-      if (gs.running) { shoot(); }
+      if (gs.running) shoot();
     };
 
-    // ✅ Relative Touch Joystick — drag anywhere to move ship, tap to shoot
-    let touchOrigin = null; // { clientX, clientY, shipX, shipY }
-
+    let touchOrigin = null;
     const onTouchMove = e => {
       e.preventDefault();
       if (!touchOrigin) return;
       const t = e.touches[0];
       const dx = t.clientX - touchOrigin.clientX;
       const dy = t.clientY - touchOrigin.clientY;
-      // Convert pixel delta to world units (approx)
-      const worldW = B.x * 2;
-      const pxW = mount.clientWidth;
-      const scale = worldW / pxW;
+      const scale = (B.x * 2) / mount.clientWidth;
       gs.mouse.x = THREE.MathUtils.clamp(touchOrigin.shipX + dx * scale, -B.x + .5, B.x - .5);
       gs.mouse.y = THREE.MathUtils.clamp(touchOrigin.shipY - dy * scale, -B.y + .5, B.y - .5);
       gs.touchActive = true;
     };
-
     const onTouchStart = e => {
       e.preventDefault();
       lastTouchTime = Date.now();
       unlockAudio();
       const t = e.touches[0];
-      // Record the finger origin and current ship world position
-      touchOrigin = {
-        clientX: t.clientX,
-        clientY: t.clientY,
-        shipX: shipGroup.position.x,
-        shipY: shipGroup.position.y,
-      };
+      touchOrigin = { clientX: t.clientX, clientY: t.clientY, shipX: shipGroup.position.x, shipY: shipGroup.position.y };
       gs.touchActive = true;
       if (gs.running) shoot();
     };
-
     const onTouchEnd = () => { touchOrigin = null; };
-
     const onResize = () => {
       cam.aspect = mount.clientWidth / mount.clientHeight;
       cam.updateProjectionMatrix();
@@ -703,7 +705,6 @@ const AsteroidGame = () => {
     // ── Game Loop ─────────────────────────────────────────────────────────
     let raf;
     let warpStart = phase === 'warp' ? performance.now() : 0;
-    // Fix 3: only remove from scene here — cleanup() does the single-pass disposal
     const removeMesh = (mesh) => { scene.remove(mesh); };
 
     const tick = t => {
@@ -711,15 +712,14 @@ const AsteroidGame = () => {
       raf = requestAnimationFrame(tick);
       const now = performance.now();
 
-      // ── Hyperspace Warp ───────────────────────────────────────────────
+      // ── Warp ──────────────────────────────────────────────────────────
       if (phase === 'warp') {
         if (warpStart === 0) warpStart = now;
         const elapsed = now - warpStart;
         const progress = Math.min(elapsed / 1600, 1);
-        // Stretch stars upward, then snap back
         const stretch = progress < 0.5
-          ? 1 + progress * 30        // ramp up: scale from 1 → 16
-          : 16 - (progress - 0.5) * 30; // snap back: scale 16 → 1
+          ? 1 + progress * 30
+          : 16 - (progress - 0.5) * 30;
         starField.scale.set(1, Math.max(1, stretch), 1);
         renderer.render(scene, cam);
         return;
@@ -728,8 +728,6 @@ const AsteroidGame = () => {
       }
 
       if (!gs.running) return;
-
-      // ── Pause gate ────────────────────────────────────────────────────
       if (paused) { renderer.render(scene, cam); return; }
 
       // ── Ship movement ─────────────────────────────────────────────────
@@ -737,41 +735,36 @@ const AsteroidGame = () => {
       const usingKeyboard =
         gs.keys['ArrowLeft'] || gs.keys['ArrowRight'] ||
         gs.keys['ArrowUp'] || gs.keys['ArrowDown'] ||
-        gs.keys['KeyA'] || gs.keys['KeyD'] || gs.keys['KeyW'] || gs.keys['KeyS'];
+        gs.keys['KeyA'] || gs.keys['KeyD'] ||
+        gs.keys['KeyW'] || gs.keys['KeyS'];
 
-      if (gs.keys['ArrowLeft'] || gs.keys['KeyA'])
-        shipGroup.position.x = Math.max(-B.x + .5, shipGroup.position.x - spd);
-      if (gs.keys['ArrowRight'] || gs.keys['KeyD'])
-        shipGroup.position.x = Math.min(B.x - .5, shipGroup.position.x + spd);
-      if (gs.keys['ArrowUp'] || gs.keys['KeyW'])
-        shipGroup.position.y = Math.min(B.y - .5, shipGroup.position.y + spd * .8);
-      if (gs.keys['ArrowDown'] || gs.keys['KeyS'])
-        shipGroup.position.y = Math.max(-B.y + .5, shipGroup.position.y - spd * .8);
+      if (!gs.sectorClearing) {
+        if (gs.keys['ArrowLeft'] || gs.keys['KeyA']) shipGroup.position.x = Math.max(-B.x + .5, shipGroup.position.x - spd);
+        if (gs.keys['ArrowRight'] || gs.keys['KeyD']) shipGroup.position.x = Math.min(B.x - .5, shipGroup.position.x + spd);
+        if (gs.keys['ArrowUp'] || gs.keys['KeyW']) shipGroup.position.y = Math.min(B.y - .5, shipGroup.position.y + spd * .8);
+        if (gs.keys['ArrowDown'] || gs.keys['KeyS']) shipGroup.position.y = Math.max(-B.y + .5, shipGroup.position.y - spd * .8);
 
-      if (!usingKeyboard) {
-        shipGroup.position.x += (gs.mouse.x - shipGroup.position.x) * .09;
-        shipGroup.position.y += (gs.mouse.y - shipGroup.position.y) * .06;
-        shipGroup.position.x = THREE.MathUtils.clamp(shipGroup.position.x, -B.x + .5, B.x - .5);
-        shipGroup.position.y = THREE.MathUtils.clamp(shipGroup.position.y, -B.y + .5, B.y - .5);
+        if (!usingKeyboard) {
+          shipGroup.position.x += (gs.mouse.x - shipGroup.position.x) * .09;
+          shipGroup.position.y += (gs.mouse.y - shipGroup.position.y) * .06;
+          shipGroup.position.x = THREE.MathUtils.clamp(shipGroup.position.x, -B.x + .5, B.x - .5);
+          shipGroup.position.y = THREE.MathUtils.clamp(shipGroup.position.y, -B.y + .5, B.y - .5);
+        }
       }
 
-      // Ship FX
       shipLight.position.copy(shipGroup.position); shipLight.position.z = 3;
       engineMesh.material.color.setHex(Math.random() > .35 ? 0xff8800 : 0xff3300);
       shipGroup.rotation.z = Math.sin(t * .002) * .05;
 
-      // Thruster trail — emit every 2 frames
       if (uiTick.current % 2 === 0) emitTrail();
 
-      // Update trail particles
       for (let i = trailParticles.length - 1; i >= 0; i--) {
         const tp = trailParticles[i];
         tp.mesh.position.y += tp.vy;
         tp.mesh.position.x += (Math.random() - 0.5) * 0.015;
         tp.life -= 0.07;
         tp.mesh.material.opacity = Math.max(0, tp.life * 0.8);
-        const s = Math.max(0, tp.life);
-        tp.mesh.scale.setScalar(s);
+        tp.mesh.scale.setScalar(Math.max(0, tp.life));
         if (tp.life <= 0) { removeMesh(tp.mesh); trailParticles.splice(i, 1); }
       }
 
@@ -786,90 +779,155 @@ const AsteroidGame = () => {
       shieldMesh.material.opacity = gs.shield ? .65 : 0;
       shieldLight.intensity = gs.shield ? 2 : 0;
       if (gs.shield) shieldMesh.rotation.z += .03;
-      // Fix 2: throttle React state — only push UI updates at ~10fps (every 6 frames)
       if (uiTick.current % 6 === 0) setActivePUps({ ...pActive });
 
-      // Keyboard shooting (held = auto-fire)
       const cooldown = gs.rapid ? 80 : 190;
-      if ((gs.keys['Space'] || gs.keys['Enter']) && t - gs.lastShot > cooldown) {
+      if (!gs.sectorClearing && (gs.keys['Space'] || gs.keys['Enter']) && t - gs.lastShot > cooldown) {
         shoot(); gs.lastShot = t;
       }
 
-      // ✅ FIX 3: Dynamic difficulty — wave-breathing system
-      gs.waveTimer += 16; // ~60fps tick
-      const waveLen = 18000; // 18s per wave cycle
-      const wavePos = (gs.waveTimer % waveLen) / waveLen; // 0..1
+      // ── Dynamic difficulty ────────────────────────────────────────────
+      gs.waveTimer += 16;
+      const waveLen = 18000;
+      const wavePos = (gs.waveTimer % waveLen) / waveLen;
       const scaledScore = Math.floor(localScore / 200);
-      // Surge 40% of cycle, calm 20%, normal 40%
       let waveMod = 1.0;
-      if (wavePos < 0.4) {
-        waveMod = 1.0 + wavePos * 1.5; // ramp up → 1.0 to 1.6
-      } else if (wavePos < 0.6) {
-        waveMod = 1.6 - (wavePos - 0.4) * 4; // rapid drop → 1.6 to 0.8
-      } else {
-        waveMod = 0.8 + (wavePos - 0.6) * 0.5; // slow recovery → 0.8 to 1.0
-      }
-      gs.diffMult = (1 + scaledScore * 0.16) * waveMod; // Softened from 0.2
-      // Fix 6: chaos factor makes difficulty feel organic, not mathematical
+      if (wavePos < 0.4) waveMod = 1.0 + wavePos * 1.5;
+      else if (wavePos < 0.6) waveMod = 1.6 - (wavePos - 0.4) * 4;
+      else waveMod = 0.8 + (wavePos - 0.6) * 0.5;
+      gs.diffMult = (1 + scaledScore * 0.16) * waveMod;
       const chaos = 0.85 + Math.random() * 0.3;
-      // Capped at 650ms (from 450) to keep it survivable
       gs.spawnInterval = Math.max(650, ((2200 - scaledScore * 80) / waveMod) * chaos);
 
-      // ── Sector Progression ──────────────────────────────────────────
-      if (localScore >= lastSectorScore.current + 1000) {
+      // ── Sector Progression ────────────────────────────────────────────
+      if (!gs.sectorClearing && localScore >= lastSectorScore.current + 1000) {
         lastSectorScore.current += 1000;
-        const newSector = Math.floor(localScore / 1000) + 1;
-        setSector(newSector);
-        
-        // Sector Clear Effect
-        triggerShake();
+        gs.sectorClearing = true;
+        gs.vortexTime = 0;
+
+        // Tag all asteroids for vortex pull with a staggered delay
+        gs.asteroids.forEach(a => {
+          a.vortexing = true;
+          a.vortexDelay = Math.random() * 30; // 0–30 frames before each starts pulling
+        });
+
+        // Play sector-clear fanfare
+        SFX.sectorClear(audioCtxRef.current);
         triggerFlash();
-        explode(shipGroup.position, 0xffffff, 40);
-        for (let j = gs.asteroids.length - 1; j >= 0; j--) {
-          const a = gs.asteroids[j];
-          explode(a.mesh.position, 0xff5500, 8);
-          removeMesh(a.mesh);
-        }
-        gs.asteroids = [];
-        gs.grazedIds.clear();
 
-        // Life Recovery (max 5)
-        const oldLives = localLives;
-        localLives = Math.min(5, localLives + 1);
-        setLives(localLives);
-        if (localLives > oldLives) {
-          const sp = worldToScreen(0, 0);
-          addPopup(sp.x, sp.y, 'CORE REPAIRED +1 LIFE', '#48e080', true);
-        }
+        // Show cinematic overlay
+        const newSector = Math.floor(localScore / 1000) + 1;
+        setSectorClearAnim({ sector: newSector, phase: 'in' });
 
-        // Visual warp
-        setPhase('warp');
-        setTimeout(() => setPhase('playing'), 1800);
-
-        // Change star colors per sector
-        const sectorColors = [0xffffff, 0x00ffff, 0xff00ff, 0xffff00, 0x00ff00, 0xff4444];
-        starField.material.color.setHex(sectorColors[(newSector - 1) % sectorColors.length]);
-        ambientLight.color.setHex(sectorColors[(newSector - 1) % sectorColors.length]);
-        ambientLight.intensity = 0.4; // briefly dim for effect
-        setTimeout(() => { ambientLight.intensity = 1.2; }, 1000);
+        // After ~1.4s — cascade-explode any remaining asteroids and shake
+        sectorClearTimer.current = setTimeout(() => {
+          gs.asteroids.forEach((a, idx) => {
+            setTimeout(() => {
+              if (a.mesh) {
+                explode(a.mesh.position, 0xff8800, 8);
+                removeMesh(a.mesh);
+              }
+            }, idx * 40);
+          });
+          gs.asteroids = [];
+          gs.ufos.forEach(u => { explode(u.mesh.position, 0x00ffff, 12); removeMesh(u.mesh); });
+          gs.ufos = [];
+          gs.enemyBullets.forEach(b => removeMesh(b.mesh));
+          gs.enemyBullets = [];
+          gs.grazedIds.clear();
+          triggerShake();
+        }, 1400);
       }
 
-      // Spawn asteroids
-      if (t - gs.lastSpawn > gs.spawnInterval) {
+      // ── Vortex pull + ship charge during sector clear ─────────────────
+      if (gs.sectorClearing) {
+        gs.vortexTime++;
+
+        // Pull each asteroid into the center in a spiral
+        for (let i = gs.asteroids.length - 1; i >= 0; i--) {
+          const a = gs.asteroids[i];
+          if (!a.vortexing || gs.vortexTime < (a.vortexDelay || 0)) continue;
+
+          const dx = -a.mesh.position.x;
+          const dy = -a.mesh.position.y;
+          const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          const pull = 0.015 + gs.vortexTime * 0.0008;
+
+          // Radial pull + tangential spin component
+          a.mesh.position.x += (dx / d) * pull * d * 0.4 + (-dy / d) * 0.04;
+          a.mesh.position.y += (dy / d) * pull * d * 0.4 + (dx / d) * 0.04;
+          a.mesh.rotation.x += 0.09;
+          a.mesh.rotation.y += 0.09;
+
+          // Micro-explode when close enough to center
+          const distToCenter = Math.sqrt(a.mesh.position.x ** 2 + a.mesh.position.y ** 2);
+          if (distToCenter < 0.6) {
+            explode(a.mesh.position, 0xff8800, 10);
+            removeMesh(a.mesh);
+            gs.asteroids.splice(i, 1);
+            gs.grazedIds.delete(a.id);
+          }
+        }
+
+        // Ship charge phase (first ~50 frames): vibrate and rev engine
+        if (gs.vortexTime < 50) {
+          shipGroup.position.x += (Math.random() - 0.5) * 0.045;
+          engineMesh.material.color.setHex(gs.vortexTime % 4 < 2 ? 0xffaa00 : 0xff4400);
+          shipLight.intensity = Math.min(6, 3 + gs.vortexTime * 0.06);
+        } else {
+          // Launch phase: burn upward
+          shipGroup.position.y += 0.25;
+          engineMesh.material.color.setHex(0xffffff);
+          shipLight.intensity = Math.min(10, shipLight.intensity + 0.2);
+        }
+
+        // Ship has left the screen — trigger transition
+        if (shipGroup.position.y > B.y + 2) {
+          gs.sectorClearing = false;
+          shipGroup.position.y = -B.y + 2;
+          shipLight.intensity = 3;
+
+          const newSector = Math.floor(localScore / 1000) + 1;
+          setSector(newSector);
+          triggerShake();
+          triggerFlash();
+
+          const oldLives = localLives;
+          localLives = Math.min(5, localLives + 1);
+          setLives(localLives);
+          if (localLives > oldLives) {
+            const sp = worldToScreen(0, 0);
+            addPopup(sp.x, sp.y, 'CORE REPAIRED +1 LIFE', '#48e080', true);
+          }
+
+          // Fade out overlay then dismiss
+          setSectorClearAnim(prev => prev ? { ...prev, phase: 'out' } : null);
+          setTimeout(() => setSectorClearAnim(null), 600);
+
+          setPhase('warp');
+          setTimeout(() => setPhase('playing'), 1800);
+
+          const sectorColors = [0xffffff, 0x00ffff, 0xff00ff, 0xffff00, 0x00ff00, 0xff4444];
+          starField.material.color.setHex(sectorColors[(newSector - 1) % sectorColors.length]);
+          ambientLight.color.setHex(sectorColors[(newSector - 1) % sectorColors.length]);
+          ambientLight.intensity = 0.4;
+          setTimeout(() => { ambientLight.intensity = 1.2; }, 1000);
+          return;
+        }
+      }
+
+      // Spawn
+      if (!gs.sectorClearing && t - gs.lastSpawn > gs.spawnInterval) {
         makeAsteroid();
         if (Math.random() > .68) makeAsteroid();
         gs.lastSpawn = t;
       }
-
-      // Spawn power-ups (Adaptive drop rate)
-      let pDropChance = 11000 + Math.random() * 8000;
-      if (localLives < 2) pDropChance *= 0.65; // drops more often if dying
-      if (gs.lastPowerUp === 0 || t - gs.lastPowerUp > pDropChance) {
-        makePowerUp(); gs.lastPowerUp = t;
+      if (!gs.sectorClearing) {
+        let pDropChance = 11000 + Math.random() * 8000;
+        if (localLives < 2) pDropChance *= 0.65;
+        if (gs.lastPowerUp === 0 || t - gs.lastPowerUp > pDropChance) { makePowerUp(); gs.lastPowerUp = t; }
       }
-
-      // Spawn UFOs
-      if (gs.lastUfoSpawn === 0 || t - gs.lastUfoSpawn > 20000 + Math.random() * 15000) {
+      if (!gs.sectorClearing && (gs.lastUfoSpawn === 0 || t - gs.lastUfoSpawn > 20000 + Math.random() * 15000)) {
         makeUfo(); gs.lastUfoSpawn = t;
       }
 
@@ -887,17 +945,13 @@ const AsteroidGame = () => {
             SFX.explode(audioCtxRef.current);
             explode(a.mesh.position);
             removeMesh(a.mesh);
-            if (!b.pierce) {
-              removeMesh(b.mesh);
-              hit = true;
-            }
+            if (!b.pierce) { removeMesh(b.mesh); hit = true; }
             gs.asteroids.splice(j, 1);
             gs.grazedIds.delete(a.id);
 
-            // Combo calc
             const timeSinceLast = now - gs.lastHitTime;
-            if (timeSinceLast < 1500) { gs.comboCount = Math.min(gs.comboCount + 1, 8); }
-            else { gs.comboCount = 1; }
+            if (timeSinceLast < 1500) gs.comboCount = Math.min(gs.comboCount + 1, 8);
+            else gs.comboCount = 1;
             gs.lastHitTime = now;
             const multiplier = gs.comboCount >= 3 ? gs.comboCount : 1;
             const earned = a.pts * multiplier;
@@ -906,8 +960,7 @@ const AsteroidGame = () => {
             if (gs.comboCount >= 3) setCombo(gs.comboCount);
             else setCombo(0);
 
-            // Track stats
-            statsRef.current.asteroidsDestroyed++;
+            statsRef.current.enemiesDestroyed++;
             if (gs.comboCount > statsRef.current.maxCombo) statsRef.current.maxCombo = gs.comboCount;
 
             const sp = worldToScreen(a.mesh.position.x, a.mesh.position.y);
@@ -928,11 +981,12 @@ const AsteroidGame = () => {
               removeMesh(u.mesh);
               if (!b.pierce) { removeMesh(b.mesh); hit = true; }
               gs.ufos.splice(k, 1);
-              
               const multiplier = gs.comboCount >= 3 ? gs.comboCount : 1;
               const earned = u.pts * multiplier;
               localScore += earned;
               setScore(localScore);
+              statsRef.current.enemiesDestroyed++;
+              if (gs.comboCount > statsRef.current.maxCombo) statsRef.current.maxCombo = gs.comboCount;
               const sp = worldToScreen(u.mesh.position.x, u.mesh.position.y);
               addPopup(sp.x, sp.y, `+${earned} UFO!`, '#00ffff', true);
               break;
@@ -946,25 +1000,64 @@ const AsteroidGame = () => {
         }
       }
 
+      // ── Enemy Bullets ─────────────────────────────────────────────────
+      for (let i = gs.enemyBullets.length - 1; i >= 0; i--) {
+        const b = gs.enemyBullets[i];
+        b.mesh.position.x += b.vx;
+        b.mesh.position.y += b.vy;
+        let hit = false;
+
+        if (!gs.sectorClearing && dist2D(b.mesh.position, shipGroup.position) < 0.6) {
+          hit = true;
+          if (gs.shield) {
+            SFX.explode(audioCtxRef.current);
+            explode(b.mesh.position, 0x4880e0, 10);
+            gs.shield = false;
+            const sp = worldToScreen(shipGroup.position.x, shipGroup.position.y);
+            addPopup(sp.x, sp.y, 'SHIELD BLOCKED', '#4880e0', true);
+          } else {
+            SFX.hit(audioCtxRef.current);
+            triggerShake();
+            explode(shipGroup.position, 0xe04848, 20);
+            gs.comboCount = 0; setCombo(0);
+            localLives--; setLives(localLives);
+            if (localLives <= 0) {
+              gs.running = false;
+              finalScore.current = localScore;
+              if (localScore > highScore.current) { highScore.current = localScore; sessionStorage.setItem('hs', localScore); }
+              clearInterval(synthIntervalRef.current);
+              const timeSurvived = Math.floor((Date.now() - gameStartTime.current) / 1000);
+              setGameStats({ ...statsRef.current, timeSurvived });
+              setSectorClearAnim(null);
+              setPhase('over'); return;
+            }
+          }
+        }
+
+        if (hit || b.mesh.position.y < -B.y - 2 || b.mesh.position.x < -B.x - 2 || b.mesh.position.x > B.x + 2) {
+          removeMesh(b.mesh);
+          gs.enemyBullets.splice(i, 1);
+        }
+      }
+
       // ── Asteroids ─────────────────────────────────────────────────────
       for (let i = gs.asteroids.length - 1; i >= 0; i--) {
         const a = gs.asteroids[i];
-        a.mesh.position.y += a.vy;
-        a.mesh.rotation.x += a.rx;
-        a.mesh.rotation.y += a.ry;
+
+        // Skip normal movement if vortexing (handled above)
+        if (!a.vortexing) {
+          a.mesh.position.y += a.vy;
+          a.mesh.rotation.x += a.rx;
+          a.mesh.rotation.y += a.ry;
+        }
 
         const distToShip = dist2D(a.mesh.position, shipGroup.position);
-
-        // ✅ FIX 7: Near-miss graze bonus — band between (hit+0.05) and (hit+0.8)
         const hitRadius = a.size + .5;
         const grazeRadius = a.size + 1.3;
-        if (
-          distToShip > hitRadius &&
-          distToShip < grazeRadius &&
-          !gs.grazedIds.has(a.id)
-        ) {
+
+        if (distToShip > hitRadius && distToShip < grazeRadius && !gs.grazedIds.has(a.id)) {
           gs.grazedIds.add(a.id);
-          const grazePts = 5; // Fix 5: +5 makes chasing danger actually rewarding
+          const grazePts = 5;
           localScore += grazePts;
           setScore(localScore);
           SFX.graze(audioCtxRef.current);
@@ -972,14 +1065,11 @@ const AsteroidGame = () => {
           statsRef.current.grazesTotal++;
         }
 
-        // Collision
-        if (distToShip < hitRadius) {
+        if (distToShip < hitRadius && !gs.sectorClearing) {
           if (gs.shield) {
             SFX.explode(audioCtxRef.current);
             explode(a.mesh.position, 0x4880e0, 12);
-            removeMesh(a.mesh);
-            gs.asteroids.splice(i, 1);
-            gs.grazedIds.delete(a.id);
+            removeMesh(a.mesh); gs.asteroids.splice(i, 1); gs.grazedIds.delete(a.id);
             gs.shield = false;
             const sp = worldToScreen(shipGroup.position.x, shipGroup.position.y);
             addPopup(sp.x, sp.y, 'SHIELD BLOCKED', '#4880e0', true);
@@ -988,44 +1078,36 @@ const AsteroidGame = () => {
           SFX.hit(audioCtxRef.current);
           triggerShake();
           explode(shipGroup.position, 0xe04848, 20);
-          removeMesh(a.mesh);
-          gs.asteroids.splice(i, 1);
-          gs.grazedIds.delete(a.id);
+          removeMesh(a.mesh); gs.asteroids.splice(i, 1); gs.grazedIds.delete(a.id);
           gs.comboCount = 0; setCombo(0);
           localLives--; setLives(localLives);
           if (localLives <= 0) {
             gs.running = false;
             finalScore.current = localScore;
-            if (localScore > highScore.current) {
-              highScore.current = localScore;
-              sessionStorage.setItem('hs', localScore);
-            }
+            if (localScore > highScore.current) { highScore.current = localScore; sessionStorage.setItem('hs', localScore); }
             clearInterval(synthIntervalRef.current);
             const timeSurvived = Math.floor((Date.now() - gameStartTime.current) / 1000);
             setGameStats({ ...statsRef.current, timeSurvived });
+            setSectorClearAnim(null);
             setPhase('over'); return;
           }
           continue;
         }
 
-        if (a.mesh.position.y < -B.y - 2) {
+        if (a.mesh.position.y < -B.y - 2 && !gs.sectorClearing) {
           SFX.hit(audioCtxRef.current);
           triggerShake();
-          removeMesh(a.mesh);
-          gs.asteroids.splice(i, 1);
-          gs.grazedIds.delete(a.id);
+          removeMesh(a.mesh); gs.asteroids.splice(i, 1); gs.grazedIds.delete(a.id);
           gs.comboCount = 0; setCombo(0);
           localLives--; setLives(localLives);
           if (localLives <= 0) {
             gs.running = false;
             finalScore.current = localScore;
-            if (localScore > highScore.current) {
-              highScore.current = localScore;
-              sessionStorage.setItem('hs', localScore);
-            }
+            if (localScore > highScore.current) { highScore.current = localScore; sessionStorage.setItem('hs', localScore); }
             clearInterval(synthIntervalRef.current);
             const timeSurvived = Math.floor((Date.now() - gameStartTime.current) / 1000);
             setGameStats({ ...statsRef.current, timeSurvived });
+            setSectorClearAnim(null);
             setPhase('over'); return;
           }
         }
@@ -1036,13 +1118,19 @@ const AsteroidGame = () => {
         const u = gs.ufos[i];
         u.mesh.position.x += u.vx;
         u.mesh.rotation.y += 0.05;
-        
-        if (dist2D(u.mesh.position, shipGroup.position) < 1.4) {
+
+        if (!gs.sectorClearing && sector >= 2 && Math.random() < 0.015 + (sector * 0.005)) {
+          const dx = shipGroup.position.x - u.mesh.position.x;
+          const dy = shipGroup.position.y - u.mesh.position.y;
+          const deg = THREE.MathUtils.radToDeg(Math.atan2(dx, -dy));
+          makeEnemyBullet(u.mesh.position.x, u.mesh.position.y - 0.5, deg);
+        }
+
+        if (!gs.sectorClearing && dist2D(u.mesh.position, shipGroup.position) < 1.4) {
           if (gs.shield) {
             SFX.explode(audioCtxRef.current);
             explode(u.mesh.position, 0x00ffff, 15);
-            removeMesh(u.mesh);
-            gs.ufos.splice(i, 1);
+            removeMesh(u.mesh); gs.ufos.splice(i, 1);
             gs.shield = false;
             const sp = worldToScreen(shipGroup.position.x, shipGroup.position.y);
             addPopup(sp.x, sp.y, 'SHIELD BLOCKED', '#4880e0', true);
@@ -1051,28 +1139,24 @@ const AsteroidGame = () => {
           SFX.hit(audioCtxRef.current);
           triggerShake();
           explode(shipGroup.position, 0xe04848, 20);
-          removeMesh(u.mesh);
-          gs.ufos.splice(i, 1);
+          removeMesh(u.mesh); gs.ufos.splice(i, 1);
           gs.comboCount = 0; setCombo(0);
           localLives--; setLives(localLives);
           if (localLives <= 0) {
             gs.running = false;
             finalScore.current = localScore;
-            if (localScore > highScore.current) {
-              highScore.current = localScore;
-              sessionStorage.setItem('hs', localScore);
-            }
+            if (localScore > highScore.current) { highScore.current = localScore; sessionStorage.setItem('hs', localScore); }
             clearInterval(synthIntervalRef.current);
             const timeSurvived = Math.floor((Date.now() - gameStartTime.current) / 1000);
             setGameStats({ ...statsRef.current, timeSurvived });
+            setSectorClearAnim(null);
             setPhase('over'); return;
           }
           continue;
         }
 
         if ((u.vx > 0 && u.mesh.position.x > B.x + 2) || (u.vx < 0 && u.mesh.position.x < -B.x - 2)) {
-          removeMesh(u.mesh);
-          gs.ufos.splice(i, 1);
+          removeMesh(u.mesh); gs.ufos.splice(i, 1);
         }
       }
 
@@ -1086,24 +1170,21 @@ const AsteroidGame = () => {
           SFX.powerup(audioCtxRef.current);
           const sp = worldToScreen(p.mesh.position.x, p.mesh.position.y);
           addPopup(sp.x, sp.y, PUPS[p.type].label, PUPS[p.type].hex, true);
-          removeMesh(p.mesh);
-          gs.powerups.splice(i, 1);
-
+          removeMesh(p.mesh); gs.powerups.splice(i, 1);
           if (p.type === 'bomb') {
             triggerShake();
             explode(shipGroup.position, 0xe02048, 40);
-            
             for (let j = gs.asteroids.length - 1; j >= 0; j--) {
               const a = gs.asteroids[j];
               explode(a.mesh.position, 0xff5500, 8);
               removeMesh(a.mesh);
               localScore += a.pts * (gs.comboCount || 1);
+              statsRef.current.enemiesDestroyed++;
             }
             setScore(localScore);
             gs.asteroids = [];
             continue;
           }
-
           gs[p.type] = true;
           gs[`${p.type}Expires`] = now + PUPS[p.type].dur;
           continue;
@@ -1115,7 +1196,6 @@ const AsteroidGame = () => {
       for (let i = gs.particles.length - 1; i >= 0; i--) {
         const p = gs.particles[i];
         if (p.isRing) {
-          // Expand the ring outward and fade
           p.scale = (p.scale || 0.1) + 0.18;
           p.mesh.scale.setScalar(p.scale);
           p.life -= 0.055;
@@ -1137,6 +1217,7 @@ const AsteroidGame = () => {
     return () => {
       gs.running = false;
       cancelAnimationFrame(raf);
+      clearTimeout(sectorClearTimer.current);
 
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
@@ -1147,7 +1228,6 @@ const AsteroidGame = () => {
       mount.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('resize', onResize);
 
-      // Fix 3: single-pass disposal — use a Set so shared geometries are disposed only once
       const uniqueGeos = new Set();
       disposables.forEach(mesh => {
         if (mesh.geometry) uniqueGeos.add(mesh.geometry);
@@ -1157,39 +1237,22 @@ const AsteroidGame = () => {
         }
       });
       uniqueGeos.forEach(g => g.dispose());
-
-      // Fix 7: dispose shared particle geo + all particle materials
       particleGeo.dispose();
       particleMats.forEach(m => m.dispose());
-
-      // Star field
       sg.dispose(); starField.material.dispose(); scene.remove(starField);
-
-      // Ship meshes
-      [coneMesh, wings, engineMesh, shieldMesh].forEach(m => {
-        m.geometry.dispose(); m.material.dispose();
-      });
-
+      [coneMesh, wings, engineMesh, shieldMesh].forEach(m => { m.geometry.dispose(); m.material.dispose(); });
       [ambientLight, sun, shipLight, shieldLight].forEach(l => scene.remove(l));
-
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
-
-      // Fix 1: close AudioContext to prevent SPA accumulation
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
-        audioCtxRef.current = null;
-      }
+      if (audioCtxRef.current) { audioCtxRef.current.close().catch(() => { }); audioCtxRef.current = null; }
     };
   }, [phase, triggerShake, showGraze, unlockAudio, paused, togglePause, triggerFlash]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <Wrapper $shaking={shaking}>
-      {/* ── Visual Overlays ───────────────────────────────────────────── */}
+    <Wrapper $shake={shaking}>
       {flash && <div style={{ position: 'absolute', inset: 0, background: '#fff', zIndex: 100, opacity: 0.4, pointerEvents: 'none' }} />}
-      
-      {/* HUD components */}
+
       <BackBtn to="/">← PORTFOLIO</BackBtn>
       <CanvasMount ref={mountRef} />
 
@@ -1203,10 +1266,29 @@ const AsteroidGame = () => {
       </PopupLayer>
 
       {/* Graze notification */}
-      {grazeMsg && (
-        <GrazePopup key={grazeMsg.id}>
-          GRAZE +{grazeMsg.pts}
-        </GrazePopup>
+      {grazeMsg && <GrazePopup key={grazeMsg.id}>GRAZE +{grazeMsg.pts}</GrazePopup>}
+
+      {/* ── Cinematic Sector Clear Overlay ── */}
+      {sectorClearAnim && (
+        <SectorClearOverlay>
+          {/* Expanding vortex rings — three staggered pulses */}
+          <VortexRing $dur="0.9" $delay="0" />
+          <VortexRing $dur="0.9" $delay="0.18" />
+          <VortexRing $dur="0.9" $delay="0.36" />
+          {/* Scanline sweeps */}
+          <ScanLine $dur="1.2" $delay="0.05" />
+          <ScanLine $dur="1.2" $delay="0.5" />
+          {/* Title slam */}
+          <SectorClearTitle>SECTOR CLEAR</SectorClearTitle>
+          {/* Sub-title */}
+          <SectorClearSub>
+            SECTOR {sectorClearAnim.sector - 1} COMPLETE · JUMPING TO {sectorClearAnim.sector}
+          </SectorClearSub>
+          {/* Bonus line */}
+          <SectorClearScore $exit={sectorClearAnim.phase === 'out'}>
+            +1 LIFE · WARP DRIVE CHARGED
+          </SectorClearScore>
+        </SectorClearOverlay>
       )}
 
       {/* HUD */}
@@ -1240,7 +1322,7 @@ const AsteroidGame = () => {
         </>
       )}
 
-      {/* Hyperspace Warp overlay */}
+      {/* Hyperspace Warp */}
       {phase === 'warp' && (
         <Overlay style={{ background: 'transparent', backdropFilter: 'none', pointerEvents: 'none' }}>
           <GameTitle style={{ fontSize: 'clamp(1.8rem,6vw,2.4rem)', letterSpacing: '10px', opacity: 0.9 }}>
@@ -1257,19 +1339,17 @@ const AsteroidGame = () => {
         <Overlay>
           <GameTitle>ASTEROID FIELD</GameTitle>
           <Sub>THREE.JS EXPERIENCE · MEET BEDDY</Sub>
-
           <ObjBox>
             <ObjTitle>MISSION OBJECTIVES</ObjTitle>
-            <ObjRow $vc="#a0c0ff"><span>Small asteroid</span>   <span className="v">+20 pts</span></ObjRow>
-            <ObjRow $vc="#ffb74d"><span>Medium asteroid</span>  <span className="v">+10 pts</span></ObjRow>
-            <ObjRow $vc="#888">  <span>Large asteroid</span>    <span className="v">+5 pts</span></ObjRow>
-            <ObjRow $vc="#ffe082"><span>Near-miss graze</span>  <span className="v">+3 pts</span></ObjRow>
-            <ObjRow $vc="#48e080"><span>Combo hits (3+)</span>  <span className="v">score ×N</span></ObjRow>
+            <ObjRow $vc="#a0c0ff"><span>Small asteroid</span>    <span className="v">+20 pts</span></ObjRow>
+            <ObjRow $vc="#ffb74d"><span>Medium asteroid</span>   <span className="v">+10 pts</span></ObjRow>
+            <ObjRow $vc="#888">  <span>Large asteroid</span>     <span className="v">+5 pts</span></ObjRow>
+            <ObjRow $vc="#ffe082"><span>Near-miss graze</span>   <span className="v">+3 pts</span></ObjRow>
+            <ObjRow $vc="#48e080"><span>Combo hits (3+)</span>   <span className="v">score ×N</span></ObjRow>
             <ObjRow $vc="#e04848"><span>Asteroid hits ship</span><span className="v">−1 life</span></ObjRow>
             <ObjRow $vc="#e04848"><span>Asteroid passes you</span><span className="v">−1 life</span></ObjRow>
-            <ObjRow>              <span>Total lives</span>      <span className="v">♥ ♥ ♥</span></ObjRow>
+            <ObjRow>              <span>Total lives</span>       <span className="v">♥ ♥ ♥</span></ObjRow>
           </ObjBox>
-
           <Legend>
             <LItem $c="#4880e0">SHIELD — absorbs one hit (10s)</LItem>
             <LItem $c="#48e080">RAPID — fast 3-way fire (8s)</LItem>
@@ -1278,13 +1358,11 @@ const AsteroidGame = () => {
             <LItem $c="#48e0e0">LASER — piercing beam (6s)</LItem>
             <LItem $c="#e02048">SMART BOMB — destroys all (instant)</LItem>
           </Legend>
-
           <CtrlRow>
             MOUSE / TOUCH — move ship &nbsp;·&nbsp; WASD / ARROWS — keyboard<br />
             SPACE (hold) / CLICK / TAP — shoot &nbsp;·&nbsp; RAPID: 3-way spread
           </CtrlRow>
-          {highScore.current > 0 &&
-            <HighScore>BEST: {String(highScore.current).padStart(6, '0')}</HighScore>}
+          {highScore.current > 0 && <HighScore>BEST: {String(highScore.current).padStart(6, '0')}</HighScore>}
           <LaunchBtn onClick={() => startGame(true)}>LAUNCH ▶</LaunchBtn>
         </Overlay>
       )}
@@ -1294,24 +1372,21 @@ const AsteroidGame = () => {
         <Overlay>
           <GameTitle style={{ fontSize: 'clamp(1.8rem,6vw,2.6rem)' }}>GAME OVER</GameTitle>
           <FinalScore>SCORE: {String(finalScore.current).padStart(6, '0')}</FinalScore>
-          
           <ObjBox style={{ marginTop: '.5rem', marginBottom: '.5rem' }}>
             <ObjTitle>PERFORMANCE STATS</ObjTitle>
-            <ObjRow $vc="#a0c0ff"><span>Asteroids Destroyed</span> <span className="v">{gameStats.asteroidsDestroyed}</span></ObjRow>
-            <ObjRow $vc="#ffb74d"><span>Max Combo</span> <span className="v">{gameStats.maxCombo}×</span></ObjRow>
-            <ObjRow $vc="#e04848"><span>Time Survived</span> <span className="v">{gameStats.timeSurvived}s</span></ObjRow>
-            <ObjRow $vc="#48e080"><span>Danger Grazes</span> <span className="v">{gameStats.grazesTotal}</span></ObjRow>
+            <ObjRow $vc="#a0c0ff"><span>Enemies Destroyed</span> <span className="v">{gameStats.enemiesDestroyed}</span></ObjRow>
+            <ObjRow $vc="#ffb74d"><span>Max Combo</span>         <span className="v">{gameStats.maxCombo}×</span></ObjRow>
+            <ObjRow $vc="#e04848"><span>Time Survived</span>     <span className="v">{gameStats.timeSurvived}s</span></ObjRow>
+            <ObjRow $vc="#48e080"><span>Danger Grazes</span>     <span className="v">{gameStats.grazesTotal}</span></ObjRow>
           </ObjBox>
-
           {finalScore.current >= highScore.current && finalScore.current > 0 &&
             <Sub style={{ color: '#ffb74d', opacity: 1, marginBottom: '.5rem' }}>★ NEW HIGH SCORE ★</Sub>}
-          {highScore.current > 0 &&
-            <HighScore>BEST: {String(highScore.current).padStart(6, '0')}</HighScore>}
+          {highScore.current > 0 && <HighScore>BEST: {String(highScore.current).padStart(6, '0')}</HighScore>}
           <LaunchBtn onClick={() => startGame(true)}>PLAY AGAIN ▶</LaunchBtn>
         </Overlay>
       )}
 
-      {/* Pause Overlay */}
+      {/* Pause */}
       {paused && phase === 'playing' && (
         <Overlay style={{ background: 'rgba(6,6,18,0.7)' }}>
           <GameTitle style={{ fontSize: '2rem', letterSpacing: '8px' }}>PAUSED</GameTitle>
