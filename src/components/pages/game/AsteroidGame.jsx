@@ -484,6 +484,7 @@ const AsteroidGame = () => {
   const shakeTimer = useRef(null);
   const uiTick = useRef(0);
   const sectorClearTimer = useRef(null);
+  const scoreRef = useRef(0);
 
   const [score, setScore] = useState(0);
   const [hp, setHp] = useState(MAX_HP);
@@ -686,7 +687,7 @@ const AsteroidGame = () => {
       // Local sector tracking
       localSector: 1,
     };
-    let localScore = 0, localHP = MAX_HP;
+    let localScore = scoreRef.current, localHP = MAX_HP;
 
     const disposables = [];
     const particleMats = [];
@@ -1046,6 +1047,7 @@ const AsteroidGame = () => {
           const bonusPts = 5 + gs.localSector * 2;
           localScore += bonusPts;
           setScore(localScore);
+          scoreRef.current = localScore;
           const sp = worldToScreen(shipGroup.position.x, shipGroup.position.y);
           addPopup(sp.x, sp.y - 30, `DANGER ZONE +${bonusPts}`, '#ffe082');
         }
@@ -1235,7 +1237,7 @@ const AsteroidGame = () => {
               gs.boss = null; gs.bossSpawned = true;
               setBossHP(null);
               const earned = 500 * gs.localSector;
-              localScore += earned; setScore(localScore);
+              localScore += earned; setScore(localScore); scoreRef.current = localScore;
               statsRef.current.bossesKilled++;
               triggerShake(2); triggerFlash();
               const sp = worldToScreen(0, 0);
@@ -1281,7 +1283,7 @@ const AsteroidGame = () => {
               // Danger zone scoring bonus
               const dzMult = inDangerZone ? 1.5 : 1;
               const earned = Math.floor(a.pts * multiplier * dzMult);
-              localScore += earned; setScore(localScore);
+              localScore += earned; setScore(localScore); scoreRef.current = localScore;
               if (gs.comboCount >= 3) setCombo(gs.comboCount); else setCombo(0);
               statsRef.current.enemiesDestroyed++;
               if (gs.comboCount > statsRef.current.maxCombo) statsRef.current.maxCombo = gs.comboCount;
@@ -1315,7 +1317,7 @@ const AsteroidGame = () => {
               gs.ufos.splice(k, 1);
               const multiplier = gs.comboCount >= 3 ? gs.comboCount : 1;
               const earned = 100 * multiplier;
-              localScore += earned; setScore(localScore);
+              localScore += earned; setScore(localScore); scoreRef.current = localScore;
               statsRef.current.enemiesDestroyed++;
               if (gs.comboCount > statsRef.current.maxCombo) statsRef.current.maxCombo = gs.comboCount;
               const sp = worldToScreen(u.mesh.position.x, u.mesh.position.y);
@@ -1373,7 +1375,7 @@ const AsteroidGame = () => {
         if (distToShip > hitRadius && distToShip < grazeRadius && !gs.grazedIds.has(a.id)) {
           gs.grazedIds.add(a.id);
           const grazePts = 5;
-          localScore += grazePts; setScore(localScore);
+          localScore += grazePts; setScore(localScore); scoreRef.current = localScore;
           SFX.graze(audioCtxRef.current);
           showGraze(grazePts);
           statsRef.current.grazesTotal++;
@@ -1466,7 +1468,7 @@ const AsteroidGame = () => {
               localScore += a.pts * (gs.comboCount || 1);
               statsRef.current.enemiesDestroyed++;
             }
-            setScore(localScore); gs.asteroids = [];
+            setScore(localScore); scoreRef.current = localScore; gs.asteroids = [];
             continue;
           }
           if (p.type === 'repair') {
