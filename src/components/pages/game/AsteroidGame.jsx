@@ -254,6 +254,8 @@ const AsteroidGame = () => {
   const [grazeMsg, setGrazeMsg] = useState(null);
   const [paused, setPaused] = useState(false);
   const [gameStats, setGameStats] = useState({ grazesTotal: 0, asteroidsDestroyed: 0, timeSurvived: 0, maxCombo: 0 });
+  const [sector, setSector] = useState(1);
+  const [flash, setFlash] = useState(false);
 
   const finalScore = useRef(0);
   const highScore = useRef(Number(sessionStorage.getItem('hs') || 0));
@@ -261,6 +263,7 @@ const AsteroidGame = () => {
   const gameStartTime = useRef(0);
   const statsRef = useRef({ grazesTotal: 0, asteroidsDestroyed: 0, maxCombo: 0 });
   const synthIntervalRef = useRef(null);
+  const lastSectorScore = useRef(0);
 
   // ── Audio unlock on first interaction ───────────────────────────────────
   const unlockAudio = useCallback(() => {
@@ -287,7 +290,8 @@ const AsteroidGame = () => {
     finalScore.current = 0;
     gameStartTime.current = Date.now();
     statsRef.current = { grazesTotal: 0, asteroidsDestroyed: 0, maxCombo: 0 };
-    setScore(0); setLives(3); setActivePUps({});
+    lastSectorScore.current = 0;
+    setScore(0); setLives(3); setActivePUps({}); setSector(1);
     setCombo(0); setPopups([]); setShaking(false); setGrazeMsg(null); setPaused(false);
     setGameStats({ grazesTotal: 0, asteroidsDestroyed: 0, timeSurvived: 0, maxCombo: 0 });
     // Start synthwave loop after a short delay (audio context needs to unlock first)
@@ -315,6 +319,11 @@ const AsteroidGame = () => {
     const id = Date.now();
     setGrazeMsg({ id, pts });
     setTimeout(() => setGrazeMsg(g => g?.id === id ? null : g), 820);
+  }, []);
+
+  const triggerFlash = useCallback(() => {
+    setFlash(true);
+    setTimeout(() => setFlash(false), 150);
   }, []);
 
 
@@ -496,13 +505,11 @@ const AsteroidGame = () => {
 
     const shoot = () => {
       SFX.shoot(audioCtxRef.current);
-      if (gs.spread) {
-        makeBullet(-24); makeBullet(-12); makeBullet(0); makeBullet(12); makeBullet(24);
-      } else if (gs.rapid) {
-        makeBullet(-16); makeBullet(0); makeBullet(16);
-      } else {
-        makeBullet(0);
-      }
+      const angles = [0];
+      if (gs.spread) angles.push(-12, 12, -24, 24);
+      else if (gs.rapid) angles.push(-15, 15);
+      
+      angles.forEach(ang => makeBullet(ang));
     };
 
     const makeAsteroid = () => {
@@ -802,20 +809,62 @@ const AsteroidGame = () => {
       } else {
         waveMod = 0.8 + (wavePos - 0.6) * 0.5; // slow recovery → 0.8 to 1.0
       }
-      gs.diffMult = (1 + scaledScore * 0.2) * waveMod;
+      gs.diffMult = (1 + scaledScore * 0.16) * waveMod; // Softened from 0.2
       // Fix 6: chaos factor makes difficulty feel organic, not mathematical
       const chaos = 0.85 + Math.random() * 0.3;
-      gs.spawnInterval = Math.max(450, ((2200 - scaledScore * 100) / waveMod) * chaos);
+      // Capped at 650ms (from 450) to keep it survivable
+      gs.spawnInterval = Math.max(650, ((2200 - scaledScore * 80) / waveMod) * chaos);
+
+      // ── Sector Progression ──────────────────────────────────────────
+      if (localScore >= lastSectorScore.current + 1000) {
+        lastSectorScore.current += 1000;
+        const newSector = Math.floor(localScore / 1000) + 1;
+        setSector(newSector);
+        
+        // Sector Clear Effect
+        triggerShake();
+        triggerFlash();
+        explode(shipGroup.position, 0xffffff, 40);
+        for (let j = gs.asteroids.length - 1; j >= 0; j--) {
+          const a = gs.asteroids[j];
+          explode(a.mesh.position, 0xff5500, 8);
+          removeMesh(a.mesh);
+        }
+        gs.asteroids = [];
+        gs.grazedIds.clear();
+
+        // Life Recovery (max 5)
+        const oldLives = localLives;
+        localLives = Math.min(5, localLives + 1);
+        setLives(localLives);
+        if (localLives > oldLives) {
+          const sp = worldToScreen(0, 0);
+          addPopup(sp.x, sp.y, 'CORE REPAIRED +1 LIFE', '#48e080', true);
+        }
+
+        // Visual warp
+        setPhase('warp');
+        setTimeout(() => setPhase('playing'), 1800);
+
+        // Change star colors per sector
+        const sectorColors = [0xffffff, 0x00ffff, 0xff00ff, 0xffff00, 0x00ff00, 0xff4444];
+        starField.material.color.setHex(sectorColors[(newSector - 1) % sectorColors.length]);
+        ambientLight.color.setHex(sectorColors[(newSector - 1) % sectorColors.length]);
+        ambientLight.intensity = 0.4; // briefly dim for effect
+        setTimeout(() => { ambientLight.intensity = 1.2; }, 1000);
+      }
 
       // Spawn asteroids
       if (t - gs.lastSpawn > gs.spawnInterval) {
         makeAsteroid();
-        if (Math.random() > .65) makeAsteroid();
+        if (Math.random() > .68) makeAsteroid();
         gs.lastSpawn = t;
       }
 
-      // Spawn power-ups
-      if (gs.lastPowerUp === 0 || t - gs.lastPowerUp > 10000 + Math.random() * 7000) {
+      // Spawn power-ups (Adaptive drop rate)
+      let pDropChance = 11000 + Math.random() * 8000;
+      if (localLives < 2) pDropChance *= 0.65; // drops more often if dying
+      if (gs.lastPowerUp === 0 || t - gs.lastPowerUp > pDropChance) {
         makePowerUp(); gs.lastPowerUp = t;
       }
 
@@ -1132,11 +1181,15 @@ const AsteroidGame = () => {
         audioCtxRef.current = null;
       }
     };
-  }, [phase, triggerShake, showGraze, unlockAudio, paused, togglePause]);
+  }, [phase, triggerShake, showGraze, unlockAudio, paused, togglePause, triggerFlash]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <Wrapper $shake={shaking}>
+    <Wrapper $shaking={shaking}>
+      {/* ── Visual Overlays ───────────────────────────────────────────── */}
+      {flash && <div style={{ position: 'absolute', inset: 0, background: '#fff', zIndex: 100, opacity: 0.4, pointerEvents: 'none' }} />}
+      
+      {/* HUD components */}
       <BackBtn to="/">← PORTFOLIO</BackBtn>
       <CanvasMount ref={mountRef} />
 
@@ -1167,7 +1220,7 @@ const AsteroidGame = () => {
             <HudCenter>
               {combo >= 3 && <ComboText>COMBO ×{combo}</ComboText>}
               <HudLabel style={{ textAlign: 'center', letterSpacing: '1px', marginTop: combo >= 3 ? '.2rem' : '0' }}>
-                LVL {Math.max(1, Math.floor(score / 300) + 1)}
+                SEC {sector} · LVL {Math.max(1, Math.floor(score / 300) + 1)}
               </HudLabel>
             </HudCenter>
             <HudBlock style={{ alignItems: 'flex-end' }}>
@@ -1190,8 +1243,12 @@ const AsteroidGame = () => {
       {/* Hyperspace Warp overlay */}
       {phase === 'warp' && (
         <Overlay style={{ background: 'transparent', backdropFilter: 'none', pointerEvents: 'none' }}>
-          <GameTitle style={{ fontSize: 'clamp(1.8rem,6vw,2.4rem)', letterSpacing: '10px', opacity: 0.9 }}>ENTERING WARP</GameTitle>
-          <Sub style={{ letterSpacing: '6px', opacity: 0.7 }}>PREPARE FOR LAUNCH</Sub>
+          <GameTitle style={{ fontSize: 'clamp(1.8rem,6vw,2.4rem)', letterSpacing: '10px', opacity: 0.9 }}>
+            {sector > 1 ? `SECTOR ${sector}` : 'ENTERING WARP'}
+          </GameTitle>
+          <Sub style={{ letterSpacing: '6px', opacity: 0.7 }}>
+            {sector > 1 ? 'HYPER-JUMP SUCCESSFUL' : 'PREPARE FOR LAUNCH'}
+          </Sub>
         </Overlay>
       )}
 
