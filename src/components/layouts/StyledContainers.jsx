@@ -17,84 +17,13 @@ export const FlexWrapper = styled(motion.div)`
     display: block;
     left: 0;
     right: 0;
-    
-    h1, h2 {
-      font-size: ${props => props.theme.typography.fontSizes['2xl']};
-      letter-spacing: -2px;
-    }
-    
-    .top, .bottom {
-      top: 2.5vh;
-      left: 2vw;
-      width: 100vw;
-      height: 10vh;
-    }
+    width: 100%;
+    min-height: 100vh;
+    position: relative;
+    top: 0;
   }
   
-  // iPhone landscape modes
   ${props => props.theme.mixins.smoothTransition('all')}
-  
-  ${props => `@media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (orientation: landscape)`} {
-    top: 9vh;
-    
-    .top, .bottom {
-      top: 10vh;
-      left: 2vw;
-      width: 60vw;
-      height: 70px;
-    }
-  }
-  
-  ${props => `@media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (orientation: landscape)`} {
-    .top, .bottom {
-      top: 15vh;
-      left: 2vw;
-      width: 60vw;
-      height: 70px;
-    }
-  }
-  
-  ${props => `@media only screen and (min-device-width: 414px) and (max-device-width: 736px) and (orientation: landscape)`} {
-    .top, .bottom {
-      top: 10vh;
-    }
-  }
-  
-  // iPhone X/newer iPhones
-  ${props => `@media only screen and (min-device-width: 375px) and (max-device-width: 812px) and (orientation: portrait)`} {
-    .bottom, .top {
-      width: 100vw;
-      height: 60px;
-    }
-  }
-  
-  ${props => `@media only screen and (min-device-width: 375px) and (max-device-width: 812px) and (orientation: landscape)`} {
-    .bottom, .top {
-      width: 50vw;
-    }
-  }
-  
-  // iPad
-  ${props => `@media only screen and (min-device-width: 768px) and (max-device-width: 1024px)`} {
-    width: 80vw;
-    
-    .top, .bottom {
-      width: 60vw;
-      height: 70px;
-    }
-  }
-  
-  // iPad Pro
-  ${props => `@media only screen and (min-device-width: 1024px) and (max-device-width: 1366px)`} {
-    display: block;
-    
-    .top, .bottom {
-      width: 40vw;
-      height: 70px;
-      top: 0;
-      left: 2vw;
-    }
-  }
 `;
 
 export const Boxes = styled(motion.div)`

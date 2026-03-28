@@ -116,6 +116,9 @@
 @media (max-width: 768px) {
 	.home-wrapper {
 		padding: var(--space-md);
+		padding-bottom: 110px; /* clear the floating mobile nav bar */
+		align-items: flex-start;
+		padding-top: 8vh;
 	}
 
 	.home-wrapper::before {

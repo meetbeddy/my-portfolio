@@ -18,6 +18,7 @@ export const ContentContainer = styled(motion.div)`
   
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     padding: ${props => props.theme.spacing.md};
+    padding-bottom: 100px; /* clear the floating mobile nav bar */
     margin-top: ${props => props.theme.spacing.xs};
   }
 `;
@@ -50,6 +51,11 @@ export const PageHeader = styled.div`
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     h1 {
       font-size: ${props => props.theme.typography.fontSizes['2xl']};
+    }
+    /* Push the decorative white circle off-screen edge on mobile so it
+       doesn't overlay the page title text */
+    .top {
+      clip-path: circle(8% at 98% 50%);
     }
   }
 `;
