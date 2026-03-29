@@ -25,7 +25,8 @@ export const ContentContainer = styled(motion.div)`
 
 export const PageHeader = styled.div`
   position: relative;
-  height: 80px;
+  height: 100px;
+  overflow: hidden;
   margin-bottom: ${props => props.theme.spacing.lg};
   
   .bottom, .top {

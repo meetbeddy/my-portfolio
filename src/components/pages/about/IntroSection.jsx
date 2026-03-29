@@ -26,8 +26,10 @@ const CardTitle = styled.h2`
 `;
 
 const TypewriterContainer = styled.div`
-  height: 2rem;
   margin-bottom: ${props => props.theme.spacing.md};
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.6;
 `;
 
 const Cursor = styled.span`
