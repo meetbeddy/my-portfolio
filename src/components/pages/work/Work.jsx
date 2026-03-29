@@ -510,6 +510,105 @@ const projects = [
       'Angular frontend with reactive forms and RxJS',
       'NestJS scalable and maintainable backend'
     ]
+  },
+  {
+    id: 'texflow',
+    title: 'TexFlow',
+    description: 'A WebGL-powered, React-based playground for generating procedural textures and animated gradients in real time. Built for designers, developers, and the perpetually curious.',
+    shortDescription: 'WebGL procedural texture & animated gradient generator',
+    thumbnail: null,
+    featured: true,
+    status: 'completed',
+    category: 'web',
+    technologies: ['React', 'WebGL', 'Vite', 'GLSL'],
+    role: 'Frontend Developer',
+    duration: '2 months',
+    year: '2024',
+    demoLink: null,
+    githubLink: 'https://github.com/meetbeddy',
+    carouselImages: [],
+    challenges: [
+      'Implementing real-time WebGL rendering efficiently in the browser',
+      'Creating seamless texture noise algorithms (Perlin, Simplex)',
+      'Designing an intuitive UI for complex procedural controls'
+    ],
+    solutions: [
+      'Leveraged custom WebGL shaders for GPU-accelerated generation',
+      'Implemented advanced math functions for seamless tiling capabilities',
+      'Built a reactive interface where sliders update shaders instantly without lag'
+    ],
+    keyFeatures: [
+      'Real-time WebGL rendering engine',
+      'Dynamic color blending and gradient mapping',
+      'Seamless tiling support for repeating backgrounds',
+      'Direct texture export capabilities'
+    ]
+  },
+  {
+    id: 'sovereign-engine',
+    title: 'Multi-MDA Platform',
+    description: 'A high-fidelity, unified staff portal designed to automate public service delivery and revenue governance across multiple government agencies (MDAs) in Imo State.',
+    shortDescription: 'Massive enterprise government portal powered by the NestJS Sovereign Engine',
+    thumbnail: null,
+    featured: true,
+    status: 'completed',
+    category: 'web',
+    technologies: ['React', 'TypeScript', 'NestJS', 'MongoDB', 'Tailwind'],
+    role: 'Full-Stack Architect',
+    duration: '8 months',
+    year: '2024',
+    demoLink: null,
+    githubLink: 'https://github.com/meetbeddy',
+    carouselImages: [],
+    challenges: [
+      'Ensuring strict data isolation between multiple government agencies',
+      'Handling massive scale for taxpayer management and revenue collection',
+      'Building a unified frontend that orchestrates multiple disparate agency modules'
+    ],
+    solutions: [
+      'Implemented a strictly modular domain architecture in NestJS (Sovereign Engine)',
+      'Designed a multi-tenant schema with robust Role-Based Access Control',
+      'Employed independent, isolated routing for agency views on the client'
+    ],
+    keyFeatures: [
+      'Multi-agency data and workflow isolation',
+      'Unified taxpayer tracking and management',
+      'Advanced orchestration and reporting algorithms',
+      'High-security compliance workflows'
+    ]
+  },
+  {
+    id: 'farmconnect',
+    title: 'FarmConnect',
+    description: 'A mobile application connecting farmers directly to consumers and markets. Built to provide a seamless cross-platform experience with geographic awareness.',
+    shortDescription: 'Cross-platform React Native mobile app for agricultural networking',
+    thumbnail: null,
+    featured: true,
+    status: 'completed',
+    category: 'mobile',
+    technologies: ['React Native', 'Expo', 'Redux', 'Socket.io'],
+    role: 'Mobile Developer',
+    duration: '3 months',
+    year: '2024',
+    demoLink: null,
+    githubLink: 'https://github.com/meetbeddy',
+    carouselImages: [],
+    challenges: [
+      'Ensuring smooth offline capabilities for rural farmers with poor connectivity',
+      'Implementing real-time messaging for market negotiations',
+      'Handling location-based services efficiently on mobile devices'
+    ],
+    solutions: [
+      'Integrated heavy data caching strategies for offline-first data access',
+      'Used Socket.io via custom React hooks for instantaneous communication',
+      'Optimised native Maps integration to render efficiently on lower-end devices'
+    ],
+    keyFeatures: [
+      'Cross-platform iOS and Android support via Expo',
+      'Real-time chat functionality via WebSockets',
+      'Geo-location based market and farm search',
+      'Robust offline data usage patterns'
+    ]
   }
 
 ];
