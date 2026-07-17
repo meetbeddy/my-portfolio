@@ -72,6 +72,15 @@ const overHeatShake = keyframes`
   25%{transform:translateX(-3px)}
   75%{transform:translateX(3px)}
 `;
+const hitConfirm = keyframes`
+  0%{opacity:0;transform:translate(-50%,-50%) scale(1.8) rotate(45deg)}
+  25%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(45deg)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(.7) rotate(45deg)}
+`;
+const chargePulse = keyframes`
+  0%,100%{opacity:.55;transform:translateX(-50%) scale(1)}
+  50%{opacity:1;transform:translateX(-50%) scale(1.05)}
+`;
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 const Wrapper = styled.div`
@@ -190,6 +199,18 @@ const BossWarningBanner = styled.div`
   color:#ff2200;white-space:nowrap;pointer-events:none;z-index:20;
   text-shadow:0 0 30px #ff2200,0 0 60px #ff000066;
   animation:${bossWarning} .5s ease-in-out infinite,${bossEntrance} .6s ease-out both;
+`;
+const BossAttackBanner = styled.div`
+  position:absolute;top:23%;left:50%;transform:translateX(-50%);
+  color:#ffd166;font-size:.62rem;font-weight:800;letter-spacing:4px;
+  text-shadow:0 0 14px rgba(255,209,102,.8);pointer-events:none;z-index:16;
+  animation:${chargePulse} .45s ease-in-out infinite;white-space:nowrap;
+`;
+const HitMarker = styled.div`
+  position:absolute;left:50%;top:50%;width:18px;height:18px;z-index:14;
+  pointer-events:none;animation:${hitConfirm} .26s ease-out forwards;
+  &::before,&::after{content:'';position:absolute;left:8px;top:0;width:2px;height:18px;background:${p => p.$color};box-shadow:0 0 8px ${p => p.$color};}
+  &::after{transform:rotate(90deg);}
 `;
 
 const PopupLayer = styled.div`position:absolute;inset:0;pointer-events:none;z-index:11;overflow:hidden;`;
@@ -367,6 +388,46 @@ const HintBanner = styled.div`
   box-shadow:0 0 24px rgba(255,183,77,.12);
   animation:${slideIn} .25s ease;
 `;
+const UpgradeOverlay = styled.div`
+  position:absolute;inset:0;z-index:70;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1rem;padding:1.25rem;
+  background:rgba(4,4,14,.88);backdrop-filter:blur(10px);overflow-y:auto;
+  @media(max-width:680px){justify-content:flex-start;padding-top:4.5rem;}
+`;
+const UpgradeEyebrow = styled.div`
+  color:#ffb74d;font-size:.62rem;font-weight:700;letter-spacing:5px;text-transform:uppercase;
+`;
+const UpgradeTitle = styled.h2`
+  margin:0;color:#fff;font-size:clamp(1.5rem,5vw,2.4rem);letter-spacing:5px;text-align:center;
+`;
+const UpgradeGrid = styled.div`
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;width:min(760px,94vw);
+  @media(max-width:680px){grid-template-columns:1fr;max-width:420px;}
+`;
+const UpgradeCard = styled.button`
+  min-height:150px;padding:1rem;text-align:left;font-family:inherit;cursor:pointer;
+  color:#fff;background:rgba(255,255,255,.05);border:1px solid ${p => p.$color}66;
+  border-radius:8px;transition:transform .18s,border-color .18s,background .18s,box-shadow .18s;
+  &:hover,&:focus-visible{transform:translateY(-3px);border-color:${p => p.$color};background:${p => p.$color}15;box-shadow:0 10px 30px ${p => p.$color}22;outline:none;}
+`;
+const UpgradeCardLabel = styled.div`
+  color:${p => p.$color};font-size:.78rem;font-weight:800;letter-spacing:2px;margin-bottom:.65rem;
+`;
+const UpgradeCardText = styled.div`
+  color:rgba(255,255,255,.64);font-size:.72rem;line-height:1.55;min-height:3.4rem;
+`;
+const UpgradeLevel = styled.div`
+  margin-top:.8rem;color:rgba(255,255,255,.36);font-size:.58rem;letter-spacing:2px;
+`;
+const UpgradeSummary = styled.div`
+  position:absolute;left:1.4rem;bottom:1.25rem;z-index:10;display:flex;gap:.35rem;flex-wrap:wrap;
+  max-width:min(430px,70vw);pointer-events:none;
+  @media(max-width:640px){left:.8rem;bottom:.8rem;max-width:65vw;}
+`;
+const UpgradeChip = styled.div`
+  padding:.22rem .45rem;border:1px solid ${p => p.$color}55;border-radius:4px;
+  background:rgba(4,4,14,.65);color:${p => p.$color};font-size:.5rem;letter-spacing:1px;
+`;
 const SectorFlash = styled.div`
   position: absolute;
   inset: 0;
@@ -400,6 +461,23 @@ const DIFFICULTIES = {
   insane: { label: 'INSANE', desc: 'fast chaos', spawnBase: 1750, damage: 1.25, scoreMult: 1.2, speed: 1.18 },
 };
 const DIFFICULTY_OPTIONS = Object.keys(DIFFICULTIES);
+
+const SECTOR_UPGRADES = [
+  { id: 'fireRate', label: 'PULSE ACCELERATOR', short: 'FIRE', description: 'Fire 12% faster. Stacks reduce the delay between every shot.', color: '#ff7a66', max: 3 },
+  { id: 'cooling', label: 'CRYO VENTS', short: 'COOL', description: 'Build 15% less heat and cool weapons faster between bursts.', color: '#48e0e0', max: 3 },
+  { id: 'damage', label: 'DENSE MUNITIONS', short: 'DMG', description: 'Shots deal 35% more damage to asteroids and sector bosses.', color: '#ffb74d', max: 3 },
+  { id: 'piercing', label: 'PHASE ROUNDS', short: 'PIERCE', description: 'Shots pass through one additional target before breaking.', color: '#c98cff', max: 2 },
+  { id: 'armor', label: 'REACTIVE PLATING', short: 'ARMOR', description: 'Reduce all hull damage by 12% for the rest of this run.', color: '#80ff9b', max: 3 },
+  { id: 'aegis', label: 'AEGIS RELAY', short: 'AEGIS', description: 'Begin every new sector with a shield that blocks one collision.', color: '#7aaeff', max: 1 },
+];
+const SALVAGE_UPGRADE = { id: 'repair', label: 'FIELD REPAIR', short: 'REPAIR', description: 'Restore 25 hull integrity before entering the next sector.', color: '#80ff9b', max: 1 };
+
+const emptyUpgrades = () => Object.fromEntries(SECTOR_UPGRADES.map(upgrade => [upgrade.id, 0]));
+const drawUpgradeChoices = levels => {
+  const available = SECTOR_UPGRADES.filter(upgrade => (levels[upgrade.id] || 0) < upgrade.max);
+  if (available.length === 0) return [SALVAGE_UPGRADE];
+  return [...available].sort(() => Math.random() - 0.5).slice(0, 3);
+};
 
 const readHighScore = () => {
   try {
@@ -603,6 +681,10 @@ const AsteroidGame = () => {
   const [difficulty, setDifficulty] = useState('arcade');
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [hint, setHint] = useState(null);
+  const [upgrades, setUpgrades] = useState(emptyUpgrades);
+  const [upgradeChoices, setUpgradeChoices] = useState(null);
+  const [bossAttack, setBossAttack] = useState(null);
+  const [hitMarker, setHitMarker] = useState(null);
 
   const finalScore = useRef(0);
   const highScore = useRef(readHighScore());
@@ -612,8 +694,12 @@ const AsteroidGame = () => {
   const synthIntervalRef = useRef(null);
   const lastSectorScore = useRef(0);
   const audioEnabledRef = useRef(true);
+  const pausedRef = useRef(false);
   const hintTimer = useRef(null);
   const shownHints = useRef(new Set());
+  const upgradesRef = useRef(emptyUpgrades());
+  const upgradeSelectionRef = useRef(null);
+  const hitMarkerTimer = useRef(null);
 
   const unlockAudio = useCallback(() => {
     if (!audioEnabledRef.current) return;
@@ -629,7 +715,10 @@ const AsteroidGame = () => {
     }
   }, [audioEnabled]);
 
-  useEffect(() => () => clearTimeout(hintTimer.current), []);
+  useEffect(() => () => {
+    clearTimeout(hintTimer.current);
+    clearTimeout(hitMarkerTimer.current);
+  }, []);
 
   const showHint = useCallback((key, text, dur = 3400) => {
     if (shownHints.current.has(key)) return;
@@ -646,13 +735,33 @@ const AsteroidGame = () => {
     if (next) unlockAudio();
   };
 
+  const chooseUpgrade = upgrade => {
+    if (upgrade.id === SALVAGE_UPGRADE.id) {
+      upgradeSelectionRef.current = upgrade.id;
+      setUpgradeChoices(null);
+      return;
+    }
+    const next = {
+      ...upgradesRef.current,
+      [upgrade.id]: Math.min(upgrade.max, (upgradesRef.current[upgrade.id] || 0) + 1),
+    };
+    upgradesRef.current = next;
+    upgradeSelectionRef.current = upgrade.id;
+    setUpgrades(next);
+    setUpgradeChoices(null);
+  };
+
   const addPopup = (x, y, text, color, big = false) => {
     const id = popupId.current++;
     setPopups(ps => [...ps, { id, x, y, text, color, big }]);
     setTimeout(() => setPopups(ps => ps.filter(p => p.id !== id)), 950);
   };
 
-  const togglePause = useCallback(() => setPaused(prev => !prev), []);
+  const togglePause = useCallback(() => setPaused(prev => {
+    const next = !prev;
+    pausedRef.current = next;
+    return next;
+  }), []);
 
   const startGame = (withWarp = false) => {
     unlockAudio();
@@ -662,11 +771,15 @@ const AsteroidGame = () => {
     statsRef.current = { grazesTotal: 0, enemiesDestroyed: 0, maxCombo: 0, bossesKilled: 0 };
     lastSectorScore.current = 0;
     shownHints.current = new Set();
+    upgradesRef.current = emptyUpgrades();
+    upgradeSelectionRef.current = null;
     setScore(0); setHp(MAX_HP); setActivePUps({}); setSector(1);
     setCombo(0); setPopups([]); setShaking(false); setGrazeMsg(null); setDamageMsg(null);
+    pausedRef.current = false;
     setPaused(false); setSectorClearAnim(null); setHeat(0); setOverheated(false);
     setBossHP(null); setBossWarningVisible(false); setDangerZoneBonus(false);
-    setHint(null);
+    setHint(null); setUpgradeChoices(null); setUpgrades(upgradesRef.current);
+    setBossAttack(null); setHitMarker(null);
     setGameStats({ grazesTotal: 0, enemiesDestroyed: 0, timeSurvived: 0, maxCombo: 0, bossesKilled: 0 });
 
     if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
@@ -702,6 +815,13 @@ const AsteroidGame = () => {
   const triggerFlash = useCallback(() => {
     setFlash(true);
     setTimeout(() => setFlash(false), 150);
+  }, []);
+
+  const showHitMarker = useCallback((color = '#ffffff') => {
+    const marker = { id: Date.now() + Math.random(), color };
+    setHitMarker(marker);
+    clearTimeout(hitMarkerTimer.current);
+    hitMarkerTimer.current = setTimeout(() => setHitMarker(current => current?.id === marker.id ? null : current), 280);
   }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -796,7 +916,7 @@ const AsteroidGame = () => {
 
     // ── Game State ────────────────────────────────────────────────────────
     const gs = {
-      running: true, hpLeft: MAX_HP, sectorClearing: false,
+      running: true, hpLeft: MAX_HP, sectorClearing: false, awaitingUpgrade: false,
       bullets: [], enemyBullets: [], asteroids: [], particles: [], powerups: [], ufos: [],
       keys: {}, mouse: { x: 0, y: -B.y + 2 }, touchActive: false,
       lastShot: 0, lastSpawn: 0, lastPowerUp: 0, lastUfoSpawn: 0,
@@ -818,7 +938,7 @@ const AsteroidGame = () => {
       // Danger zone bonus
       dangerZoneFrames: 0,
       // Local sector tracking
-      localSector: 1,
+      localSector: sector,
     };
     let localScore = scoreRef.current, localHP = MAX_HP;
 
@@ -867,7 +987,19 @@ const AsteroidGame = () => {
       mesh.rotation.z = -rad;
       mesh.add(bLight);
       scene.add(mesh);
-      gs.bullets.push({ mesh, vx: Math.sin(rad) * (isLaser ? 0.5 : 0.18), vy: isLaser ? 0.7 : 0.32, big: gs.bigbullet, pierce: isLaser, geo, mat });
+      gs.bullets.push({
+        mesh,
+        vx: Math.sin(rad) * (isLaser ? 0.5 : 0.18),
+        vy: isLaser ? 0.7 : 0.32,
+        big: gs.bigbullet,
+        pierce: isLaser,
+        penetration: isLaser ? Infinity : upgradesRef.current.piercing,
+        damage: (gs.bigbullet ? 2 : 1) * (1 + upgradesRef.current.damage * 0.35),
+        hitTargets: new Set(),
+        hitBoss: false,
+        geo,
+        mat,
+      });
     };
 
     const shoot = () => {
@@ -881,7 +1013,8 @@ const AsteroidGame = () => {
       angles.forEach(ang => makeBullet(ang));
 
       // Heat build-up
-      const heatIncrease = gs.rapid ? 12 : gs.spread ? 15 : gs.laser ? 18 : 8;
+      const baseHeat = gs.rapid ? 12 : gs.spread ? 15 : gs.laser ? 18 : 8;
+      const heatIncrease = Math.max(3, baseHeat * (1 - upgradesRef.current.cooling * 0.15));
       gs.heat = Math.min(100, gs.heat + heatIncrease);
       setHeat(gs.heat);
 
@@ -1016,7 +1149,25 @@ const AsteroidGame = () => {
       g.add(new THREE.PointLight(0xff2200, 5, 10));
       g.position.set(0, B.y + 3, 0);
       scene.add(g);
-      gs.boss = { mesh: g, entering: true, enterProgress: 0, shootTimer: 0, orbitAngle: 0, core, ring };
+      const telegraphGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+      const telegraphMat = new THREE.LineBasicMaterial({ color: 0xffd166, transparent: true, opacity: 0 });
+      const telegraphLine = trackMesh(new THREE.Line(telegraphGeo, telegraphMat));
+      scene.add(telegraphLine);
+      gs.boss = {
+        mesh: g,
+        entering: true,
+        enterProgress: 0,
+        attackClock: 0,
+        orbitAngle: 0,
+        core,
+        ring,
+        telegraphLine,
+        telegraphGeo,
+        telegraphMat,
+        charging: false,
+        lockTarget: new THREE.Vector3(),
+        phase: 1,
+      };
       disposables.push(core); disposables.push(ring);
 
       setBossWarningVisible(true);
@@ -1095,7 +1246,8 @@ const AsteroidGame = () => {
 
     const takeDamage = (dmg, color = '#ff4444') => {
       const wasHP = localHP;
-      const scaledDamage = Math.max(1, Math.round(dmg * difficultyCfg.damage));
+      const armorReduction = 1 - upgradesRef.current.armor * 0.12;
+      const scaledDamage = Math.max(1, Math.round(dmg * difficultyCfg.damage * armorReduction));
       localHP = Math.max(0, localHP - scaledDamage);
       gs.hpLeft = localHP;
       setHp(localHP);
@@ -1110,7 +1262,7 @@ const AsteroidGame = () => {
         clearInterval(synthIntervalRef.current);
         const timeSurvived = Math.floor((Date.now() - gameStartTime.current) / 1000);
         setGameStats({ ...statsRef.current, timeSurvived });
-        setSectorClearAnim(null); setBossHP(null);
+        setSectorClearAnim(null); setBossHP(null); setBossAttack(null);
         setPhase('over');
       }
     };
@@ -1131,11 +1283,36 @@ const AsteroidGame = () => {
       } else { starField.scale.set(1, 1, 1); }
 
       if (!gs.running) return;
-      if (paused) { renderer.render(scene, cam); return; }
+      if (pausedRef.current) { renderer.render(scene, cam); return; }
+      if (gs.awaitingUpgrade) {
+        const selectedUpgradeId = upgradeSelectionRef.current;
+        if (!selectedUpgradeId) { renderer.render(scene, cam); return; }
+        upgradeSelectionRef.current = null;
+        gs.awaitingUpgrade = false;
+        gs.lastSpawn = t;
+        if (upgradesRef.current.aegis > 0) {
+          gs.shield = true;
+          gs.shieldExpires = Infinity;
+        }
+        if (selectedUpgradeId === SALVAGE_UPGRADE.id) {
+          localHP = Math.min(MAX_HP, localHP + 25);
+          gs.hpLeft = localHP;
+          setHp(localHP);
+        }
+        const selectedUpgrade = SECTOR_UPGRADES.find(upgrade => upgrade.id === selectedUpgradeId) || SALVAGE_UPGRADE;
+        if (selectedUpgrade) {
+          SFX.powerup(audioCtxRef.current);
+          const sp = worldToScreen(shipGroup.position.x, shipGroup.position.y);
+          const selectedLabel = selectedUpgradeId === SALVAGE_UPGRADE.id
+            ? `${selectedUpgrade.label} +25 HP`
+            : `${selectedUpgrade.label} LV.${upgradesRef.current[selectedUpgradeId]}`;
+          addPopup(sp.x, sp.y - 30, selectedLabel, selectedUpgrade.color, true);
+        }
+      }
 
       // ── Heat cool-down ─────────────────────────────────────────────────
       if (!gs.overheated && uiTick.current % 3 === 0) {
-        gs.heat = Math.max(0, gs.heat - 1);
+        gs.heat = Math.max(0, gs.heat - (1 + upgradesRef.current.cooling * 0.35));
         if (uiTick.current % 12 === 0) setHeat(gs.heat);
       }
 
@@ -1199,7 +1376,7 @@ const AsteroidGame = () => {
       for (const type of ['shield', 'rapid', 'bigbullet', 'spread', 'laser']) {
         if (gs[type]) {
           if (now > gs[`${type}Expires`]) { gs[type] = false; }
-          else { pActive[type] = Math.ceil((gs[`${type}Expires`] - now) / 1000); }
+          else { pActive[type] = gs[`${type}Expires`] === Infinity ? 'READY' : Math.ceil((gs[`${type}Expires`] - now) / 1000); }
         }
       }
       shieldMesh.material.opacity = gs.shield ? .65 : 0;
@@ -1208,7 +1385,7 @@ const AsteroidGame = () => {
       if (uiTick.current % 6 === 0) setActivePUps({ ...pActive });
 
       // Auto-fire while space held
-      const cooldown = gs.rapid ? 80 : 190;
+      const cooldown = Math.max(65, (gs.rapid ? 80 : 190) * (1 - upgradesRef.current.fireRate * 0.12));
       if (!gs.sectorClearing && (gs.keys['Space'] || gs.keys['Enter']) && t - gs.lastShot > cooldown) {
         shoot(); gs.lastShot = t;
       }
@@ -1233,13 +1410,13 @@ const AsteroidGame = () => {
 
       // ── Sector Progression ────────────────────────────────────────────
       if (!gs.sectorClearing && !gs.boss && localScore >= lastSectorScore.current + 1000) {
-        lastSectorScore.current += 1000;
+        lastSectorScore.current = localScore;
         gs.sectorClearing = true;
         gs.vortexTime = 0;
         gs.asteroids.forEach(a => { a.vortexing = true; a.vortexDelay = Math.random() * 30; });
         SFX.sectorClear(audioCtxRef.current);
         triggerFlash();
-        const newSector = Math.floor(localScore / 1000) + 1;
+        const newSector = gs.localSector + 1;
         setSectorClearAnim({ sector: newSector, phase: 'in' });
 
         sectorClearTimer.current = setTimeout(() => {
@@ -1282,7 +1459,7 @@ const AsteroidGame = () => {
           gs.sectorClearing = false;
           shipGroup.position.y = -B.y + 2;
           shipLight.intensity = 3;
-          const newSector = Math.floor(localScore / 1000) + 1;
+          const newSector = gs.localSector + 1;
           gs.localSector = newSector;
           gs.bossSpawned = false;
           setSector(newSector);
@@ -1296,8 +1473,9 @@ const AsteroidGame = () => {
           addPopup(sp.x, sp.y, 'HULL REPAIRED +20 HP', '#48e080', true);
           setSectorClearAnim(prev => prev ? { ...prev, phase: 'out' } : null);
           setTimeout(() => setSectorClearAnim(null), 600);
-          setPhase('warp');
-          setTimeout(() => setPhase('playing'), 1800);
+          gs.awaitingUpgrade = true;
+          upgradeSelectionRef.current = null;
+          setUpgradeChoices(drawUpgradeChoices(upgradesRef.current));
           const palette = SECTOR_PALETTES[(newSector - 1) % SECTOR_PALETTES.length];
           setSectorFlash({ color: palette.accent, opacity: 0.7 });
           setTimeout(() => setSectorFlash({ color: palette.accent, opacity: 0 }), 400);
@@ -1327,17 +1505,48 @@ const AsteroidGame = () => {
           boss.mesh.position.y = B.y - 2.5 + Math.sin(boss.orbitAngle * 2.3) * 1.2;
           boss.core.rotation.x += 0.02; boss.core.rotation.y += 0.015;
           boss.ring.rotation.z += 0.04;
-          boss.shootTimer++;
-          const shootRate = Math.max(40, 90 - gs.localSector * 5);
-          if (boss.shootTimer % shootRate === 0) {
-            const dx = shipGroup.position.x - boss.mesh.position.x;
-            const dy = shipGroup.position.y - boss.mesh.position.y;
+          const hpRatio = gs.bossHPLeft / gs.bossMaxHP;
+          const nextPhase = hpRatio > 0.66 ? 1 : hpRatio > 0.33 ? 2 : 3;
+          if (nextPhase !== boss.phase) {
+            boss.phase = nextPhase;
+            triggerShake();
+            const sp = worldToScreen(boss.mesh.position.x, boss.mesh.position.y);
+            addPopup(sp.x, sp.y, `BOSS PHASE ${nextPhase}`, '#ff7a66', true);
+          }
+
+          boss.attackClock++;
+          const shootRate = Math.max(72, 116 - gs.localSector * 4);
+          const warningFrames = 42;
+          if (!boss.charging && boss.attackClock >= shootRate - warningFrames) {
+            boss.charging = true;
+            boss.lockTarget.copy(shipGroup.position);
+            showHint('boss-telegraph', 'The gold targeting line locks before each boss volley. Break away after it fixes on you.');
+          }
+
+          if (boss.charging) {
+            const chargeProgress = Math.min(1, (boss.attackClock - (shootRate - warningFrames)) / warningFrames);
+            const positions = boss.telegraphGeo.attributes.position.array;
+            positions[0] = boss.mesh.position.x; positions[1] = boss.mesh.position.y - 0.5; positions[2] = 0;
+            positions[3] = boss.lockTarget.x; positions[4] = boss.lockTarget.y; positions[5] = 0;
+            boss.telegraphGeo.attributes.position.needsUpdate = true;
+            boss.telegraphMat.opacity = 0.2 + chargeProgress * 0.75;
+            boss.core.material.emissiveIntensity = 0.7 + chargeProgress * 1.8;
+            boss.ring.scale.setScalar(1 + Math.sin(boss.attackClock * 0.45) * 0.08);
+            if (uiTick.current % 6 === 0) setBossAttack({ phase: boss.phase, progress: Math.round(chargeProgress * 100) });
+          }
+
+          if (boss.attackClock >= shootRate) {
+            const dx = boss.lockTarget.x - boss.mesh.position.x;
+            const dy = boss.lockTarget.y - boss.mesh.position.y;
             const deg = THREE.MathUtils.radToDeg(Math.atan2(dx, -dy));
-            makeEnemyBullet(boss.mesh.position.x, boss.mesh.position.y - 0.5, deg);
-            if (gs.localSector >= 3) {
-              makeEnemyBullet(boss.mesh.position.x, boss.mesh.position.y - 0.5, deg - 20);
-              makeEnemyBullet(boss.mesh.position.x, boss.mesh.position.y - 0.5, deg + 20);
-            }
+            const pattern = boss.phase === 1 ? [0] : boss.phase === 2 ? [-16, 0, 16] : [-28, -14, 0, 14, 28];
+            pattern.forEach(offset => makeEnemyBullet(boss.mesh.position.x, boss.mesh.position.y - 0.5, deg + offset));
+            boss.attackClock = 0;
+            boss.charging = false;
+            boss.telegraphMat.opacity = 0;
+            boss.core.material.emissiveIntensity = 0.5;
+            boss.ring.scale.setScalar(1);
+            setBossAttack(null);
           }
         }
       }
@@ -1365,13 +1574,16 @@ const AsteroidGame = () => {
         let hit = false;
 
         // Check boss collision first
-        if (gs.boss && !gs.boss.entering) {
+        if (gs.boss && !gs.boss.entering && !b.hitBoss) {
           const dist = dist2D(b.mesh.position, gs.boss.mesh.position);
           if (dist < 2.2) {
             SFX.bossHit(audioCtxRef.current);
             explode(b.mesh.position, 0xff2200, 6);
-            if (!b.pierce) { removeMesh(b.mesh); hit = true; }
-            gs.bossHPLeft = Math.max(0, gs.bossHPLeft - (b.big ? 2 : 1));
+            showHitMarker('#ff7a66');
+            b.hitBoss = true;
+            if (!b.pierce && b.penetration <= 0) { removeMesh(b.mesh); hit = true; }
+            else if (!b.pierce) b.penetration--;
+            gs.bossHPLeft = Math.max(0, gs.bossHPLeft - b.damage);
             setBossHP(gs.bossHPLeft);
             gs.boss.core.material.emissiveIntensity = 1.5;
             setTimeout(() => { if (gs.boss) gs.boss.core.material.emissiveIntensity = 0.5; }, 100);
@@ -1380,9 +1592,10 @@ const AsteroidGame = () => {
               // Boss dead!
               SFX.bigExplode(audioCtxRef.current);
               for (let e = 0; e < 5; e++) setTimeout(() => explode(gs.boss.mesh.position, 0xff4400, 20), e * 150);
+              removeMesh(gs.boss.telegraphLine);
               removeMesh(gs.boss.mesh);
               gs.boss = null; gs.bossSpawned = true;
-              setBossHP(null);
+              setBossHP(null); setBossAttack(null);
               const earned = Math.round(500 * gs.localSector * difficultyCfg.scoreMult);
               localScore += earned; setScore(localScore); scoreRef.current = localScore;
               statsRef.current.bossesKilled++;
@@ -1392,7 +1605,7 @@ const AsteroidGame = () => {
               // Spawn repair kit
               makePowerUp();
             }
-            if (!hit) gs.bullets.splice(i, 1);
+            if (hit) gs.bullets.splice(i, 1);
             continue;
           }
         }
@@ -1400,9 +1613,11 @@ const AsteroidGame = () => {
         for (let j = gs.asteroids.length - 1; j >= 0; j--) {
           const a = gs.asteroids[j];
           const hr = b.big ? a.size + .3 : a.size + .14;
-          if (dist2D(b.mesh.position, a.mesh.position) < hr) {
-            a.hitsLeft--;
+          if (!b.hitTargets.has(a.id) && dist2D(b.mesh.position, a.mesh.position) < hr) {
+            b.hitTargets.add(a.id);
+            a.hitsLeft -= b.damage;
             a.flashFrames = 6;
+            showHitMarker(a.type.labelColor);
             // Flash hit asteroid red
             a.mat.emissive = new THREE.Color('#ffffff');
             a.mat.emissiveIntensity = 1;
@@ -1413,11 +1628,13 @@ const AsteroidGame = () => {
               }
             }, 80);
 
-            if (!b.pierce) { removeMesh(b.mesh); hit = true; }
+            if (!b.pierce && b.penetration <= 0) { removeMesh(b.mesh); hit = true; }
+            else if (!b.pierce) b.penetration--;
 
             if (a.hitsLeft <= 0) {
               SFX.explode(audioCtxRef.current);
-              explode(a.mesh.position);
+              explode(a.mesh.position, a.type.id === 'crystal' ? 0x6688ff : 0xff5500, a.type.id === 'large' ? 24 : 14);
+              if (a.type.id === 'large') triggerShake();
               removeMesh(a.mesh);
               gs.asteroids.splice(j, 1);
               gs.grazedIds.delete(a.id);
@@ -1446,7 +1663,8 @@ const AsteroidGame = () => {
               SFX.explode(audioCtxRef.current);
               explode(b.mesh.position, 0xffffff, 4);
               const sp = worldToScreen(a.mesh.position.x, a.mesh.position.y);
-              addPopup(sp.x, sp.y, `${a.hitsLeft} HIT${a.hitsLeft > 1 ? 'S' : ''} LEFT`, a.type.labelColor);
+              const hitsRemaining = Math.ceil(a.hitsLeft);
+              addPopup(sp.x, sp.y, `${hitsRemaining} HIT${hitsRemaining > 1 ? 'S' : ''} LEFT`, a.type.labelColor);
             }
             break;
           }
@@ -1459,8 +1677,10 @@ const AsteroidGame = () => {
             if (dist2D(b.mesh.position, u.mesh.position) < uRadius) {
               SFX.explode(audioCtxRef.current);
               explode(u.mesh.position, 0x00ffff, 25);
+              showHitMarker('#48e0e0');
               removeMesh(u.mesh);
-              if (!b.pierce) { removeMesh(b.mesh); hit = true; }
+              if (!b.pierce && b.penetration <= 0) { removeMesh(b.mesh); hit = true; }
+              else if (!b.pierce) b.penetration--;
               gs.ufos.splice(k, 1);
               const multiplier = gs.comboCount >= 3 ? gs.comboCount : 1;
               const earned = Math.round(100 * multiplier * difficultyCfg.scoreMult);
@@ -1680,7 +1900,7 @@ const AsteroidGame = () => {
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
       if (audioCtxRef.current) { audioCtxRef.current.close().catch(() => { }); audioCtxRef.current = null; }
     };
-  }, [phase, triggerShake, showGraze, showDamage, unlockAudio, paused, togglePause, triggerFlash, difficulty, showHint]);
+  }, [phase, triggerShake, showGraze, showDamage, showHitMarker, unlockAudio, togglePause, triggerFlash, difficulty, showHint]);
 
   const hpPct = (hp / MAX_HP) * 100;
   const heatPct = heat;
@@ -1714,10 +1934,33 @@ const AsteroidGame = () => {
 
       {grazeMsg && <GrazePopup key={grazeMsg.id}>GRAZE +{grazeMsg.pts}</GrazePopup>}
       {damageMsg && <DamagePopup key={damageMsg.id} $color={damageMsg.color}>-{damageMsg.dmg} HP</DamagePopup>}
+      {hitMarker && <HitMarker key={hitMarker.id} $color={hitMarker.color} />}
       {hint && phase === 'playing' && <HintBanner>{hint}</HintBanner>}
 
       {/* Boss warning */}
       {bossWarningVisible && <BossWarningBanner>⚠ BOSS INCOMING ⚠</BossWarningBanner>}
+      {bossAttack && <BossAttackBanner>PHASE {bossAttack.phase} · TARGET LOCK {bossAttack.progress}%</BossAttackBanner>}
+
+      {upgradeChoices && (
+        <UpgradeOverlay>
+          <UpgradeEyebrow>SECTOR {sector - 1} CLEARED</UpgradeEyebrow>
+          <UpgradeTitle>CHOOSE ONE UPGRADE</UpgradeTitle>
+          <UpgradeGrid>
+            {upgradeChoices.map(upgrade => (
+              <UpgradeCard key={upgrade.id} type="button" $color={upgrade.color} onClick={() => chooseUpgrade(upgrade)}>
+                <UpgradeCardLabel $color={upgrade.color}>{upgrade.label}</UpgradeCardLabel>
+                <UpgradeCardText>{upgrade.description}</UpgradeCardText>
+                <UpgradeLevel>
+                  {upgrade.id === SALVAGE_UPGRADE.id
+                    ? 'RESTORE 25 HULL'
+                    : `LEVEL ${upgrades[upgrade.id] || 0} → ${Math.min(upgrade.max, (upgrades[upgrade.id] || 0) + 1)} / ${upgrade.max}`}
+                </UpgradeLevel>
+              </UpgradeCard>
+            ))}
+          </UpgradeGrid>
+          <Sub>THE RUN RESUMES WHEN YOU CHOOSE</Sub>
+        </UpgradeOverlay>
+      )}
 
       {/* Sector Clear Overlay */}
       {sectorClearAnim && (
@@ -1781,11 +2024,11 @@ const AsteroidGame = () => {
           {/* Boss HP bar */}
           {bossHP !== null && (
             <BossBarWrap>
-              <BossLabel>★ SECTOR BOSS ★</BossLabel>
+              <BossLabel>★ SECTOR BOSS · PHASE {bossAttack?.phase || (bossHP / bossMaxHP > .66 ? 1 : bossHP / bossMaxHP > .33 ? 2 : 3)} ★</BossLabel>
               <BossBarTrack>
                 <BossBarFill $pct={(bossHP / bossMaxHP) * 100} />
               </BossBarTrack>
-              <HudLabel style={{ fontSize: '.5rem' }}>{bossHP} / {bossMaxHP}</HudLabel>
+              <HudLabel style={{ fontSize: '.5rem' }}>{Math.ceil(bossHP)} / {bossMaxHP}</HudLabel>
             </BossBarWrap>
           )}
 
@@ -1798,6 +2041,14 @@ const AsteroidGame = () => {
               {activePUps.spread && <Pill $c="#c048e0">SPREAD {activePUps.spread}s</Pill>}
               {activePUps.laser && <Pill $c="#48e0e0">LASER {activePUps.laser}s</Pill>}
             </PowerBar>
+          )}
+
+          {Object.values(upgrades).some(Boolean) && (
+            <UpgradeSummary aria-label="Run upgrades">
+              {SECTOR_UPGRADES.filter(upgrade => upgrades[upgrade.id] > 0).map(upgrade => (
+                <UpgradeChip key={upgrade.id} $color={upgrade.color}>{upgrade.short} {upgrades[upgrade.id]}</UpgradeChip>
+              ))}
+            </UpgradeSummary>
           )}
         </>
       )}
