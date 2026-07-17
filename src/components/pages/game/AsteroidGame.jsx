@@ -280,6 +280,17 @@ const BackBtn = styled(Link)`
   transition:background .2s,color .2s;
   &:hover{background:rgba(255,255,255,.14);color:#fff;}
 `;
+const GameControls = styled.div`
+  position:absolute;right:1.4rem;top:3.2rem;z-index:30;display:flex;gap:.45rem;
+  @media(max-width:640px){top:auto;right:.8rem;bottom:.8rem;}
+`;
+const IconControl = styled.button`
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.68);width:2.1rem;height:2.1rem;border-radius:50%;
+  display:grid;place-items:center;font-family:inherit;font-size:.78rem;cursor:pointer;
+  backdrop-filter:blur(8px);transition:background .2s,color .2s,transform .18s;
+  &:hover{background:rgba(255,255,255,.14);color:#fff;transform:translateY(-1px);}
+`;
 const Overlay = styled.div`
   position:absolute;inset:0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:.9rem;
@@ -312,6 +323,30 @@ const LItem = styled.div`
   border-radius:1rem;padding:.22rem .6rem;
 `;
 const CtrlRow = styled.div`font-size:.67rem;color:rgba(255,255,255,.3);letter-spacing:1px;text-align:center;line-height:2;`;
+const QuickBrief = styled.div`
+  display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;width:min(620px,92vw);
+  @media(max-width:640px){grid-template-columns:1fr;}
+`;
+const BriefCard = styled.div`
+  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);
+  border-radius:.6rem;padding:.75rem .9rem;text-align:left;
+`;
+const BriefLabel = styled.div`
+  color:${p => p.$c || '#ffb74d'};font-size:.62rem;font-weight:700;letter-spacing:2px;
+  margin-bottom:.35rem;text-transform:uppercase;
+`;
+const BriefText = styled.div`color:rgba(255,255,255,.64);font-size:.72rem;line-height:1.5;`;
+const OptionRow = styled.div`
+  display:flex;gap:.55rem;flex-wrap:wrap;justify-content:center;width:min(620px,92vw);
+`;
+const OptionButton = styled.button`
+  border:1px solid ${p => p.$active ? '#e04848' : 'rgba(255,255,255,.14)'};
+  background:${p => p.$active ? 'rgba(224,72,72,.18)' : 'rgba(255,255,255,.045)'};
+  color:${p => p.$active ? '#fff' : 'rgba(255,255,255,.58)'};
+  border-radius:999px;padding:.42rem .8rem;font-family:inherit;font-size:.66rem;
+  letter-spacing:1.5px;cursor:pointer;transition:background .18s,border-color .18s,color .18s,transform .18s;
+  &:hover{transform:translateY(-1px);border-color:rgba(224,72,72,.65);color:#fff;}
+`;
 const LaunchBtn = styled.button`
   background:linear-gradient(135deg,#e04848,#b02020);color:#fff;
   border:none;padding:.65rem 2.2rem;border-radius:2rem;font-size:.9rem;
@@ -323,6 +358,15 @@ const LaunchBtn = styled.button`
 `;
 const HighScore = styled.div`font-size:.9rem;color:rgba(255,255,255,.5);letter-spacing:2px;`;
 const FinalScore = styled.div`font-size:1.4rem;color:#e04848;letter-spacing:3px;`;
+const HintBanner = styled.div`
+  position:absolute;left:50%;bottom:5.4rem;transform:translateX(-50%);
+  z-index:18;pointer-events:none;width:min(520px,88vw);text-align:center;
+  padding:.55rem .9rem;border:1px solid rgba(255,183,77,.25);border-radius:999px;
+  background:rgba(6,6,18,.72);backdrop-filter:blur(8px);
+  color:rgba(255,232,180,.92);font-size:.68rem;line-height:1.45;letter-spacing:1px;
+  box-shadow:0 0 24px rgba(255,183,77,.12);
+  animation:${slideIn} .25s ease;
+`;
 const SectorFlash = styled.div`
   position: absolute;
   inset: 0;
@@ -349,6 +393,22 @@ const SectorVignette = styled.div`
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MAX_HP = 100;
+const HIGH_SCORE_KEY = 'asteroidFieldHighScore';
+const DIFFICULTIES = {
+  chill: { label: 'CHILL', desc: 'slower start', spawnBase: 2600, damage: 0.75, scoreMult: 0.9, speed: 0.85 },
+  arcade: { label: 'ARCADE', desc: 'balanced', spawnBase: 2200, damage: 1, scoreMult: 1, speed: 1 },
+  insane: { label: 'INSANE', desc: 'fast chaos', spawnBase: 1750, damage: 1.25, scoreMult: 1.2, speed: 1.18 },
+};
+const DIFFICULTY_OPTIONS = Object.keys(DIFFICULTIES);
+
+const readHighScore = () => {
+  try {
+    const stored = Number(localStorage.getItem(HIGH_SCORE_KEY) || sessionStorage.getItem('hs') || 0);
+    return Number.isFinite(stored) ? stored : 0;
+  } catch {
+    return 0;
+  }
+};
 
 const PUPS = {
   shield: { color: 0x4880e0, hex: '#4880e0', label: 'SHIELD', dur: 10000 },
@@ -540,19 +600,51 @@ const AsteroidGame = () => {
   const [dangerZoneBonus, setDangerZoneBonus] = useState(false);
   const [sectorFlash, setSectorFlash] = useState({ color: '#ffffff', opacity: 0 });
   const [sectorVignette, setSectorVignette] = useState('#0a0a1a');
+  const [difficulty, setDifficulty] = useState('arcade');
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [hint, setHint] = useState(null);
 
   const finalScore = useRef(0);
-  const highScore = useRef(Number(sessionStorage.getItem('hs') || 0));
+  const highScore = useRef(readHighScore());
   const popupId = useRef(0);
   const gameStartTime = useRef(0);
   const statsRef = useRef({ grazesTotal: 0, enemiesDestroyed: 0, maxCombo: 0, bossesKilled: 0 });
   const synthIntervalRef = useRef(null);
   const lastSectorScore = useRef(0);
+  const audioEnabledRef = useRef(true);
+  const hintTimer = useRef(null);
+  const shownHints = useRef(new Set());
 
   const unlockAudio = useCallback(() => {
+    if (!audioEnabledRef.current) return;
     if (!audioCtxRef.current) audioCtxRef.current = createAudio();
     if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume().catch(() => { });
   }, []);
+
+  useEffect(() => {
+    audioEnabledRef.current = audioEnabled;
+    if (!audioEnabled && synthIntervalRef.current) {
+      clearInterval(synthIntervalRef.current);
+      synthIntervalRef.current = null;
+    }
+  }, [audioEnabled]);
+
+  useEffect(() => () => clearTimeout(hintTimer.current), []);
+
+  const showHint = useCallback((key, text, dur = 3400) => {
+    if (shownHints.current.has(key)) return;
+    shownHints.current.add(key);
+    clearTimeout(hintTimer.current);
+    setHint(text);
+    hintTimer.current = setTimeout(() => setHint(null), dur);
+  }, []);
+
+  const toggleAudio = () => {
+    const next = !audioEnabled;
+    audioEnabledRef.current = next;
+    setAudioEnabled(next);
+    if (next) unlockAudio();
+  };
 
   const addPopup = (x, y, text, color, big = false) => {
     const id = popupId.current++;
@@ -569,14 +661,19 @@ const AsteroidGame = () => {
     gameStartTime.current = Date.now();
     statsRef.current = { grazesTotal: 0, enemiesDestroyed: 0, maxCombo: 0, bossesKilled: 0 };
     lastSectorScore.current = 0;
+    shownHints.current = new Set();
     setScore(0); setHp(MAX_HP); setActivePUps({}); setSector(1);
     setCombo(0); setPopups([]); setShaking(false); setGrazeMsg(null); setDamageMsg(null);
     setPaused(false); setSectorClearAnim(null); setHeat(0); setOverheated(false);
     setBossHP(null); setBossWarningVisible(false); setDangerZoneBonus(false);
+    setHint(null);
     setGameStats({ grazesTotal: 0, enemiesDestroyed: 0, timeSurvived: 0, maxCombo: 0, bossesKilled: 0 });
 
     if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
-    setTimeout(() => { synthIntervalRef.current = startSynthwave(audioCtxRef.current); }, 500);
+    if (audioEnabledRef.current) {
+      setTimeout(() => { synthIntervalRef.current = startSynthwave(audioCtxRef.current); }, 500);
+    }
+    setTimeout(() => showHint('opening', 'Move with mouse, touch, WASD, or arrows. Hold SPACE, click, or tap to fire.'), 900);
 
     if (withWarp) { setPhase('warp'); setTimeout(() => setPhase('playing'), 1800); }
     else setPhase('playing');
@@ -612,6 +709,7 @@ const AsteroidGame = () => {
     if (phase !== 'playing' && phase !== 'warp') return;
     const mount = mountRef.current;
     if (!mount) return;
+    const difficultyCfg = DIFFICULTIES[difficulty];
 
     const isMobile = mount.clientWidth < 768;
     const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: 'high-performance' });
@@ -703,7 +801,7 @@ const AsteroidGame = () => {
       keys: {}, mouse: { x: 0, y: -B.y + 2 }, touchActive: false,
       lastShot: 0, lastSpawn: 0, lastPowerUp: 0, lastUfoSpawn: 0,
       waveTimer: 0,
-      spawnInterval: 2200, diffMult: 1,
+      spawnInterval: difficultyCfg.spawnBase, diffMult: difficultyCfg.speed,
       shield: false, shieldExpires: 0,
       rapid: false, rapidExpires: 0,
       bigbullet: false, bigbulletExpires: 0,
@@ -848,6 +946,7 @@ const AsteroidGame = () => {
     };
 
     const makePowerUp = () => {
+      showHint('powerup', 'Power-ups change your weapon for a few seconds. Grab them when the screen gets crowded.');
       const types = Object.keys(PUPS);
       // Weight repair more when low HP
       const weights = types.map(t => {
@@ -889,7 +988,8 @@ const AsteroidGame = () => {
     // ── BOSS ──────────────────────────────────────────────────────────────
     const spawnBoss = () => {
       if (gs.boss) return;
-      const bossHP_val = 30 + gs.localSector * 10;
+      showHint('boss', 'Bosses arrive every third sector. Keep moving after each shot pattern.');
+      const bossHP_val = Math.round((30 + gs.localSector * 10) * (0.9 + difficultyCfg.damage * 0.1));
       gs.bossMaxHP = bossHP_val;
       gs.bossHPLeft = bossHP_val;
       gs.bossSpawned = true;
@@ -995,14 +1095,18 @@ const AsteroidGame = () => {
 
     const takeDamage = (dmg, color = '#ff4444') => {
       const wasHP = localHP;
-      localHP = Math.max(0, localHP - dmg);
+      const scaledDamage = Math.max(1, Math.round(dmg * difficultyCfg.damage));
+      localHP = Math.max(0, localHP - scaledDamage);
       gs.hpLeft = localHP;
       setHp(localHP);
-      showDamage(dmg, color);
+      showDamage(scaledDamage, color);
       if (localHP <= 0 && wasHP > 0) {
         gs.running = false;
         finalScore.current = localScore;
-        if (localScore > highScore.current) { highScore.current = localScore; sessionStorage.setItem('hs', localScore); }
+        if (localScore > highScore.current) {
+          highScore.current = localScore;
+          try { localStorage.setItem(HIGH_SCORE_KEY, String(localScore)); } catch { }
+        }
         clearInterval(synthIntervalRef.current);
         const timeSurvived = Math.floor((Date.now() - gameStartTime.current) / 1000);
         setGameStats({ ...statsRef.current, timeSurvived });
@@ -1079,7 +1183,8 @@ const AsteroidGame = () => {
       if (inDangerZone) {
         gs.dangerZoneFrames++;
         if (gs.dangerZoneFrames % 120 === 0) {
-          const bonusPts = 5 + gs.localSector * 2;
+          showHint('danger', 'The center danger zone pays bonus points, but it leaves less room to dodge.');
+          const bonusPts = Math.round((5 + gs.localSector * 2) * difficultyCfg.scoreMult);
           localScore += bonusPts;
           setScore(localScore);
           scoreRef.current = localScore;
@@ -1117,9 +1222,9 @@ const AsteroidGame = () => {
       if (wavePos < 0.4) waveMod = 1.0 + wavePos * 1.5;
       else if (wavePos < 0.6) waveMod = 1.6 - (wavePos - 0.4) * 4;
       else waveMod = 0.8 + (wavePos - 0.6) * 0.5;
-      gs.diffMult = (1 + scaledScore * 0.16) * waveMod;
+      gs.diffMult = (1 + scaledScore * 0.16) * waveMod * difficultyCfg.speed;
       const chaos = 0.85 + Math.random() * 0.3;
-      gs.spawnInterval = Math.max(650, ((2200 - scaledScore * 80) / waveMod) * chaos);
+      gs.spawnInterval = Math.max(520, ((difficultyCfg.spawnBase - scaledScore * 80) / waveMod) * chaos);
 
       // ── Boss spawn every 3 sectors ─────────────────────────────────────
       if (!gs.sectorClearing && !gs.boss && gs.localSector > 1 && gs.localSector % 3 === 0 && !gs.bossSpawned) {
@@ -1278,7 +1383,7 @@ const AsteroidGame = () => {
               removeMesh(gs.boss.mesh);
               gs.boss = null; gs.bossSpawned = true;
               setBossHP(null);
-              const earned = 500 * gs.localSector;
+              const earned = Math.round(500 * gs.localSector * difficultyCfg.scoreMult);
               localScore += earned; setScore(localScore); scoreRef.current = localScore;
               statsRef.current.bossesKilled++;
               triggerShake(2); triggerFlash();
@@ -1324,7 +1429,7 @@ const AsteroidGame = () => {
               const multiplier = gs.comboCount >= 3 ? gs.comboCount : 1;
               // Danger zone scoring bonus
               const dzMult = inDangerZone ? 1.5 : 1;
-              const earned = Math.floor(a.pts * multiplier * dzMult);
+              const earned = Math.floor(a.pts * multiplier * dzMult * difficultyCfg.scoreMult);
               localScore += earned; setScore(localScore); scoreRef.current = localScore;
               if (gs.comboCount >= 3) setCombo(gs.comboCount); else setCombo(0);
               statsRef.current.enemiesDestroyed++;
@@ -1358,7 +1463,7 @@ const AsteroidGame = () => {
               if (!b.pierce) { removeMesh(b.mesh); hit = true; }
               gs.ufos.splice(k, 1);
               const multiplier = gs.comboCount >= 3 ? gs.comboCount : 1;
-              const earned = 100 * multiplier;
+              const earned = Math.round(100 * multiplier * difficultyCfg.scoreMult);
               localScore += earned; setScore(localScore); scoreRef.current = localScore;
               statsRef.current.enemiesDestroyed++;
               if (gs.comboCount > statsRef.current.maxCombo) statsRef.current.maxCombo = gs.comboCount;
@@ -1416,7 +1521,7 @@ const AsteroidGame = () => {
 
         if (distToShip > hitRadius && distToShip < grazeRadius && !gs.grazedIds.has(a.id)) {
           gs.grazedIds.add(a.id);
-          const grazePts = 5;
+          const grazePts = Math.max(1, Math.round(5 * difficultyCfg.scoreMult));
           localScore += grazePts; setScore(localScore); scoreRef.current = localScore;
           SFX.graze(audioCtxRef.current);
           showGraze(grazePts);
@@ -1507,7 +1612,7 @@ const AsteroidGame = () => {
               const a = gs.asteroids[j];
               explode(a.mesh.position, 0xff5500, 8);
               removeMesh(a.mesh);
-              localScore += a.pts * (gs.comboCount || 1);
+              localScore += Math.round(a.pts * (gs.comboCount || 1) * difficultyCfg.scoreMult);
               statsRef.current.enemiesDestroyed++;
             }
             setScore(localScore); scoreRef.current = localScore; gs.asteroids = [];
@@ -1575,7 +1680,7 @@ const AsteroidGame = () => {
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
       if (audioCtxRef.current) { audioCtxRef.current.close().catch(() => { }); audioCtxRef.current = null; }
     };
-  }, [phase, triggerShake, showGraze, showDamage, unlockAudio, paused, togglePause, triggerFlash]);
+  }, [phase, triggerShake, showGraze, showDamage, unlockAudio, paused, togglePause, triggerFlash, difficulty, showHint]);
 
   const hpPct = (hp / MAX_HP) * 100;
   const heatPct = heat;
@@ -1585,6 +1690,14 @@ const AsteroidGame = () => {
       {flash && <div style={{ position: 'absolute', inset: 0, background: '#fff', zIndex: 100, opacity: 0.4, pointerEvents: 'none' }} />}
 
       <BackBtn to="/">← PORTFOLIO</BackBtn>
+      {phase === 'playing' && (
+        <GameControls>
+          <IconControl onClick={togglePause} title="Pause">II</IconControl>
+          <IconControl onClick={toggleAudio} title={audioEnabled ? 'Mute audio' : 'Enable audio'}>
+            {audioEnabled ? 'ON' : 'OFF'}
+          </IconControl>
+        </GameControls>
+      )}
       <CanvasMount ref={mountRef} />
 
       <SectorVignette $color={sectorVignette} />
@@ -1601,6 +1714,7 @@ const AsteroidGame = () => {
 
       {grazeMsg && <GrazePopup key={grazeMsg.id}>GRAZE +{grazeMsg.pts}</GrazePopup>}
       {damageMsg && <DamagePopup key={damageMsg.id} $color={damageMsg.color}>-{damageMsg.dmg} HP</DamagePopup>}
+      {hint && phase === 'playing' && <HintBanner>{hint}</HintBanner>}
 
       {/* Boss warning */}
       {bossWarningVisible && <BossWarningBanner>⚠ BOSS INCOMING ⚠</BossWarningBanner>}
@@ -1704,36 +1818,40 @@ const AsteroidGame = () => {
       {phase === 'start' && (
         <Overlay>
           <GameTitle>ASTEROID FIELD</GameTitle>
-          <Sub>THREE.JS COMBAT EXPERIENCE</Sub>
-          <ObjBox>
-            <ObjTitle>ASTEROID THREAT LEVELS</ObjTitle>
-            <ObjRow $vc="#7aaeff"><span>🔵 Small — 1 hit to destroy</span>     <span className="v">-8 HP · +25 pts</span></ObjRow>
-            <ObjRow $vc="#ffb74d"><span>🟡 Medium — 2 hits to destroy</span>   <span className="v">-20 HP · +12 pts</span></ObjRow>
-            <ObjRow $vc="#e04848"><span>🔴 Large — 3 hits to destroy</span>    <span className="v">-35 HP · +8 pts</span></ObjRow>
-            <ObjRow $vc="#aabbff"><span>💎 Crystal — 1 hit, high value</span>  <span className="v">-12 HP · +40 pts</span></ObjRow>
-            <ObjRow $vc="#ffe082"><span>🟠 Near-miss graze</span>              <span className="v">+5 pts</span></ObjRow>
-            <ObjRow $vc="#48e080"><span>🔥 Danger Zone (center)</span>         <span className="v">+bonus pts</span></ObjRow>
-            <ObjRow $vc="#ff8800"><span>★ Boss — every 3 sectors</span>        <span className="v">+500×sector pts</span></ObjRow>
-            <ObjRow $vc="#ff4444"><span>Asteroid passes bottom</span>           <span className="v">−HP penalty</span></ObjRow>
-            <ObjRow>              <span>Hull Integrity</span>                  <span className="v">100 HP</span></ObjRow>
-          </ObjBox>
-          <Legend>
-            <LItem $c="#4880e0">SHIELD — absorbs one hit</LItem>
-            <LItem $c="#48e080">RAPID — fast 3-way fire</LItem>
-            <LItem $c="#ffb74d">BIG SHOT — double damage</LItem>
-            <LItem $c="#c048e0">SPREAD — 5-way fire</LItem>
-            <LItem $c="#48e0e0">LASER — piercing beam</LItem>
-            <LItem $c="#e02048">SMART BOMB — destroys all</LItem>
-            <LItem $c="#80ff80">REPAIR KIT — +30 HP</LItem>
-          </Legend>
-          <ObjBox style={{ background: 'rgba(255,80,0,.04)', borderColor: 'rgba(255,140,0,.15)' }}>
-            <ObjTitle>⚠ WEAPON HEAT SYSTEM</ObjTitle>
-            <ObjRow><span>Rapid fire builds heat — cool down or overheat!</span></ObjRow>
-            <ObjRow><span>Overheat locks weapons for <span className="v">2.5 seconds</span></span></ObjRow>
-          </ObjBox>
+          <Sub>SURVIVE, CLEAR SECTORS, BEAT BOSSES</Sub>
+          <QuickBrief>
+            <BriefCard>
+              <BriefLabel $c="#7aaeff">Move</BriefLabel>
+              <BriefText>Mouse, touch, WASD, or arrow keys. Stay nimble near the center for bonus points.</BriefText>
+            </BriefCard>
+            <BriefCard>
+              <BriefLabel $c="#ffb74d">Fire</BriefLabel>
+              <BriefText>Hold SPACE, click, tap, or press Enter. Watch weapon heat before it locks.</BriefText>
+            </BriefCard>
+            <BriefCard>
+              <BriefLabel $c="#48e080">Upgrade</BriefLabel>
+              <BriefText>Collect power-ups for shields, spread shots, lasers, bombs, and repair kits.</BriefText>
+            </BriefCard>
+          </QuickBrief>
+          <OptionRow aria-label="Difficulty">
+            {DIFFICULTY_OPTIONS.map(mode => (
+              <OptionButton
+                key={mode}
+                type="button"
+                $active={difficulty === mode}
+                onClick={() => setDifficulty(mode)}
+              >
+                {DIFFICULTIES[mode].label} - {DIFFICULTIES[mode].desc}
+              </OptionButton>
+            ))}
+          </OptionRow>
+          <OptionRow aria-label="Audio">
+            <OptionButton type="button" $active={audioEnabled} onClick={toggleAudio}>
+              AUDIO {audioEnabled ? 'ON' : 'OFF'}
+            </OptionButton>
+          </OptionRow>
           <CtrlRow>
-            MOUSE / TOUCH — move &nbsp;·&nbsp; WASD / ARROWS — keyboard<br />
-            SPACE (hold) / CLICK / TAP — shoot
+            BUILT WITH THREE.JS, REACT, PROCEDURAL AUDIO, AND CUSTOM GAME LOGIC
           </CtrlRow>
           {highScore.current > 0 && <HighScore>BEST: {String(highScore.current).padStart(6, '0')}</HighScore>}
           <LaunchBtn onClick={() => startGame(true)}>LAUNCH ▶</LaunchBtn>
