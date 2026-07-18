@@ -47,21 +47,80 @@ const AnimationRoutes = () => {
   );
 }
 
-// --- DYNAMIC TITLES ---
-const PageTitleHandler = () => {
+const pageMetadata = {
+  '/': {
+    title: 'Obed Okpala | Full-Stack Product Engineer',
+    description: 'Obed Okpala builds dependable React, Angular, Node.js, and TypeScript systems for complex, real-world operations.'
+  },
+  '/about': {
+    title: 'About | Obed Okpala',
+    description: 'Learn about Obed Okpala, a full-stack product engineer with more than four years of professional software delivery experience.'
+  },
+  '/skills': {
+    title: 'Skills and Experience | Obed Okpala',
+    description: 'Explore Obed Okpala\'s experience across React, Angular, TypeScript, Node.js, NestJS, product architecture, and performance.'
+  },
+  '/projects': {
+    title: 'Projects | Obed Okpala',
+    description: 'Case studies spanning vehicle services, cooperative finance, secure elections, multi-agency systems, mobile products, and Three.js.'
+  },
+  '/contact': {
+    title: 'Contact | Obed Okpala',
+    description: 'Contact Obed Okpala about full-stack product engineering, enterprise web systems, and software collaboration.'
+  },
+  '/play': {
+    title: 'Asteroid Field | Obed Okpala',
+    description: 'Play Asteroid Field, a browser arcade game built with React, Three.js, procedural audio, adaptive combat, and responsive controls.'
+  }
+};
+
+const upsertMeta = (attribute, key, content) => {
+  let element = document.head.querySelector(`meta[${attribute}="${key}"]`);
+  if (!element) {
+    element = document.createElement('meta');
+    element.setAttribute(attribute, key);
+    document.head.appendChild(element);
+  }
+  element.setAttribute('content', content);
+};
+
+const SeoHandler = () => {
   const location = useLocation();
+
   useEffect(() => {
-    const path = location.pathname.split("/").filter(Boolean).pop();
-    const pageName = path ? path.charAt(0).toUpperCase() + path.slice(1) : "Home";
-    document.title = `${pageName} | Meet Beddy`;
+    const metadata = pageMetadata[location.pathname] || pageMetadata['/'];
+    const canonicalUrl = `${window.location.origin}${location.pathname}`;
+    const socialImage = `${window.location.origin}/image/obed-dark-bg.png`;
+
+    document.title = metadata.title;
+    upsertMeta('name', 'description', metadata.description);
+    upsertMeta('property', 'og:title', metadata.title);
+    upsertMeta('property', 'og:description', metadata.description);
+    upsertMeta('property', 'og:type', 'website');
+    upsertMeta('property', 'og:url', canonicalUrl);
+    upsertMeta('property', 'og:image', socialImage);
+    upsertMeta('property', 'og:image:alt', 'Portrait of Obed Okpala');
+    upsertMeta('name', 'twitter:card', 'summary_large_image');
+    upsertMeta('name', 'twitter:title', metadata.title);
+    upsertMeta('name', 'twitter:description', metadata.description);
+    upsertMeta('name', 'twitter:image', socialImage);
+
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', canonicalUrl);
   }, [location]);
+
   return null;
 };
 
 function App() {
   return (
     <Router>
-      <PageTitleHandler />
+      <SeoHandler />
 
       <div className="App">
         <SideNav />

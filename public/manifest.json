@@ -1,15 +1,18 @@
 {
-  "short_name": "Obed Beddy",
-  "name": "Obed Beddy | Full-Stack Developer",
+  "short_name": "Obed Okpala",
+  "name": "Obed Okpala | Full-Stack Product Engineer",
+  "description": "Portfolio of Obed Okpala, a full-stack product engineer building dependable software for complex operations.",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
   "start_url": ".",
   "display": "standalone",
+  "categories": ["portfolio", "developer", "productivity"],
   "theme_color": "#e04848",
   "background_color": "#121212"
 }
