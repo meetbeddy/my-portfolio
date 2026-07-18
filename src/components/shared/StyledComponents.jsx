@@ -1,62 +1,52 @@
 import styled from "styled-components";
 import { motion } from "framer-motion";
-import { circleMove } from "../animations";
 
 export const ContentContainer = styled(motion.div)`
-  max-width: ${props => props.maxWidth || "1000px"};
-  width: 90%;
-  margin: ${props => props.theme.spacing.md} auto 0;
-  padding: ${props => props.theme.spacing.xl};
-  background: ${props => props.theme.mixins.glassEffect.background};
-  backdrop-filter: ${props => props.theme.mixins.glassEffect.backdropFilter};
-  -webkit-backdrop-filter: ${props => props.theme.mixins.glassEffect.backdropFilter};
-  border-radius: ${props => props.theme.borders.radius.xl};
-  border: ${props => props.theme.mixins.glassEffect.border};
-  box-shadow: ${props => props.theme.shadows.lg};
+  max-width: ${props => props.$maxWidth || "1120px"};
+  width: calc(100% - 64px);
+  margin: 0 auto;
+  padding: ${props => props.theme.spacing['3xl']} 0 ${props => props.theme.spacing['4xl']};
   position: relative;
   z-index: ${props => props.theme.zIndex.base + 2};
   
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    padding: ${props => props.theme.spacing.md};
-    padding-bottom: 100px; /* clear the floating mobile nav bar */
-    margin-top: ${props => props.theme.spacing.xs};
+    width: calc(100% - 32px);
+    padding: ${props => props.theme.spacing['2xl']} 0 120px;
   }
 `;
 
-export const PageHeader = styled.div`
-  position: relative;
-  height: 100px;
-  overflow: hidden;
-  margin-bottom: ${props => props.theme.spacing.lg};
-  
-  .bottom, .top {
-    position: absolute;
-    width: 100%;
-    height: 100px;
-    display: flex;
-    align-items: center;
-  }
-  
-  .bottom {
-    color: #e04848;
+export const PageHeader = styled.header`
+  margin-bottom: ${props => props.theme.spacing['2xl']};
+  padding-bottom: ${props => props.theme.spacing.xl};
+  border-bottom: 1px solid ${props => props.theme.colors.border};
+
+  .eyebrow {
+    margin: 0 0 ${props => props.theme.spacing.sm};
+    color: ${props => props.theme.colors.accent};
+    font-size: ${props => props.theme.typography.fontSizes.sm};
+    font-weight: ${props => props.theme.typography.fontWeight.semibold};
+    text-transform: uppercase;
+    letter-spacing: 0;
   }
 
-  .top {
-    background-color: white;
-    color: black;
-    clip-path: circle(10% at 85% 50%);
-    animation: ${circleMove} 10s ease-in-out infinite;
-    z-index: 1;
+  h1 {
+    margin-bottom: ${props => props.theme.spacing.sm};
+    color: ${props => props.theme.colors.text};
+    font-size: ${props => props.theme.typography.fontSizes['3xl']};
+    letter-spacing: 0;
+  }
+
+  .subtitle {
+    max-width: 680px;
+    margin: 0;
+    color: ${props => props.theme.colors.textSecondary};
+    font-size: ${props => props.theme.typography.fontSizes.md};
+    line-height: 1.6;
   }
   
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     h1 {
       font-size: ${props => props.theme.typography.fontSizes['2xl']};
-    }
-    /* Push the decorative white circle off-screen edge on mobile so it
-       doesn't overlay the page title text */
-    .top {
-      clip-path: circle(8% at 98% 50%);
     }
   }
 `;
@@ -101,27 +91,26 @@ export const RightColumn = styled(motion.div)`
 `;
 
 export const StyledButton = styled(motion.button)`
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryDark} 100%);
+  background: ${props => props.secondary ? 'transparent' : props.theme.colors.primary};
   color: ${props => props.theme.colors.text};
   font-weight: ${props => props.theme.typography.fontWeight.semibold};
-  font-size: ${props => props.theme.typography.fontSizes.base}; 
-  letter-spacing: ${props => props.theme.typography.letterSpacing.wide};
+  font-size: ${props => props.theme.typography.fontSizes.base};
+  letter-spacing: 0;
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
-  border-radius: ${props => props.theme.borders.radius.full};
-  box-shadow: ${props => props.theme.shadows.glow};
-  border: none;
+  border-radius: ${props => props.theme.borders.radius.md};
+  border: 1px solid ${props => props.secondary ? props.theme.colors.border : props.theme.colors.primary};
   cursor: pointer;
-  min-height: 2.5rem;
+  min-height: 44px;
   ${props => props.theme.mixins.smoothTransition('all')}
   
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px ${props => `rgba(${parseInt(props.theme.colors.primary.slice(1, 3), 16)}, ${parseInt(props.theme.colors.primary.slice(3, 5), 16)}, ${parseInt(props.theme.colors.primary.slice(5, 7), 16)}, 0.6)`};
+    transform: translateY(-2px);
+    background: ${props => props.secondary ? props.theme.colors.surfaceHover : props.theme.colors.primaryDark};
+    border-color: ${props => props.secondary ? props.theme.colors.textMuted : props.theme.colors.primaryDark};
   }
   
   &:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 10px ${props => `rgba(${parseInt(props.theme.colors.primary.slice(1, 3), 16)}, ${parseInt(props.theme.colors.primary.slice(3, 5), 16)}, ${parseInt(props.theme.colors.primary.slice(5, 7), 16)}, 0.4)`};
+    transform: translateY(0);
   }
 `;
 

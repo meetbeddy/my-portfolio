@@ -148,7 +148,7 @@ export const GlobalStyles = createGlobalStyle`
 
   h1 {
     font-size: ${props => props.theme.typography.fontSizes['3xl']};
-    letter-spacing: ${props => props.theme.typography.letterSpacing.tight};
+    letter-spacing: 0;
   }
 
   h2 {
@@ -172,7 +172,7 @@ export const GlobalStyles = createGlobalStyle`
     font-size: ${props => props.theme.typography.fontSizes.base};
     font-weight: ${props => props.theme.typography.fontWeight.bold};
     text-transform: uppercase;
-    letter-spacing: ${props => props.theme.typography.letterSpacing.wide};
+    letter-spacing: 0;
   }
 
   /* Paragraph spacing */
@@ -185,7 +185,6 @@ export const GlobalStyles = createGlobalStyle`
     max-width: 100%;
     height: auto;
     display: block;
-    border-radius: ${props => props.theme.borders.radius.md};
   }
   
   /* Button reset */
@@ -426,10 +425,6 @@ export const GlobalStyles = createGlobalStyle`
   
   /* Responsive typography */
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    html {
-      font-size: 15px;
-    }
-    
     h1 {
       font-size: ${props => props.theme.typography.fontSizes['2xl']};
     }
@@ -444,10 +439,6 @@ export const GlobalStyles = createGlobalStyle`
   }
   
   @media (max-width: ${props => props.theme.breakpoints.mobileL}) {
-    html {
-      font-size: 14px;
-    }
-    
     .container {
       padding: 0 ${props => props.theme.spacing.sm};
     }

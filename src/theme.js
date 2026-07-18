@@ -69,10 +69,10 @@ export const theme = {
             relaxed: 1.8
         },
         letterSpacing: {
-            tight: '-0.025em',
+            tight: '0',
             normal: '0',
-            wide: '0.025em',
-            wider: '0.05em'
+            wide: '0',
+            wider: '0'
         }
     },
 

@@ -42,26 +42,22 @@ const StyledSideNav = styled(motion.nav)`
   z-index: 200;
   top: 0;
   left: 0;
-  background: rgba(14, 14, 22, 0.82);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
+  background: #0d0d0d;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 2.5rem 0;
 
-  /* Red gradient left accent line (former style) */
   &::before {
     content: '';
     position: absolute;
-    top: 15%;
+    top: 0;
     left: 0;
     width: 2px;
-    height: 70%;
-    border-radius: 1px;
-    background: linear-gradient(to bottom, transparent, #e04848, transparent);
+    height: 100%;
+    background: #e04848;
   }
 
   @media (max-width: 768px) {
@@ -83,18 +79,17 @@ const Logo = styled(motion.div)`
   transform: translateX(-50%);
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #e04848 0%, #8a1818 100%);
+  border-radius: 4px;
+  background: #e04848;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(224, 72, 72, 0.35);
 
   span {
     font-size: 1rem;
     color: #fff;
     font-weight: 800;
-    letter-spacing: -1px;
+    letter-spacing: 0;
     font-family: 'Outfit', sans-serif;
   }
 `;
@@ -123,7 +118,7 @@ const SocialContainer = styled(motion.div)`
 const Divider = styled.div`
   width: 30px;
   height: 1px;
-  background: linear-gradient(to right, transparent, rgba(224, 72, 72, 0.3), transparent);
+  background: rgba(255, 255, 255, 0.14);
   margin: 0.5rem 0;
 `;
 

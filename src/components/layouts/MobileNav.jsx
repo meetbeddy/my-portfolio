@@ -12,12 +12,10 @@ const NavWrapper = styled(motion.nav)`
   width: 90%;
   max-width: 400px;
   height: 64px;
-  background: rgba(14, 14, 22, 0.85); /* Matches SideNav navy */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 24px;
-  border: 1px solid rgba(224, 72, 72, 0.2); /* Red border */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  background: #0d0d0d;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -49,7 +47,7 @@ const NavItem = styled(Link)`
     font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0;
   }
 `;
 
@@ -60,7 +58,6 @@ const ActiveIndicator = styled(motion.div)`
   height: 4px;
   background: #e04848;
   border-radius: 0 0 6px 6px;
-  box-shadow: 0 0 15px rgba(224, 72, 72, 0.6);
 `;
 
 
