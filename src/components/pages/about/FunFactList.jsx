@@ -1,8 +1,9 @@
 
 import React from "react";
 import styled from "styled-components";
-import * as Icons from "lucide-react";
+import { CircleHelp, Clock, Code, Coffee, Globe, Headphones, Volleyball } from "lucide-react";
 
+const factIcons = { CircleHelp, Clock, Code, Coffee, Globe, Headphones, Volleyball };
 
 const FactListItem = styled.li`
   display: flex;
@@ -14,7 +15,7 @@ const FunFactList = ({ facts }) => {
     return (
         <ul style={{ display: "flex", flexDirection: "column", gap: '10px' }}>
             {facts.map((fact, i) => {
-                const Icon = Icons[fact.icon] || Icons["CircleHelp"];
+                const Icon = factIcons[fact.icon] || CircleHelp;
                 return (
                     <FactListItem key={i}>
                         <Icon size={24} />

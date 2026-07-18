@@ -1,6 +1,3 @@
-import React from "react";
-import { Headphones, Volleyball, Coffee, Globe, Clock, Code } from "lucide-react";
-
 export const allFunFacts = [
     { icon: "Headphones", text: "Indie-pop is my coding soundtrack" },
     { icon: "Volleyball", text: "Football enthusiast (hustle > bulk)" },
