@@ -522,6 +522,8 @@ const ASTEROID_TYPES = [
     emissive: new THREE.Color('#2244aa'),
     emissiveIntensity: 0.5,
     weight: 4,
+    behavior: 'drift',
+    unlockSector: 1,
     label: 'SMALL',
     labelColor: '#7aaeff',
   },
@@ -537,6 +539,8 @@ const ASTEROID_TYPES = [
     emissive: null,
     emissiveIntensity: 0,
     weight: 4,
+    behavior: 'weave',
+    unlockSector: 1,
     label: 'MEDIUM',
     labelColor: '#ffb74d',
   },
@@ -552,6 +556,8 @@ const ASTEROID_TYPES = [
     emissive: new THREE.Color('#6a1500'),
     emissiveIntensity: 0.3,
     weight: 3,
+    behavior: 'hunter',
+    unlockSector: 2,
     label: 'LARGE',
     labelColor: '#e04848',
   },
@@ -567,16 +573,41 @@ const ASTEROID_TYPES = [
     emissive: new THREE.Color('#4466ff'),
     emissiveIntensity: 0.8,
     weight: 2,
+    behavior: 'zigzag',
+    unlockSector: 2,
     label: 'CRYSTAL',
     labelColor: '#aabbff',
   },
+  {
+    id: 'splitter',
+    sizeRange: [0.65, 0.9],
+    damage: 18,
+    hitsToDie: 2,
+    pts: 35,
+    speed: 0.9,
+    matProps: () => ({ color: new THREE.Color('#48d6a8'), roughness: 0.2, metalness: 0.65 }),
+    emissive: new THREE.Color('#0a6b52'),
+    emissiveIntensity: 0.65,
+    weight: 2,
+    behavior: 'splitter',
+    unlockSector: 2,
+    label: 'SPLITTER',
+    labelColor: '#48e0b0',
+  },
 ];
 
-const pickAsteroidType = () => {
-  const total = ASTEROID_TYPES.reduce((s, t) => s + t.weight, 0);
+const pickAsteroidType = (sector = 1) => {
+  const availableTypes = ASTEROID_TYPES.filter(type => sector >= type.unlockSector);
+  const total = availableTypes.reduce((s, t) => s + t.weight, 0);
   let r = Math.random() * total;
-  for (const t of ASTEROID_TYPES) { r -= t.weight; if (r <= 0) return t; }
-  return ASTEROID_TYPES[0];
+  for (const t of availableTypes) { r -= t.weight; if (r <= 0) return t; }
+  return availableTypes[0];
+};
+
+const UFO_TYPES = {
+  raider: { label: 'RAIDER', color: 0x00ffff, hex: '#48e0e0', behavior: 'strafe', damage: 22, pts: 100, cooldown: 1700 },
+  hunter: { label: 'HUNTER', color: 0xff4f87, hex: '#ff6b9b', behavior: 'hunt', damage: 26, pts: 140, cooldown: 1450 },
+  sentinel: { label: 'SENTINEL', color: 0xffc857, hex: '#ffd166', behavior: 'orbit', damage: 20, pts: 175, cooldown: 1250 },
 };
 
 // ─── Sound ────────────────────────────────────────────────────────────────────
@@ -1027,9 +1058,10 @@ const AsteroidGame = () => {
       }
     };
 
-    const makeEnemyBullet = (x, y, angleOffset = 0) => {
+    const makeEnemyBullet = (x, y, angleOffset = 0, options = {}) => {
       const geo = new THREE.SphereGeometry(0.18, 8, 8);
-      const color = 0xcc22ff;
+      const color = options.color || 0xcc22ff;
+      const speed = options.speed || 0.22;
       const mat = new THREE.MeshBasicMaterial({ color });
       const mesh = trackMesh(new THREE.Mesh(geo, mat));
       const bLight = new THREE.PointLight(color, 2, 4);
@@ -1038,17 +1070,26 @@ const AsteroidGame = () => {
       mesh.rotation.z = -rad;
       mesh.add(bLight);
       scene.add(mesh);
-      gs.enemyBullets.push({ mesh, vx: Math.sin(rad) * 0.12, vy: -0.22, geo, mat });
+      gs.enemyBullets.push({
+        mesh,
+        vx: Math.sin(rad) * speed,
+        vy: -Math.cos(rad) * speed,
+        damage: options.damage || 18,
+        hitColor: options.hitColor || '#cc44ff',
+        geo,
+        mat,
+      });
     };
 
     // ── Asteroid ──────────────────────────────────────────────────────────
-    const makeAsteroid = (forcedType = null) => {
-      const type = forcedType || pickAsteroidType();
+    const makeAsteroid = (forcedType = null, options = {}) => {
+      const type = forcedType || pickAsteroidType(gs.localSector);
       const [minS, maxS] = type.sizeRange;
-      const size = minS + Math.random() * (maxS - minS);
+      const size = (minS + Math.random() * (maxS - minS)) * (options.scale || 1);
 
       let geo;
       if (type.id === 'crystal') geo = new THREE.OctahedronGeometry(size, 1);
+      else if (type.id === 'splitter') geo = new THREE.DodecahedronGeometry(size, 0);
       else if (type.id === 'large') geo = new THREE.IcosahedronGeometry(size, 0);
       else geo = new THREE.IcosahedronGeometry(size, Math.random() > .5 ? 1 : 0);
 
@@ -1058,24 +1099,31 @@ const AsteroidGame = () => {
         emissiveIntensity: type.emissiveIntensity || 0,
       });
       const mesh = trackMesh(new THREE.Mesh(geo, mat));
-      mesh.position.set((Math.random() - .5) * B.x * 1.8, B.y + size + .5, (Math.random() - .5) * 1.5);
+      if (options.position) mesh.position.copy(options.position);
+      else mesh.position.set((Math.random() - .5) * B.x * 1.8, B.y + size + .5, (Math.random() - .5) * 1.5);
       mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
       if (type.emissive) mesh.add(new THREE.PointLight(type.emissive, 1.5, 4));
       scene.add(mesh);
-      gs.asteroids.push({
+      const asteroid = {
         mesh, size, type,
         pts: type.pts,
         damage: type.damage,
         hitsLeft: type.hitsToDie,
         id: Math.random().toString(36).slice(2),
         vy: -(0.018 + Math.random() * 0.010) * gs.diffMult * type.speed,
+        vx: options.vx || 0,
         rx: (Math.random() - .5) * .016,
         ry: (Math.random() - .5) * .016,
+        age: 0,
+        originX: mesh.position.x,
+        behaviorPhase: Math.random() * Math.PI * 2,
         vortexing: false,
         vortexDelay: 0,
         flashFrames: 0,
         geo, mat,
-      });
+      };
+      gs.asteroids.push(asteroid);
+      return asteroid;
     };
 
     const makePowerUp = () => {
@@ -1102,20 +1150,44 @@ const AsteroidGame = () => {
     };
 
     const makeUfo = () => {
+      const availableTypes = ['raider'];
+      if (gs.localSector >= 2) availableTypes.push('hunter');
+      if (gs.localSector >= 3) availableTypes.push('sentinel');
+      const typeId = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+      const cfg = UFO_TYPES[typeId];
       const g = new THREE.Group();
       const geo1 = new THREE.SphereGeometry(0.7, 16, 8); geo1.scale(1, 0.25, 1);
-      const mat1 = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.1 });
+      const mat1 = new THREE.MeshStandardMaterial({ color: 0x777777, emissive: cfg.color, emissiveIntensity: 0.18, metalness: 0.9, roughness: 0.1 });
       const mesh1 = trackMesh(new THREE.Mesh(geo1, mat1));
       const geo2 = new THREE.SphereGeometry(0.4, 16, 8); geo2.scale(1, 0.7, 1);
-      const mat2 = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+      const mat2 = new THREE.MeshBasicMaterial({ color: cfg.color });
       const mesh2 = trackMesh(new THREE.Mesh(geo2, mat2));
       mesh2.position.y = 0.2;
-      const uLight = new THREE.PointLight(0x00ffff, 3, 5);
+      const uLight = new THREE.PointLight(cfg.color, 3, 5);
       g.add(mesh1); g.add(mesh2); g.add(uLight);
       const fromLeft = Math.random() > 0.5;
-      g.position.set(fromLeft ? -B.x - 2 : B.x + 2, B.y - 1 - Math.random() * (B.y - 1), 0);
+      if (cfg.behavior === 'strafe') {
+        g.position.set(fromLeft ? -B.x - 2 : B.x + 2, B.y - 1 - Math.random() * (B.y - 1), 0);
+      } else {
+        g.position.set((Math.random() - 0.5) * B.x * 1.4, B.y + 2, 0);
+      }
       scene.add(g);
-      gs.ufos.push({ mesh: g, vx: (fromLeft ? 1 : -1) * (0.05 + Math.random() * 0.04), pts: 100, damage: 25 });
+      gs.ufos.push({
+        mesh: g,
+        typeId,
+        cfg,
+        vx: (fromLeft ? 1 : -1) * (0.05 + Math.random() * 0.04),
+        vy: -0.035,
+        pts: cfg.pts,
+        damage: cfg.damage,
+        spawnedAt: performance.now(),
+        lastShot: performance.now() + Math.random() * 500,
+        orbitAngle: Math.random() * Math.PI * 2,
+        lastShipX: shipGroup.position.x,
+        lastShipY: shipGroup.position.y,
+      });
+      const sp = worldToScreen(g.position.x, g.position.y);
+      addPopup(sp.x, Math.max(70, sp.y), cfg.label, cfg.hex, true);
     };
 
     // ── BOSS ──────────────────────────────────────────────────────────────
@@ -1424,7 +1496,7 @@ const AsteroidGame = () => {
             setTimeout(() => { if (a.mesh) { explode(a.mesh.position, 0xff8800, 8); removeMesh(a.mesh); } }, idx * 40);
           });
           gs.asteroids = [];
-          gs.ufos.forEach(u => { explode(u.mesh.position, 0x00ffff, 12); removeMesh(u.mesh); });
+          gs.ufos.forEach(u => { explode(u.mesh.position, u.cfg.color, 12); removeMesh(u.mesh); });
           gs.ufos = []; gs.enemyBullets.forEach(b => removeMesh(b.mesh));
           gs.enemyBullets = []; gs.grazedIds.clear();
           triggerShake();
@@ -1633,11 +1705,23 @@ const AsteroidGame = () => {
 
             if (a.hitsLeft <= 0) {
               SFX.explode(audioCtxRef.current);
-              explode(a.mesh.position, a.type.id === 'crystal' ? 0x6688ff : 0xff5500, a.type.id === 'large' ? 24 : 14);
+              const destroyedAt = a.mesh.position.clone();
+              const explosionColor = a.type.id === 'crystal' ? 0x6688ff : a.type.id === 'splitter' ? 0x48d6a8 : 0xff5500;
+              explode(a.mesh.position, explosionColor, a.type.id === 'large' ? 24 : 14);
               if (a.type.id === 'large') triggerShake();
               removeMesh(a.mesh);
               gs.asteroids.splice(j, 1);
               gs.grazedIds.delete(a.id);
+
+              if (a.type.id === 'splitter') {
+                [-1, 1].forEach(direction => {
+                  const fragmentPosition = destroyedAt.clone();
+                  fragmentPosition.x += direction * 0.28;
+                  makeAsteroid(ASTEROID_TYPES[0], { position: fragmentPosition, scale: 0.8, vx: direction * 0.04 });
+                });
+                const splitAt = worldToScreen(destroyedAt.x, destroyedAt.y);
+                addPopup(splitAt.x, splitAt.y - 16, 'SPLIT ×2', '#48e0b0', true);
+              }
 
               const timeSinceLast = now - gs.lastHitTime;
               if (timeSinceLast < 1500) gs.comboCount = Math.min(gs.comboCount + 1, 8);
@@ -1676,19 +1760,19 @@ const AsteroidGame = () => {
             const uRadius = b.big ? 1.0 : 0.8;
             if (dist2D(b.mesh.position, u.mesh.position) < uRadius) {
               SFX.explode(audioCtxRef.current);
-              explode(u.mesh.position, 0x00ffff, 25);
-              showHitMarker('#48e0e0');
+              explode(u.mesh.position, u.cfg.color, 25);
+              showHitMarker(u.cfg.hex);
               removeMesh(u.mesh);
               if (!b.pierce && b.penetration <= 0) { removeMesh(b.mesh); hit = true; }
               else if (!b.pierce) b.penetration--;
               gs.ufos.splice(k, 1);
               const multiplier = gs.comboCount >= 3 ? gs.comboCount : 1;
-              const earned = Math.round(100 * multiplier * difficultyCfg.scoreMult);
+              const earned = Math.round(u.pts * multiplier * difficultyCfg.scoreMult);
               localScore += earned; setScore(localScore); scoreRef.current = localScore;
               statsRef.current.enemiesDestroyed++;
               if (gs.comboCount > statsRef.current.maxCombo) statsRef.current.maxCombo = gs.comboCount;
               const sp = worldToScreen(u.mesh.position.x, u.mesh.position.y);
-              addPopup(sp.x, sp.y, `+${earned} UFO!`, '#00ffff', true);
+              addPopup(sp.x, sp.y, `+${earned} ${u.cfg.label}!`, u.cfg.hex, true);
               break;
             }
           }
@@ -1719,7 +1803,7 @@ const AsteroidGame = () => {
             triggerShake();
             explode(shipGroup.position, 0xe04848, 20);
             gs.comboCount = 0; setCombo(0);
-            takeDamage(18, '#cc44ff');
+            takeDamage(b.damage, b.hitColor);
           }
         }
         if (hit || b.mesh.position.y < -B.y - 2 || b.mesh.position.x < -B.x - 2 || b.mesh.position.x > B.x + 2) {
@@ -1731,7 +1815,22 @@ const AsteroidGame = () => {
       for (let i = gs.asteroids.length - 1; i >= 0; i--) {
         const a = gs.asteroids[i];
         if (!a.vortexing) {
+          a.age++;
           a.mesh.position.y += a.vy;
+          if (a.type.behavior === 'drift') {
+            a.mesh.position.x += a.vx;
+          } else if (a.type.behavior === 'weave') {
+            a.mesh.position.x = THREE.MathUtils.clamp(a.originX + Math.sin(a.age * 0.045 + a.behaviorPhase) * 1.15, -B.x + a.size, B.x - a.size);
+          } else if (a.type.behavior === 'hunter') {
+            const steering = THREE.MathUtils.clamp((shipGroup.position.x - a.mesh.position.x) * 0.006, -0.018, 0.018);
+            a.mesh.position.x = THREE.MathUtils.clamp(a.mesh.position.x + steering, -B.x + a.size, B.x - a.size);
+          } else if (a.type.behavior === 'zigzag') {
+            if (a.vx === 0) a.vx = Math.sin(a.behaviorPhase) >= 0 ? 0.045 : -0.045;
+            a.mesh.position.x += a.vx;
+            if (Math.abs(a.mesh.position.x) > B.x - a.size) a.vx *= -1;
+          } else if (a.type.behavior === 'splitter') {
+            a.mesh.position.x = THREE.MathUtils.clamp(a.originX + Math.sin(a.age * 0.07 + a.behaviorPhase) * 0.65, -B.x + a.size, B.x - a.size);
+          }
           a.mesh.rotation.x += a.rx;
           a.mesh.rotation.y += a.ry;
         }
@@ -1785,18 +1884,44 @@ const AsteroidGame = () => {
       // ── UFOs ──────────────────────────────────────────────────────────
       for (let i = gs.ufos.length - 1; i >= 0; i--) {
         const u = gs.ufos[i];
-        u.mesh.position.x += u.vx;
-        u.mesh.rotation.y += 0.05;
-        if (!gs.sectorClearing && gs.localSector >= 2 && Math.random() < 0.015 + (gs.localSector * 0.005)) {
-          const dx = shipGroup.position.x - u.mesh.position.x;
-          const dy = shipGroup.position.y - u.mesh.position.y;
-          const deg = THREE.MathUtils.radToDeg(Math.atan2(dx, -dy));
-          makeEnemyBullet(u.mesh.position.x, u.mesh.position.y - 0.5, deg);
+        const shipVx = shipGroup.position.x - u.lastShipX;
+        const shipVy = shipGroup.position.y - u.lastShipY;
+
+        if (u.cfg.behavior === 'strafe') {
+          u.mesh.position.x += u.vx;
+        } else if (u.cfg.behavior === 'hunt') {
+          u.mesh.position.x += THREE.MathUtils.clamp((shipGroup.position.x - u.mesh.position.x) * 0.012, -0.055, 0.055);
+          u.mesh.position.y += THREE.MathUtils.clamp((shipGroup.position.y + 2.4 - u.mesh.position.y) * 0.012, -0.045, 0.015);
+        } else {
+          u.orbitAngle += 0.018;
+          const orbitX = THREE.MathUtils.clamp(shipGroup.position.x + Math.cos(u.orbitAngle) * 3.2, -B.x + 1, B.x - 1);
+          const orbitY = THREE.MathUtils.clamp(shipGroup.position.y + 3.2 + Math.sin(u.orbitAngle) * 1.5, -B.y + 2, B.y - 1);
+          u.mesh.position.x += (orbitX - u.mesh.position.x) * 0.035;
+          u.mesh.position.y += (orbitY - u.mesh.position.y) * 0.035;
         }
+        u.mesh.rotation.y += 0.05;
+        if (!gs.sectorClearing && now - u.lastShot >= u.cfg.cooldown) {
+          const predictionFrames = u.cfg.behavior === 'hunt' ? 18 : u.cfg.behavior === 'orbit' ? 9 : 0;
+          const targetX = THREE.MathUtils.clamp(shipGroup.position.x + shipVx * predictionFrames, -B.x, B.x);
+          const targetY = THREE.MathUtils.clamp(shipGroup.position.y + shipVy * predictionFrames, -B.y, B.y);
+          const dx = targetX - u.mesh.position.x;
+          const dy = targetY - u.mesh.position.y;
+          const deg = THREE.MathUtils.radToDeg(Math.atan2(dx, -dy));
+          const offsets = u.cfg.behavior === 'orbit' ? [-12, 0, 12] : [0];
+          offsets.forEach(offset => makeEnemyBullet(u.mesh.position.x, u.mesh.position.y - 0.5, deg + offset, {
+            color: u.cfg.color,
+            speed: u.cfg.behavior === 'hunt' ? 0.25 : 0.21,
+            damage: Math.round(u.damage * 0.65),
+            hitColor: u.cfg.hex,
+          }));
+          u.lastShot = now;
+        }
+        u.lastShipX = shipGroup.position.x;
+        u.lastShipY = shipGroup.position.y;
         if (!gs.sectorClearing && dist2D(u.mesh.position, shipGroup.position) < 1.4) {
           if (gs.shield) {
             SFX.explode(audioCtxRef.current);
-            explode(u.mesh.position, 0x00ffff, 15);
+            explode(u.mesh.position, u.cfg.color, 15);
             removeMesh(u.mesh); gs.ufos.splice(i, 1);
             gs.shield = false;
             const sp = worldToScreen(shipGroup.position.x, shipGroup.position.y);
@@ -1807,10 +1932,12 @@ const AsteroidGame = () => {
           explode(shipGroup.position, 0xe04848, 20);
           removeMesh(u.mesh); gs.ufos.splice(i, 1);
           gs.comboCount = 0; setCombo(0);
-          takeDamage(u.damage, '#00ffff');
+          takeDamage(u.damage, u.cfg.hex);
           continue;
         }
-        if ((u.vx > 0 && u.mesh.position.x > B.x + 2) || (u.vx < 0 && u.mesh.position.x < -B.x - 2)) {
+        const strafeComplete = u.cfg.behavior === 'strafe' && ((u.vx > 0 && u.mesh.position.x > B.x + 2) || (u.vx < 0 && u.mesh.position.x < -B.x - 2));
+        const expired = now - u.spawnedAt > 18000;
+        if (strafeComplete || expired || u.mesh.position.y < -B.y - 2) {
           removeMesh(u.mesh); gs.ufos.splice(i, 1);
         }
       }
