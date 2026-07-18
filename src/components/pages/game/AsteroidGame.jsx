@@ -3,6 +3,14 @@ import * as THREE from 'three';
 import styled, { keyframes, css } from 'styled-components';
 import { Link } from 'react-router-dom';
 import { Crosshair } from 'lucide-react';
+import {
+  AUDIO_SETTINGS_KEY, DIFFICULTIES, DIFFICULTY_OPTIONS, MAX_HP,
+  PUPS, SALVAGE_UPGRADE, SECTOR_PALETTES, SECTOR_UPGRADES, TUTORIAL_KEY,
+  TUTORIAL_STEPS, drawUpgradeChoices, emptyUpgrades,
+  hasCompletedTutorial, highScoreKey, readAudioSettings, readHighScore,
+} from './core/gameConfig';
+import { createAudio, SFX, startSynthwave } from './core/gameAudio';
+import { useTouchControls } from './core/useTouchControls';
 
 // ─── Keyframes ───────────────────────────────────────────────────────────────
 const pulse = keyframes`0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.95)}`;
@@ -545,88 +553,6 @@ const SectorVignette = styled.div`
   transition: background 2s ease;
 `;
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-const MAX_HP = 100;
-const HIGH_SCORE_KEY = 'asteroidFieldHighScore';
-const TUTORIAL_KEY = 'asteroidFieldTutorialComplete';
-const AUDIO_SETTINGS_KEY = 'asteroidFieldAudioSettings';
-const DIFFICULTIES = {
-  chill: { label: 'CHILL', desc: 'shielded start', rule: 'Slower heat · +30 hull per sector · more drops', spawnBase: 2600, damage: 0.75, scoreMult: 0.9, speed: 0.85, heatMult: 0.82, overheatLock: 2000, sectorRepair: 30, startShield: true, powerupInterval: 0.78, projectileSpeed: 0.9 },
-  arcade: { label: 'ARCADE', desc: 'balanced', rule: 'Standard rules · +20 hull per sector', spawnBase: 2200, damage: 1, scoreMult: 1, speed: 1, heatMult: 1, overheatLock: 2500, sectorRepair: 20, startShield: false, powerupInterval: 1, projectileSpeed: 1 },
-  insane: { label: 'INSANE', desc: 'high-risk score', rule: 'Hot weapons · +8 hull per sector · dense bosses', spawnBase: 1750, damage: 1.25, scoreMult: 1.2, speed: 1.18, heatMult: 1.15, overheatLock: 3200, sectorRepair: 8, startShield: false, powerupInterval: 1.3, projectileSpeed: 1.15 },
-};
-const DIFFICULTY_OPTIONS = Object.keys(DIFFICULTIES);
-const TUTORIAL_STEPS = [
-  { title: 'FLIGHT CONTROL', text: 'Move with the mouse, touch, WASD, or arrow keys.' },
-  { title: 'WEAPONS ONLINE', text: 'Hold Space, press Enter, click, or tap to fire.' },
-  { title: 'HEAT DISCIPLINE', text: 'Build weapon heat above 30%, then stop firing and let it cool below 15%.' },
-  { title: 'RISK AND REWARD', text: 'Enter the dashed center zone for bonus points, then keep moving to survive.' },
-];
-
-const hasCompletedTutorial = () => {
-  try { return localStorage.getItem(TUTORIAL_KEY) === 'true'; }
-  catch { return false; }
-};
-
-const readAudioSettings = () => {
-  try {
-    const stored = JSON.parse(localStorage.getItem(AUDIO_SETTINGS_KEY) || '{}');
-    return {
-      enabled: stored.enabled ?? true,
-      sfxVolume: Number.isFinite(stored.sfxVolume) ? stored.sfxVolume : 0.8,
-      musicVolume: Number.isFinite(stored.musicVolume) ? stored.musicVolume : 0.55,
-    };
-  } catch {
-    return { enabled: true, sfxVolume: 0.8, musicVolume: 0.55 };
-  }
-};
-
-const SECTOR_UPGRADES = [
-  { id: 'fireRate', label: 'PULSE ACCELERATOR', short: 'FIRE', description: 'Fire 12% faster. Stacks reduce the delay between every shot.', color: '#ff7a66', max: 3 },
-  { id: 'cooling', label: 'CRYO VENTS', short: 'COOL', description: 'Build 15% less heat and cool weapons faster between bursts.', color: '#48e0e0', max: 3 },
-  { id: 'damage', label: 'DENSE MUNITIONS', short: 'DMG', description: 'Shots deal 35% more damage to asteroids and sector bosses.', color: '#ffb74d', max: 3 },
-  { id: 'piercing', label: 'PHASE ROUNDS', short: 'PIERCE', description: 'Shots pass through one additional target before breaking.', color: '#c98cff', max: 2 },
-  { id: 'armor', label: 'REACTIVE PLATING', short: 'ARMOR', description: 'Reduce all hull damage by 12% for the rest of this run.', color: '#80ff9b', max: 3 },
-  { id: 'aegis', label: 'AEGIS RELAY', short: 'AEGIS', description: 'Begin every new sector with a shield that blocks one collision.', color: '#7aaeff', max: 1 },
-];
-const SALVAGE_UPGRADE = { id: 'repair', label: 'FIELD REPAIR', short: 'REPAIR', description: 'Restore 25 hull integrity before entering the next sector.', color: '#80ff9b', max: 1 };
-
-const emptyUpgrades = () => Object.fromEntries(SECTOR_UPGRADES.map(upgrade => [upgrade.id, 0]));
-const drawUpgradeChoices = levels => {
-  const available = SECTOR_UPGRADES.filter(upgrade => (levels[upgrade.id] || 0) < upgrade.max);
-  if (available.length === 0) return [SALVAGE_UPGRADE];
-  return [...available].sort(() => Math.random() - 0.5).slice(0, 3);
-};
-
-const highScoreKey = mode => `${HIGH_SCORE_KEY}:${mode}`;
-const readHighScore = (mode = 'arcade') => {
-  try {
-    const legacyScore = mode === 'arcade' ? localStorage.getItem(HIGH_SCORE_KEY) || sessionStorage.getItem('hs') : null;
-    const stored = Number(localStorage.getItem(highScoreKey(mode)) || legacyScore || 0);
-    return Number.isFinite(stored) ? stored : 0;
-  } catch {
-    return 0;
-  }
-};
-
-const PUPS = {
-  shield: { color: 0x4880e0, hex: '#4880e0', label: 'SHIELD', dur: 10000 },
-  rapid: { color: 0x48e080, hex: '#48e080', label: 'RAPID FIRE', dur: 8000 },
-  bigbullet: { color: 0xffb74d, hex: '#ffb74d', label: 'BIG SHOT', dur: 8000 },
-  spread: { color: 0xc048e0, hex: '#c048e0', label: 'SPREAD', dur: 8000 },
-  laser: { color: 0x48e0e0, hex: '#48e0e0', label: 'LASER', dur: 6000 },
-  bomb: { color: 0xe02048, hex: '#e02048', label: 'SMART BOMB', dur: 0 },
-  repair: { color: 0x80ff80, hex: '#80ff80', label: 'REPAIR KIT', dur: 0 },
-};
-
-const SECTOR_PALETTES = [
-  { star: 0xffffff, ambient: 0x223344, fog: '#0a0a1a', accent: '#ffffff' }, // Sector 1 — white/blue
-  { star: 0x00ffff, ambient: 0x003344, fog: '#001a1a', accent: '#00ffff' }, // Sector 2 — cyan
-  { star: 0xff00ff, ambient: 0x330033, fog: '#1a001a', accent: '#ff00ff' }, // Sector 3 — magenta
-  { star: 0xffff00, ambient: 0x333300, fog: '#1a1a00', accent: '#ffff00' }, // Sector 4 — yellow
-  { star: 0x00ff88, ambient: 0x003322, fog: '#001a0e', accent: '#00ff88' }, // Sector 5 — green
-  { star: 0xff4444, ambient: 0x330011, fog: '#1a0005', accent: '#ff4444' }, // Sector 6 — red
-];
 // ─── Asteroid types — now with damage ────────────────────────────────────────
 // damage: how many HP the player loses on collision
 // hitsToDie: how many bullet hits to destroy
@@ -731,73 +657,6 @@ const UFO_TYPES = {
   sentinel: { label: 'SENTINEL', color: 0xffc857, hex: '#ffd166', behavior: 'orbit', damage: 20, pts: 175, cooldown: 1250 },
 };
 
-// ─── Sound ────────────────────────────────────────────────────────────────────
-const createAudio = () => {
-  try { return new (window.AudioContext || window.webkitAudioContext)(); }
-  catch { return null; }
-};
-const playTone = (ctx, { freq = 440, type = 'sine', gain = 0.18, dur = 0.12, decay = 0.08 } = {}) => {
-  if (!ctx || ctx.state === 'suspended') return;
-  try {
-    const osc = ctx.createOscillator();
-    const vol = ctx.createGain();
-    osc.connect(vol); vol.connect(ctx.destination);
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(freq * 0.5, ctx.currentTime + dur);
-    vol.gain.setValueAtTime(gain * (ctx.__sfxVolume ?? 1), ctx.currentTime);
-    vol.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur + decay);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + dur + decay + 0.01);
-  } catch { }
-};
-const SFX = {
-  shoot: ctx => playTone(ctx, { freq: 880, type: 'square', gain: 0.09, dur: 0.06, decay: 0.04 }),
-  shootWeak: ctx => playTone(ctx, { freq: 440, type: 'square', gain: 0.05, dur: 0.04, decay: 0.02 }),
-  explode: ctx => playTone(ctx, { freq: 120, type: 'sawtooth', gain: 0.22, dur: 0.18, decay: 0.14 }),
-  bigExplode: ctx => { playTone(ctx, { freq: 80, type: 'sawtooth', gain: 0.30, dur: 0.30, decay: 0.25 }); playTone(ctx, { freq: 160, type: 'sawtooth', gain: 0.15, dur: 0.20, decay: 0.18 }); },
-  hit: ctx => playTone(ctx, { freq: 55, type: 'sawtooth', gain: 0.28, dur: 0.25, decay: 0.20 }),
-  heavyHit: ctx => playTone(ctx, { freq: 35, type: 'sawtooth', gain: 0.40, dur: 0.35, decay: 0.30 }),
-  powerup: ctx => playTone(ctx, { freq: 660, type: 'sine', gain: 0.20, dur: 0.25, decay: 0.12 }),
-  graze: ctx => playTone(ctx, { freq: 1200, type: 'sine', gain: 0.12, dur: 0.07, decay: 0.06 }),
-  overheat: ctx => playTone(ctx, { freq: 200, type: 'sawtooth', gain: 0.25, dur: 0.40, decay: 0.20 }),
-  bossHit: ctx => playTone(ctx, { freq: 180, type: 'sawtooth', gain: 0.20, dur: 0.18, decay: 0.14 }),
-  sectorClear: ctx => {
-    [523, 659, 784].forEach((freq, i) => {
-      setTimeout(() => playTone(ctx, { freq, type: 'sine', gain: 0.28, dur: 0.22, decay: 0.18 }), i * 140);
-    });
-  },
-};
-
-// ─── Synthwave ────────────────────────────────────────────────────────────────
-const startSynthwave = (ctx) => {
-  if (!ctx || ctx.state === 'suspended') return null;
-  try {
-    const notes = [55, 82.5, 55, 110, 55, 82.5, 110, 82.5];
-    let step = 0;
-    const bpm = 128;
-    const stepDur = (60 / bpm) / 2;
-    const playNote = () => {
-      if (!ctx || ctx.state === 'closed') return;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass'; filter.frequency.value = 800;
-      osc.type = 'sawtooth';
-      osc.frequency.value = notes[step % notes.length];
-      const t = ctx.currentTime;
-      gain.gain.setValueAtTime(0.06 * (ctx.__musicVolume ?? 1), t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + stepDur * 0.85);
-      osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-      osc.start(t); osc.stop(t + stepDur);
-      step++;
-    };
-    playNote();
-    const interval = setInterval(playNote, stepDur * 1000);
-    return interval;
-  } catch { return null; }
-};
-
 // ─── Component ────────────────────────────────────────────────────────────────
 const AsteroidGame = () => {
   const mountRef = useRef(null);
@@ -842,7 +701,6 @@ const AsteroidGame = () => {
   const [tutorialStep, setTutorialStep] = useState(null);
   const [bestScore, setBestScore] = useState(() => readHighScore('arcade'));
   const [newHighScore, setNewHighScore] = useState(false);
-  const [touchStick, setTouchStick] = useState({ x: 0, y: 0 });
 
   const finalScore = useRef(0);
   const highScore = useRef(readHighScore('arcade'));
@@ -860,7 +718,6 @@ const AsteroidGame = () => {
   const upgradeSelectionRef = useRef(null);
   const hitMarkerTimer = useRef(null);
   const tutorialRef = useRef({ active: false, step: null, startedAt: 0, heatSeen: false });
-  const touchInputRef = useRef({ x: 0, y: 0, active: false, firing: false, pointerId: null });
 
   const unlockAudio = useCallback(() => {
     if (!audioEnabledRef.current) return;
@@ -871,6 +728,16 @@ const AsteroidGame = () => {
     }
     if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume().catch(() => { });
   }, []);
+  const {
+    inputRef: touchInputRef,
+    stick: touchStick,
+    updateJoystick,
+    startJoystick,
+    stopJoystick,
+    startFire: startTouchFire,
+    stopFire: stopTouchFire,
+    reset: resetTouchControls,
+  } = useTouchControls(unlockAudio);
 
   useEffect(() => {
     audioEnabledRef.current = audioEnabled;
@@ -950,48 +817,6 @@ const AsteroidGame = () => {
     }
   };
 
-  const updateJoystick = (event) => {
-    const input = touchInputRef.current;
-    if (!input.active || input.pointerId !== event.pointerId) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    let x = (event.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
-    let y = (event.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
-    const magnitude = Math.hypot(x, y);
-    if (magnitude > 1) { x /= magnitude; y /= magnitude; }
-    touchInputRef.current = { ...input, x, y };
-    setTouchStick({ x, y });
-  };
-
-  const startJoystick = (event) => {
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    touchInputRef.current = { ...touchInputRef.current, active: true, pointerId: event.pointerId };
-    unlockAudio();
-    updateJoystick(event);
-  };
-
-  const stopJoystick = (event) => {
-    if (touchInputRef.current.pointerId !== event.pointerId) return;
-    touchInputRef.current = { ...touchInputRef.current, x: 0, y: 0, active: false, pointerId: null };
-    setTouchStick({ x: 0, y: 0 });
-  };
-
-  const setTouchFiring = (firing) => {
-    touchInputRef.current = { ...touchInputRef.current, firing };
-    if (firing) unlockAudio();
-  };
-
-  const startTouchFire = (event) => {
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setTouchFiring(true);
-  };
-
-  const stopTouchFire = (event) => {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-    setTouchFiring(false);
-  };
-
   const chooseUpgrade = upgrade => {
     if (upgrade.id === SALVAGE_UPGRADE.id) {
       upgradeSelectionRef.current = upgrade.id;
@@ -1040,8 +865,7 @@ const AsteroidGame = () => {
     setHint(null); setUpgradeChoices(null); setUpgrades(upgradesRef.current);
     setBossAttack(null); setHitMarker(null); setTutorialStep(tutorialEnabled ? 0 : null);
     setNewHighScore(false);
-    touchInputRef.current = { x: 0, y: 0, active: false, firing: false, pointerId: null };
-    setTouchStick({ x: 0, y: 0 });
+    resetTouchControls();
     setGameStats({ grazesTotal: 0, enemiesDestroyed: 0, timeSurvived: 0, maxCombo: 0, bossesKilled: 0 });
 
     if (synthIntervalRef.current) { clearInterval(synthIntervalRef.current); synthIntervalRef.current = null; }
