@@ -1,37 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Code, ExternalLink, Github, Calendar, Tag, Layers, Wrench, Star, Box } from "lucide-react";
+import { Code, ExternalLink, Github, Calendar, Tag, Layers, Wrench, Star, ArrowUpRight } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
-import { SubTitle, StyledButton, RevealContainer } from "../../shared/StyledComponents";
+import { StyledButton } from "../../shared/StyledComponents";
 import styled from "styled-components";
 
-// Styled Components
-const FilterButton = styled(motion.button)`
-  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
-  border-radius: ${props => props.theme.borders.radius.full};
-  transition: all 0.3s ease;
-  margin: ${props => props.theme.spacing.xs};
-  background-color: ${props => props.active ? props.theme.colors.primary : props.theme.colors.surface};
-  color: ${props => props.active ? props.theme.colors.text : props.theme.colors.text};
-  border: none;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: ${props => props.active ? props.theme.colors.primaryDark : props.theme.colors.surfaceHover};
-  }
-`;
-
-const FilterContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${props => props.theme.spacing.sm};
-  justify-content: center;
+const ProjectsIntro = styled.div`
+  max-width: 720px;
   margin-bottom: ${props => props.theme.spacing.xl};
+
+  p {
+    color: ${props => props.theme.colors.textSecondary};
+    line-height: 1.7;
+  }
 `;
 
 const ProjectsGrid = styled(motion.div)`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: ${props => props.theme.spacing.lg};
   margin-bottom: ${props => props.theme.spacing.xl};
 `;
@@ -46,19 +32,17 @@ const ProjectCard = styled(motion.div)`
   display: flex;
   flex-direction: column;
   position: relative;
-  perspective: 1000px;
-  will-change: transform;
+  border: 1px solid ${props => props.theme.colors.surfaceLight};
   
   &:hover {
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(224, 72, 72, 0.2);
-    z-index: 10;
+    box-shadow: ${props => props.theme.shadows.md};
   }
 `;
 
 const ProjectImageContainer = styled.div`
   position: relative;
   overflow: hidden;
-  height: 180px;
+  aspect-ratio: 3 / 2;
   background-color: ${props => props.bgColor || props.theme.colors.surfaceDark};
 `;
 
@@ -74,19 +58,6 @@ const ProjectImage = styled.div`
   }
 `;
 
-const ProjectImageOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7));
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: ${props => props.theme.spacing.md};
-`;
-
 const ProjectContent = styled.div`
   padding: ${props => props.theme.spacing.md};
   flex-grow: 1;
@@ -98,9 +69,12 @@ const ProjectTitle = styled.h3`
   font-size: ${props => props.theme.typography.fontSizes.lg};
   font-weight: ${props => props.theme.typography.fontWeight.bold};
   margin-bottom: ${props => props.theme.spacing.sm};
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.xs};
+`;
+
+const ProjectMeta = styled.p`
+  color: ${props => props.theme.colors.primaryLight};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+  margin-bottom: ${props => props.theme.spacing.sm};
 `;
 
 const ProjectDescription = styled.p`
@@ -134,6 +108,23 @@ const ProjectFooter = styled.div`
   border-top: 1px solid ${props => props.theme.colors.surfaceLight};
 `;
 
+const DetailsButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.xs};
+  border: 0;
+  background: none;
+  color: ${props => props.theme.colors.text};
+  font: inherit;
+  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  padding: ${props => props.theme.spacing.xs} 0;
+
+  &:hover {
+    color: ${props => props.theme.colors.primary};
+  }
+`;
+
 const IconButton = styled.a`
   display: flex;
   align-items: center;
@@ -155,39 +146,6 @@ const IconButton = styled.a`
 const ButtonGroup = styled.div`
   display: flex;
   gap: ${props => props.theme.spacing.sm};
-`;
-
-const StatusBadge = styled.span`
-  position: absolute;
-  top: ${props => props.theme.spacing.sm};
-  right: ${props => props.theme.spacing.sm};
-  background-color: ${props =>
-    props.status === 'completed' ? 'rgba(46, 204, 113, 0.9)' :
-      props.status === 'in-progress' ? 'rgba(241, 196, 15, 0.9)' :
-        'rgba(52, 152, 219, 0.9)'
-  };
-  color: white;
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
-  border-radius: ${props => props.theme.borders.radius.full};
-  font-size: ${props => props.theme.typography.fontSizes.sm};
-  font-weight: ${props => props.theme.typography.fontWeight.medium};
-  z-index: 2;
-`;
-
-const FeaturedFlag = styled.div`
-  position: absolute;
-  top: ${props => props.theme.spacing.sm};
-  left: ${props => props.theme.spacing.sm};
-  background-color: rgba(255, 87, 51, 0.9);
-  color: white;
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
-  border-radius: ${props => props.theme.borders.radius.full};
-  font-size: ${props => props.theme.typography.fontSizes.sm};
-  font-weight: ${props => props.theme.typography.fontWeight.medium};
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.xs};
-  z-index: 2;
 `;
 
 const DetailSection = styled.div`
@@ -217,32 +175,6 @@ const DetailCard = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${props => props.theme.spacing.sm};
-`;
-
-const BackButton = styled(motion.button)`
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.sm};
-  background: none;
-  border: none;
-  color: ${props => props.theme.colors.text};
-  cursor: pointer;
-  margin-bottom: ${props => props.theme.spacing.md};
-  font-weight: ${props => props.theme.typography.fontWeight.medium};
-  padding: ${props => props.theme.spacing.sm} 0;
-  
-  &:hover {
-    color: ${props => props.theme.colors.primary};
-  }
-`;
-
-const EmptyStateContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: ${props => props.theme.spacing.xl};
-  text-align: center;
 `;
 
 const Modal = styled(motion.div)`
@@ -343,65 +275,6 @@ const CarouselDot = styled.button`
   &:hover {
     background-color: ${props => props.active ? props.theme.colors.primary : 'rgba(255, 255, 255, 0.5)'};
   }
-`;
-
-const WorkTimeline = styled.div`
-  position: relative;
-  padding-left: ${props => props.theme.spacing.xl};
-  margin-top: ${props => props.theme.spacing.xl};
-  
-  &:before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background-color: ${props => props.theme.colors.surfaceLight};
-  }
-`;
-
-const TimelineItem = styled.div`
-  position: relative;
-  padding-bottom: ${props => props.theme.spacing.xl};
-  
-  &:last-child {
-    padding-bottom: 0;
-  }
-  
-  &:before {
-    content: "";
-    position: absolute;
-    left: -${props => props.theme.spacing.xl};
-    top: 0;
-    width: 1rem;
-    height: 1rem;
-    border-radius: 50%;
-    background-color: ${props => props.theme.colors.primary};
-    transform: translateX(-0.25rem);
-  }
-`;
-
-const TimelineContent = styled(motion.div)`
-  background-color: ${props => props.theme.colors.surface};
-  border-radius: ${props => props.theme.borders.radius.lg};
-  padding: ${props => props.theme.spacing.lg};
-  box-shadow: ${props => props.theme.shadows.sm};
-`;
-
-const TimelineHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: ${props => props.theme.spacing.md};
-`;
-
-const TimelineDate = styled.div`
-  font-size: ${props => props.theme.typography.fontSizes.sm};
-  color: ${props => props.theme.colors.primaryLight};
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.xs};
 `;
 
 // Project data â€” real projects from CV
@@ -867,245 +740,95 @@ const ProjectDetails = ({ project, onClose }) => {
 
 // Main Projects page component
 const Projects = () => {
-  const [filter, setFilter] = useState('all');
   const [selectedProject, setSelectedProject] = useState(null);
-  const [view, setView] = useState('grid'); // 'grid' or 'timeline'
 
-  // Filter projects based on selected category
-  const filteredProjects = projects.filter(project => {
-    if (filter === 'all') return true;
-    if (filter === 'featured') return project.featured;
-    return project.category === filter;
-  });
-
-  // Handle project click
-  const handleProjectClick = (project) => {
-    setSelectedProject(project);
-  };
-
-  // Close project details modal
   const closeModal = () => {
     setSelectedProject(null);
   };
 
-  // Project card animation variants
   const cardVariants = {
-    hidden: { opacity: 0, y: 50 },
+    hidden: { opacity: 0, y: 24 },
     visible: { opacity: 1, y: 0 }
   };
 
-  // Container animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.06
       }
     }
   };
 
   return (
-    <PageLayout title="Projects" subtitle="Explore my work and projects">
-      {/* Filter buttons */}
-      <FilterContainer>
-        <FilterButton
-          active={filter === 'all'}
-          onClick={() => setFilter('all')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          All Projects
-        </FilterButton>
-        <FilterButton
-          active={filter === 'featured'}
-          onClick={() => setFilter('featured')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Featured
-        </FilterButton>
-        <FilterButton
-          active={filter === 'web'}
-          onClick={() => setFilter('web')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Web Apps
-        </FilterButton>
-        <FilterButton
-          active={filter === 'backend'}
-          onClick={() => setFilter('backend')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Backend
-        </FilterButton>
-        <FilterButton
-          active={filter === 'ui'}
-          onClick={() => setFilter('ui')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          UI/Design
-        </FilterButton>
-        <FilterButton
-          active={filter === 'other'}
-          onClick={() => setFilter('other')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Other
-        </FilterButton>
-      </FilterContainer>
+    <PageLayout title="Projects" subtitle="Product systems, platforms, and interactive work">
+      <ProjectsIntro>
+        <p>
+          A focused selection of production systems and interactive experiments. Open any project
+          for its context, constraints, and implementation decisions.
+        </p>
+      </ProjectsIntro>
 
-      {/* View toggle */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        marginBottom: '20px',
-        gap: '12px'
-      }}>
-        <FilterButton
-          active={view === 'grid'}
-          onClick={() => setView('grid')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Project Grid
-        </FilterButton>
-        <FilterButton
-          active={view === 'timeline'}
-          onClick={() => setView('timeline')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Work Timeline
-        </FilterButton>
-      </div>
+      <ProjectsGrid variants={containerVariants} initial="hidden" animate="visible">
+        {projects.map(project => (
+          <ProjectCard
+            key={project.id}
+            variants={cardVariants}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
+            <ProjectImageContainer>
+              <ProjectImage style={{ backgroundImage: `url(${project.thumbnail})` }} />
+            </ProjectImageContainer>
 
-      {/* Grid View */}
-      {view === 'grid' && (
-        <>
-          {filteredProjects.length > 0 ? (
-            <ProjectsGrid
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {filteredProjects.map(project => (
-                <ProjectCard
-                  key={project.id}
-                  onClick={() => handleProjectClick(project)}
-                  variants={cardVariants}
-                  whileHover={{ 
-                    scale: 1.02, 
-                    rotateY: 8, 
-                    rotateX: -5,
-                    transition: { duration: 0.3 }
-                  }}
-                  className="interactive"
-                >
-                  <ProjectImageContainer>
-                    <ProjectImage style={{ backgroundImage: `url(${project.thumbnail})` }} />
-                    <ProjectImageOverlay>
-                      <ButtonGroup>
-                        {project.demoLink && (
-                          <IconButton href={project.demoLink} target="_blank" onClick={(e) => e.stopPropagation()}>
-                            <ExternalLink size={18} />
-                          </IconButton>
-                        )}
-                        {project.githubLink && (
-                          <IconButton href={project.githubLink} target="_blank" onClick={(e) => e.stopPropagation()}>
-                            <Github size={18} />
-                          </IconButton>
-                        )}
-                      </ButtonGroup>
-                    </ProjectImageOverlay>
-                    {project.featured && (
-                      <FeaturedFlag>
-                        <Star size={14} /> Featured
-                      </FeaturedFlag>
-                    )}
-                    <StatusBadge status={project.status}>
-                      {project.status === 'completed' ? 'Completed' :
-                        project.status === 'in-progress' ? 'In Progress' : 'Concept'}
-                    </StatusBadge>
-                  </ProjectImageContainer>
-                  <ProjectContent>
-                    <ProjectTitle>
-                      <Box size={18} style={{ color: '#4d8cfc' }} />
-                      {project.title}
-                    </ProjectTitle>
-                    <ProjectDescription>{project.shortDescription}</ProjectDescription>
-                    <TagContainer>
-                      {project.technologies.slice(0, 3).map((tech, index) => (
-                        <TechTag key={index}>
-                          <Code size={14} style={{ marginRight: '4px' }} />
-                          {tech}
-                        </TechTag>
-                      ))}
-                      {project.technologies.length > 3 && (
-                        <TechTag>+{project.technologies.length - 3}</TechTag>
-                      )}
-                    </TagContainer>
-                  </ProjectContent>
-                </ProjectCard>
-              ))}
-            </ProjectsGrid>
-          ) : (
-            <EmptyStateContainer>
-              <h3>No projects found for this filter</h3>
-              <p>Try selecting a different category</p>
-            </EmptyStateContainer>
-          )}
-        </>
-      )}
+            <ProjectContent>
+              <ProjectMeta>{project.role} / {project.year}</ProjectMeta>
+              <ProjectTitle>{project.title}</ProjectTitle>
+              <ProjectDescription>{project.shortDescription}</ProjectDescription>
+              <TagContainer>
+                {project.technologies.slice(0, 3).map(tech => (
+                  <TechTag key={tech}>{tech}</TechTag>
+                ))}
+                {project.technologies.length > 3 && (
+                  <TechTag>+{project.technologies.length - 3}</TechTag>
+                )}
+              </TagContainer>
+            </ProjectContent>
 
-      {/* Timeline View */}
-      {view === 'timeline' && (
-        <WorkTimeline>
-          {workExperience.map((work, index) => (
-            <TimelineItem key={work.id}>
-              <TimelineContent
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.2 }}
-              >
-                <TimelineHeader>
-                  <div>
-                    <h3>{work.position}</h3>
-                    <h4>{work.company}</h4>
-                  </div>
-                  <TimelineDate>
-                    <Calendar size={16} />
-                    {work.period}
-                  </TimelineDate>
-                </TimelineHeader>
-                <p>{work.description}</p>
-                <div style={{ marginTop: '16px' }}>
-                  <h5 style={{ marginBottom: '8px' }}>Key Achievements:</h5>
-                  <ul>
-                    {work.achievements.map((achievement, i) => (
-                      <li key={i}>{achievement}</li>
-                    ))}
-                  </ul>
-                </div>
-                <TagContainer>
-                  {work.technologies.map((tech, i) => (
-                    <TechTag key={i}>
-                      <Code size={14} style={{ marginRight: '4px' }} />
-                      {tech}
-                    </TechTag>
-                  ))}
-                </TagContainer>
-              </TimelineContent>
-            </TimelineItem>
-          ))}
-        </WorkTimeline>
-      )}
+            <ProjectFooter>
+              <DetailsButton type="button" onClick={() => setSelectedProject(project)}>
+                View details
+                <ArrowUpRight size={16} />
+              </DetailsButton>
+              <ButtonGroup>
+                {project.demoLink && (
+                  <IconButton
+                    href={project.demoLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Open ${project.title}`}
+                    title="Open live project"
+                  >
+                    <ExternalLink size={18} />
+                  </IconButton>
+                )}
+                {project.githubLink && (
+                  <IconButton
+                    href={project.githubLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`View ${project.title} source code`}
+                    title="View source code"
+                  >
+                    <Github size={18} />
+                  </IconButton>
+                )}
+              </ButtonGroup>
+            </ProjectFooter>
+          </ProjectCard>
+        ))}
+      </ProjectsGrid>
 
-      {/* Project details modal */}
       <AnimatePresence>
         {selectedProject && (
           <ProjectDetails project={selectedProject} onClose={closeModal} />
