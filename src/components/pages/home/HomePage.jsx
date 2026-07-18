@@ -1,266 +1,262 @@
-import React, { useEffect } from "react";
-import { FlexWrapper } from "../../layouts/StyledContainers";
+import React from "react";
 import { Link } from "react-router-dom";
-import { Button } from "../../button/Button";
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
+import { ArrowRight, Gamepad2, MessageSquare } from "lucide-react";
 import styled from "styled-components";
-import "./homepage.css";
-import AnimatedBackground from "../../shared/AnimatedBackground";
+import portrait from "./obed-dark-bg.png";
 
-// Container animation variants
-const ContainerVariants = {
-  initial: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-      ease: [0.4, 0, 0.2, 1],
-    },
-  },
-  exit: {
-    opacity: 0,
-    transition: {
-      duration: 0.2,
-      ease: [0.4, 0, 1, 1],
-    },
-  },
-};
+const HomeShell = styled(motion.main)`
+  width: calc(100% - 76px);
+  min-height: 100vh;
+  margin-left: 76px;
+  background: #080808;
+  color: ${props => props.theme.colors.text};
+  overflow: hidden;
 
-// Text container animations
-const TextContainerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.3,
-    },
-  },
-};
-
-// Individual character animations
-const CharacterVariants = {
-  hidden: {
-    opacity: 0,
-    y: 20,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      damping: 12,
-      stiffness: 200,
-    },
-  },
-};
-
-// Subtitle animation
-const SubtitleVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: 1.5,
-      duration: 0.8,
-      ease: "easeOut",
-    },
-  },
-};
-
-// Glass card style
-const GlassCard = styled(motion.div)`
-  width: 100%;
-  max-width: 700px;
-  height: auto;
-  margin: 0 auto;
-  padding: 2.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-
-  @media (max-width: 768px) {
-    width: 85%;
-    padding: 1.5rem;
-    margin: 8vh auto 4vh;
-  }
-
-  @media only screen and (max-width: 568px) and (orientation: landscape) {
-    margin-top: 20vh;
-    padding: 1rem;
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    width: 100%;
+    margin-left: 0;
+    padding-bottom: 88px;
   }
 `;
 
-// Heading styles
-const Heading = styled(motion.h1)`
-  font-size: 4rem;
-  font-weight: 700;
-  margin: 0;
-  color: white;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  letter-spacing: -2px;
+const Hero = styled.section`
+  position: relative;
+  min-height: 78vh;
+  display: flex;
+  align-items: center;
+  padding: ${props => props.theme.spacing['3xl']};
+  isolation: isolate;
 
-  @media (max-width: 768px) {
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    min-height: 76vh;
+    align-items: flex-start;
+    padding: ${props => props.theme.spacing['2xl']} ${props => props.theme.spacing.lg};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobileL}) {
+    padding-top: ${props => props.theme.spacing.xl};
+  }
+`;
+
+const Portrait = styled.img`
+  position: absolute;
+  right: 6%;
+  bottom: 0;
+  width: 430px;
+  height: 92%;
+  object-fit: contain;
+  object-position: center bottom;
+  z-index: -1;
+
+  @media (max-width: ${props => props.theme.breakpoints.laptop}) {
+    right: -3%;
+    opacity: 0.72;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    right: -24%;
+    width: 78%;
+    height: 76%;
+    opacity: 0.28;
+  }
+`;
+
+const HeroContent = styled(motion.div)`
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 760px;
+`;
+
+const Role = styled.p`
+  margin: 0 0 ${props => props.theme.spacing.md};
+  color: ${props => props.theme.colors.accent};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  letter-spacing: 0;
+  text-transform: uppercase;
+`;
+
+const Name = styled.h1`
+  margin: 0 0 ${props => props.theme.spacing.md};
+  font-size: 4.5rem;
+  line-height: 1;
+  font-weight: ${props => props.theme.typography.fontWeight.bold};
+  letter-spacing: 0;
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     font-size: 3rem;
   }
-`;
 
-const Name = styled(motion.h2)`
-  font-size: 3.5rem;
-  font-weight: 700;
-  margin: 0.5rem 0 1rem;
-  color: white;
-  letter-spacing: -2px;
-
-  @media (max-width: 768px) {
+  @media (max-width: ${props => props.theme.breakpoints.mobileL}) {
     font-size: 2.5rem;
   }
 `;
 
-const Subtitle = styled(motion.h3)`
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 1rem 0;
-  color: #e04848;
-  letter-spacing: -1px;
+const PositioningStatement = styled.h2`
+  max-width: 690px;
+  margin: 0 0 ${props => props.theme.spacing.lg};
+  font-size: ${props => props.theme.typography.fontSizes['2xl']};
+  line-height: 1.25;
+  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  letter-spacing: 0;
 
-  @media (max-width: 768px) {
-    font-size: 1.5rem;
+  @media (max-width: ${props => props.theme.breakpoints.mobileL}) {
+    font-size: ${props => props.theme.typography.fontSizes.xl};
   }
 `;
 
-const JobTitle = styled(motion.p)`
-  font-size: 1.2rem;
-  font-weight: 400;
-  margin: 1rem 0 2rem;
-  color: rgba(255, 255, 255, 0.8);
-  letter-spacing: 1px;
+const Summary = styled.p`
+  max-width: 650px;
+  margin: 0 0 ${props => props.theme.spacing.xl};
+  color: ${props => props.theme.colors.textSecondary};
+  font-size: ${props => props.theme.typography.fontSizes.md};
+  line-height: 1.7;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobileL}) {
+    font-size: ${props => props.theme.typography.fontSizes.base};
+  }
 `;
 
-const ButtonContainer = styled(motion.div)`
-  margin-top: 2rem;
+const Actions = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: ${props => props.theme.spacing.md};
 `;
 
-const StyledButton = styled(Button)`
-  background: linear-gradient(135deg, #e04848 0%, #c04040 100%);
-  color: white;
-  font-weight: 600;
-  letter-spacing: 1px;
-  padding: 12px 28px;
-  border-radius: 30px;
-  box-shadow: 0 4px 15px rgba(224, 72, 72, 0.4);
-  border: none;
-  cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+const ActionLink = styled(Link)`
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${props => props.theme.spacing.sm};
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
+  border: 1px solid ${props => props.$secondary ? props.theme.colors.border : props.theme.colors.primary};
+  border-radius: ${props => props.theme.borders.radius.md};
+  background: ${props => props.$secondary ? 'transparent' : props.theme.colors.primary};
+  color: ${props => props.theme.colors.text};
+  text-decoration: none;
+  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(224, 72, 72, 0.6);
-  }
-
-  &:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 10px rgba(224, 72, 72, 0.4);
+    background: ${props => props.$secondary ? props.theme.colors.surfaceHover : props.theme.colors.primaryDark};
+    border-color: ${props => props.$secondary ? props.theme.colors.textMuted : props.theme.colors.primaryDark};
+    transform: translateY(-2px);
   }
 `;
 
-const HomePage = () => {
-  const controls = useAnimation();
-  const nameString = "I'm Obed.";
+const DemoLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
+  min-height: 44px;
+  color: ${props => props.theme.colors.textSecondary};
+  text-decoration: none;
+  font-weight: ${props => props.theme.typography.fontWeight.medium};
 
-  useEffect(() => {
-    controls.start("visible");
-  }, [controls]);
+  &:hover {
+    color: ${props => props.theme.colors.text};
+  }
+`;
 
-  return (
-    <>
-      <AnimatedBackground />
-      <FlexWrapper
-        className="home-wrapper"
-        variants={ContainerVariants}
-        initial="initial"
-        animate="visible"
-        exit="exit"
+const FocusBand = styled.section`
+  min-height: 22vh;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #f1f1eb;
+  color: #171717;
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const FocusItem = styled.div`
+  min-width: 0;
+  padding: ${props => props.theme.spacing.xl};
+  border-left: 1px solid rgba(23, 23, 23, 0.14);
+  border-top: 4px solid ${props => props.$accent};
+
+  &:first-child {
+    border-left: 0;
+  }
+
+  h3 {
+    margin: 0 0 ${props => props.theme.spacing.sm};
+    font-size: ${props => props.theme.typography.fontSizes.lg};
+    letter-spacing: 0;
+  }
+
+  p {
+    margin: 0;
+    color: #4b4b47;
+    line-height: 1.6;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    border-left: 0;
+    padding: ${props => props.theme.spacing.lg};
+  }
+`;
+
+const HomePage = () => (
+  <HomeShell
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.3 }}
+  >
+    <Hero>
+      <Portrait src={portrait} alt="Portrait of Obed Okpala" />
+      <HeroContent
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: 'easeOut' }}
       >
-        <div className="animated-circle circle-1"></div>
-        <div className="animated-circle circle-2"></div>
-        <div className="animated-circle circle-3"></div>
+        <Role>Full-stack product engineer</Role>
+        <Name>Obed Okpala</Name>
+        <PositioningStatement>
+          I build dependable software for complex, real-world operations.
+        </PositioningStatement>
+        <Summary>
+          React, Angular, Node.js, and TypeScript systems for government services,
+          cooperative finance, secure elections, and high-interaction web products.
+        </Summary>
+        <Actions>
+          <ActionLink to="/projects">
+            View projects
+            <ArrowRight size={18} />
+          </ActionLink>
+          <ActionLink to="/contact" $secondary>
+            <MessageSquare size={18} />
+            Start a conversation
+          </ActionLink>
+          <DemoLink to="/play">
+            <Gamepad2 size={18} />
+            Play engineering demo
+          </DemoLink>
+        </Actions>
+      </HeroContent>
+    </Hero>
 
-        <GlassCard
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <Heading
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-          >
-            Hello,
-          </Heading>
-
-          <motion.div
-            variants={TextContainerVariants}
-            initial="hidden"
-            animate={controls}
-          >
-            <Name>
-              {nameString.split("").map((char, index) => (
-                <motion.span
-                  key={index}
-                  variants={CharacterVariants}
-                  style={{ display: "inline-block" }}
-                >
-                  {char === " " ? "\u00A0" : char}
-                </motion.span>
-              ))}
-            </Name>
-          </motion.div>
-
-          <Subtitle
-            variants={SubtitleVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            Full-Stack Web Developer
-          </Subtitle>
-
-          <JobTitle
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2, duration: 1 }}
-          >
-            Building elegant, scalable web experiences with React, Node.js & Three.js
-          </JobTitle>
-
-          <ButtonContainer
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.5, duration: 0.8 }}
-            style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}
-          >
-            <Link to="/about" style={{ textDecoration: 'none' }}>
-              <StyledButton>Learn More</StyledButton>
-            </Link>
-            <Link to="/play" style={{ textDecoration: 'none' }}>
-              <StyledButton style={{ 
-                background: 'rgba(255, 255, 255, 0.05)', 
-                border: '1px solid rgba(224, 72, 72, 0.4)',
-                backdropFilter: 'blur(10px)'
-              }}>
-                <i className="fa fa-gamepad" style={{ marginRight: '8px' }} />
-                Play Game
-              </StyledButton>
-            </Link>
-          </ButtonContainer>
-        </GlassCard>
-      </FlexWrapper></>
-
-  );
-};
+    <FocusBand aria-label="Engineering focus">
+      <FocusItem $accent="#e04848">
+        <h3>Operational products</h3>
+        <p>Vehicle services, elections, cooperative finance, and public-sector workflows.</p>
+      </FocusItem>
+      <FocusItem $accent="#4880e0">
+        <h3>Across the stack</h3>
+        <p>From interaction design and frontend architecture to APIs, data, and deployment.</p>
+      </FocusItem>
+      <FocusItem $accent="#2ea867">
+        <h3>Built for longevity</h3>
+        <p>Performance, maintainability, security, and reliable day-to-day operations.</p>
+      </FocusItem>
+    </FocusBand>
+  </HomeShell>
+);
 
 export default HomePage;
