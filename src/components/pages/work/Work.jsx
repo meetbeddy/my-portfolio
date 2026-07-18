@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Code, ExternalLink, Github, Calendar, Tag, Layers, Wrench, Star, ArrowUpRight } from "lucide-react";
+import { Code, ExternalLink, Github, Layers, Wrench, Star, ArrowUpRight, UserRoundCheck, CircleCheckBig } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import { StyledButton } from "../../shared/StyledComponents";
 import styled from "styled-components";
@@ -152,6 +153,51 @@ const DetailSection = styled.div`
   margin-bottom: ${props => props.theme.spacing.lg};
 `;
 
+const CaseStudyMeta = styled.dl`
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: ${props => props.theme.spacing.md};
+  margin: ${props => props.theme.spacing.lg} 0;
+  padding: ${props => props.theme.spacing.md} 0;
+  border-top: 1px solid ${props => props.theme.colors.surfaceLight};
+  border-bottom: 1px solid ${props => props.theme.colors.surfaceLight};
+
+  div {
+    min-width: 0;
+  }
+
+  dt {
+    margin-bottom: ${props => props.theme.spacing.xs};
+    color: ${props => props.theme.colors.textMuted};
+    font-size: ${props => props.theme.typography.fontSizes.sm};
+  }
+
+  dd {
+    margin: 0;
+    color: ${props => props.theme.colors.text};
+    font-weight: ${props => props.theme.typography.fontWeight.medium};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+`;
+
+const EvidenceNote = styled.p`
+  margin: ${props => props.theme.spacing.md} 0 0;
+  padding: ${props => props.theme.spacing.md};
+  border-left: 3px solid ${props => props.theme.colors.accent};
+  background: ${props => props.theme.colors.surface};
+  color: ${props => props.theme.colors.textSecondary};
+  line-height: 1.6;
+`;
+
+const FigureCaption = styled.p`
+  margin: -${props => props.theme.spacing.sm} 0 ${props => props.theme.spacing.lg};
+  color: ${props => props.theme.colors.textMuted};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+`;
+
 const DetailTitle = styled.h3`
   font-size: ${props => props.theme.typography.fontSizes.lg};
   font-weight: ${props => props.theme.typography.fontWeight.semibold};
@@ -169,9 +215,8 @@ const DetailGrid = styled.div`
 `;
 
 const DetailCard = styled.div`
-  background-color: ${props => props.theme.colors.surface};
-  border-radius: ${props => props.theme.borders.radius.md};
-  padding: ${props => props.theme.spacing.md};
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+  border-left: 2px solid ${props => props.theme.colors.surfaceLight};
   display: flex;
   flex-direction: column;
   gap: ${props => props.theme.spacing.sm};
@@ -292,9 +337,22 @@ const projects = [
     role: 'Game Developer',
     duration: 'Iterative build',
     year: '2026',
+    engagement: 'Portfolio build',
+    access: 'Live demo and source available',
+    evidenceNote: 'This build is playable in the portfolio, and its implementation is included in the linked repository.',
     demoLink: '/play',
-    githubLink: 'https://github.com/meetbeddy',
+    githubLink: 'https://github.com/meetbeddy/my-portfolio',
     carouselImages: ['/image/projects/asteroid-field-cover.webp'],
+    contribution: [
+      'Designed and implemented the game loop, combat systems, progression, and interface',
+      'Separated frame-critical Three.js state from React-rendered application state',
+      'Built keyboard, pointer, and touch controls plus persistent audio and difficulty settings'
+    ],
+    outcomes: [
+      'A complete browser game that can be evaluated directly from this portfolio',
+      'One shared combat model across desktop and mobile input methods',
+      'Data-driven enemies, upgrades, bosses, and difficulty settings that can be tuned independently'
+    ],
     challenges: [
       'Keeping a real-time Three.js simulation responsive inside a React application',
       'Making keyboard, pointer, and touch input feel consistent without resetting run state',
@@ -327,9 +385,22 @@ const projects = [
     role: 'Full-Stack Developer',
     duration: '4 months',
     year: '2023',
+    engagement: 'Product delivery',
+    access: 'Private implementation',
+    evidenceNote: 'The client implementation and repository are private. This case study documents my role and the delivered workflow at a high level.',
     demoLink: null,
-    githubLink: 'https://github.com/meetbeddy',
+    githubLink: null,
     carouselImages: ['/image/projects/cooperative-platform-cover.webp'],
+    contribution: [
+      'Implemented member and administrator experiences across the React and Express stack',
+      'Modelled account, loan, transaction, and marketplace state in MongoDB',
+      'Connected authentication, account activity, and checkout into one product workflow'
+    ],
+    outcomes: [
+      'Consolidated common cooperative tasks into a single member-facing platform',
+      'Delivered loan requests, balance history, and marketplace checkout as connected flows',
+      'Created reusable state and API patterns for both member and administrative features'
+    ],
     challenges: [
       'Designing a secure multi-role auth system for members and administrators',
       'Building real-time balance and transaction tracking across accounts',
@@ -362,9 +433,22 @@ const projects = [
     role: 'Full-Stack Developer',
     duration: '3 months',
     year: '2023',
+    engagement: 'Product delivery',
+    access: 'Private implementation',
+    evidenceNote: 'Election data, member access, and source code are private. A walkthrough can be discussed without exposing voter or client information.',
     demoLink: null,
-    githubLink: 'https://github.com/meetbeddy',
+    githubLink: null,
     carouselImages: ['/image/projects/ican-election-cover.webp'],
+    contribution: [
+      'Built authenticated voting and election administration flows across the frontend and API',
+      'Implemented duplicate-vote prevention, aggregate result updates, and action logging',
+      'Applied TypeScript contracts across client state and server responses'
+    ],
+    outcomes: [
+      'Enabled authenticated members to complete a ballot through one controlled workflow',
+      'Provided administrators with election setup, account controls, results, and audit history',
+      'Kept individual vote handling separate from aggregate result presentation'
+    ],
     challenges: [
       'Guaranteeing election integrity and preventing duplicate votes',
       'Displaying real-time results without compromising vote privacy',
@@ -397,9 +481,22 @@ const projects = [
     role: 'Full-Stack Developer',
     duration: '6 months',
     year: '2024',
+    engagement: 'Professional product work',
+    access: 'Private implementation',
+    evidenceNote: 'The production system and repository are private. The case study names only the workflows and engineering responsibilities that can be shared publicly.',
     demoLink: null,
-    githubLink: 'https://github.com/meetbeddy',
+    githubLink: null,
     carouselImages: ['/image/projects/fenix-vms-cover.webp'],
+    contribution: [
+      'Implemented Angular workflows and NestJS services for core vehicle operations',
+      'Worked across registration, renewal, ownership change, revalidation, and direct levy modules',
+      'Applied tenant-aware authorization and validation to shared application flows'
+    ],
+    outcomes: [
+      'Brought multiple vehicle licensing operations into one consistent staff workflow',
+      'Created shared frontend and API patterns for tenant-specific vehicle services',
+      'Reduced duplication between registration-related forms and backend validation paths'
+    ],
     challenges: [
       'Designing a scalable multi-tenant architecture for multiple licensing authorities',
       'Handling complex ownership transfer and revalidation workflows',
@@ -432,9 +529,22 @@ const projects = [
     role: 'Frontend Developer',
     duration: '2 months',
     year: '2024',
+    engagement: 'Independent product build',
+    access: 'Walkthrough available on request',
+    evidenceNote: 'The public portfolio presents an editorial cover rather than a fabricated UI screenshot. A product walkthrough can be discussed on request.',
     demoLink: null,
-    githubLink: 'https://github.com/meetbeddy',
+    githubLink: null,
     carouselImages: ['/image/projects/texflow-cover.webp'],
+    contribution: [
+      'Designed the shader-driven texture pipeline and its React control surface',
+      'Connected live parameter updates to GPU rendering without rebuilding the scene',
+      'Implemented repeatable texture generation and browser-side export flows'
+    ],
+    outcomes: [
+      'Made procedural texture changes visible immediately as controls are adjusted',
+      'Kept rendering work on the GPU while React managed product state and controls',
+      'Supported seamless output suitable for repeating web and design surfaces'
+    ],
     challenges: [
       'Implementing real-time WebGL rendering efficiently in the browser',
       'Creating seamless texture noise algorithms (Perlin, Simplex)',
@@ -465,9 +575,22 @@ const projects = [
     role: 'Full-Stack Architect',
     duration: '8 months',
     year: '2024',
+    engagement: 'Professional product work',
+    access: 'Private implementation',
+    evidenceNote: 'Agency data, production access, and source code are private. Architecture details are intentionally limited to publicly shareable responsibilities.',
     demoLink: null,
-    githubLink: 'https://github.com/meetbeddy',
+    githubLink: null,
     carouselImages: ['/image/projects/multi-mda-cover.webp'],
+    contribution: [
+      'Defined modular NestJS boundaries for agency-specific domains and shared services',
+      'Designed tenant-aware access patterns for staff, taxpayer, and revenue workflows',
+      'Structured the React application so agency modules could remain operationally distinct'
+    ],
+    outcomes: [
+      'Established one platform structure for multiple agency workflows without merging their data contexts',
+      'Created reusable authorization and reporting foundations across agency modules',
+      'Reduced coupling by keeping domain logic inside independently owned backend modules'
+    ],
     challenges: [
       'Ensuring strict data isolation between multiple government agencies',
       'Handling massive scale for taxpayer management and revenue collection',
@@ -498,9 +621,22 @@ const projects = [
     role: 'Mobile Developer',
     duration: '3 months',
     year: '2024',
+    engagement: 'Mobile product build',
+    access: 'Walkthrough available on request',
+    evidenceNote: 'The app build and repository are not public. The case study describes the cross-platform and connectivity work without presenting a fabricated product screenshot.',
     demoLink: null,
-    githubLink: 'https://github.com/meetbeddy',
+    githubLink: null,
     carouselImages: ['/image/projects/farmconnect-cover.webp'],
+    contribution: [
+      'Implemented the Expo application structure and shared state for farmer and buyer journeys',
+      'Integrated location-aware discovery, cached data access, and real-time messaging',
+      'Tuned mobile rendering and network behavior for less capable devices and unreliable connections'
+    ],
+    outcomes: [
+      'Delivered one React Native codebase for both iOS and Android product flows',
+      'Allowed core marketplace data to remain useful during intermittent connectivity',
+      'Connected discovery, messaging, and location into one mobile journey'
+    ],
     challenges: [
       'Ensuring smooth offline capabilities for rural farmers with poor connectivity',
       'Implementing real-time messaging for market negotiations',
@@ -622,21 +758,24 @@ const ProjectDetails = ({ project, onClose }) => {
               >
                 <img
                   src={project.carouselImages[currentSlide]}
-                  alt={`${project.title} screenshot ${currentSlide + 1}`}
+                  alt={`${project.title} editorial project cover ${currentSlide + 1}`}
                   style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                 />
               </CarouselSlide>
             </AnimatePresence>
-            <CarouselNav>
-              {project.carouselImages.map((_, index) => (
-                <CarouselDot
-                  key={index}
-                  active={currentSlide === index}
-                  onClick={() => setCurrentSlide(index)}
-                />
-              ))}
-            </CarouselNav>
+            {project.carouselImages.length > 1 && (
+              <CarouselNav>
+                {project.carouselImages.map((_, index) => (
+                  <CarouselDot
+                    key={index}
+                    active={currentSlide === index}
+                    onClick={() => setCurrentSlide(index)}
+                  />
+                ))}
+              </CarouselNav>
+            )}
           </ProjectCarousel>
+          <FigureCaption>Editorial project cover, not a product screenshot.</FigureCaption>
 
           {/* Project overview */}
           <DetailSection>
@@ -645,16 +784,14 @@ const ProjectDetails = ({ project, onClose }) => {
             </DetailTitle>
             <p>{project.description}</p>
 
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '12px',
-              margin: '20px 0'
-            }}>
-              <TechTag><Tag size={14} style={{ marginRight: '4px' }} />Role: {project.role}</TechTag>
-              <TechTag><Calendar size={14} style={{ marginRight: '4px' }} />Duration: {project.duration}</TechTag>
-              <TechTag><Calendar size={14} style={{ marginRight: '4px' }} />Year: {project.year}</TechTag>
-            </div>
+            <CaseStudyMeta>
+              <div><dt>Role</dt><dd>{project.role}</dd></div>
+              <div><dt>Timeline</dt><dd>{project.duration}</dd></div>
+              <div><dt>Year</dt><dd>{project.year}</dd></div>
+              <div><dt>Engagement</dt><dd>{project.engagement}</dd></div>
+            </CaseStudyMeta>
+
+            <EvidenceNote><strong>Access:</strong> {project.access}. {project.evidenceNote}</EvidenceNote>
 
             <div style={{ margin: '16px 0' }}>
               <h4 style={{ marginBottom: '8px', fontSize: '1rem' }}>Technologies used:</h4>
@@ -666,10 +803,31 @@ const ProjectDetails = ({ project, onClose }) => {
             </div>
           </DetailSection>
 
+          <DetailSection>
+            <DetailGrid>
+              <DetailCard>
+                <DetailTitle>
+                  <UserRoundCheck size={20} /> My contribution
+                </DetailTitle>
+                <ul>
+                  {project.contribution.map(item => <li key={item}>{item}</li>)}
+                </ul>
+              </DetailCard>
+              <DetailCard>
+                <DetailTitle>
+                  <CircleCheckBig size={20} /> Outcome
+                </DetailTitle>
+                <ul>
+                  {project.outcomes.map(item => <li key={item}>{item}</li>)}
+                </ul>
+              </DetailCard>
+            </DetailGrid>
+          </DetailSection>
+
           {/* Key Features */}
           <DetailSection>
             <DetailTitle>
-              <Star size={20} /> Key Features
+              <Star size={20} /> Delivered scope
             </DetailTitle>
             <ul>
               {project.keyFeatures.map((feature, index) => (
@@ -681,11 +839,11 @@ const ProjectDetails = ({ project, onClose }) => {
           {/* Challenges & Solutions */}
           <DetailSection>
             <DetailTitle>
-              <Wrench size={20} /> Challenges & Solutions
+              <Wrench size={20} /> Constraints & Engineering decisions
             </DetailTitle>
             <DetailGrid>
               <DetailCard>
-                <h4>Challenges</h4>
+                <h4>Constraints</h4>
                 <ul>
                   {project.challenges.map((challenge, index) => (
                     <li key={index}>{challenge}</li>
@@ -693,7 +851,7 @@ const ProjectDetails = ({ project, onClose }) => {
                 </ul>
               </DetailCard>
               <DetailCard>
-                <h4>Solutions</h4>
+                <h4>Decisions</h4>
                 <ul>
                   {project.solutions.map((solution, index) => (
                     <li key={index}>{solution}</li>
@@ -717,6 +875,9 @@ const ProjectDetails = ({ project, onClose }) => {
                 View Source Code
               </StyledButton>
             )}
+            <StyledButton as={Link} to="/contact" secondary>
+              Discuss this project
+            </StyledButton>
           </div>
 
           {/* Testimonial */}
