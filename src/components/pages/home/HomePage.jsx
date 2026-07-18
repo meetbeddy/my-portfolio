@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Gamepad2, MessageSquare } from "lucide-react";
+import { ArrowRight, FileText, Gamepad2, Github, Linkedin, MessageSquare } from "lucide-react";
 import styled from "styled-components";
 import portrait from "./obed-dark-bg.png";
 
@@ -202,6 +202,100 @@ const FocusItem = styled.div`
   }
 `;
 
+const TrustSection = styled.section`
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 0.8fr 1.1fr;
+  padding: ${props => props.theme.spacing['2xl']} ${props => props.theme.spacing['3xl']};
+  background: #131313;
+  border-top: 1px solid ${props => props.theme.colors.border};
+
+  @media (max-width: ${props => props.theme.breakpoints.laptop}) {
+    grid-template-columns: repeat(2, 1fr);
+    padding: ${props => props.theme.spacing['2xl']};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobileL}) {
+    grid-template-columns: 1fr;
+    padding: ${props => props.theme.spacing.xl} ${props => props.theme.spacing.lg};
+  }
+`;
+
+const TrustColumn = styled.div`
+  min-width: 0;
+  padding: 0 ${props => props.theme.spacing.xl};
+  border-left: 1px solid ${props => props.theme.colors.border};
+
+  &:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  h2,
+  h3 {
+    margin-bottom: ${props => props.theme.spacing.sm};
+    letter-spacing: 0;
+  }
+
+  h2 {
+    font-size: ${props => props.theme.typography.fontSizes.xl};
+  }
+
+  h3 {
+    font-size: ${props => props.theme.typography.fontSizes.lg};
+  }
+
+  p {
+    margin: 0;
+    color: ${props => props.theme.colors.textMuted};
+    line-height: 1.6;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.laptop}) {
+    padding: ${props => props.theme.spacing.lg};
+    border-left: 0;
+    border-top: 1px solid ${props => props.theme.colors.border};
+
+    &:first-child,
+    &:nth-child(2) {
+      border-top: 0;
+    }
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobileL}) {
+    padding: ${props => props.theme.spacing.lg} 0;
+
+    &:nth-child(2) {
+      border-top: 1px solid ${props => props.theme.colors.border};
+    }
+  }
+`;
+
+const Metric = styled.strong`
+  display: block;
+  margin-bottom: ${props => props.theme.spacing.xs};
+  color: ${props => props.theme.colors.primaryLight};
+  font-size: ${props => props.theme.typography.fontSizes['3xl']};
+  line-height: 1;
+`;
+
+const TrustLinks = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: ${props => props.theme.spacing.sm};
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: ${props => props.theme.spacing.sm};
+    color: ${props => props.theme.colors.textSecondary};
+
+    &:hover {
+      color: ${props => props.theme.colors.text};
+    }
+  }
+`;
+
 const HomePage = () => (
   <HomeShell
     initial={{ opacity: 0 }}
@@ -256,6 +350,39 @@ const HomePage = () => (
         <p>Performance, maintainability, security, and reliable day-to-day operations.</p>
       </FocusItem>
     </FocusBand>
+
+    <TrustSection aria-label="Professional proof">
+      <TrustColumn>
+        <h2>Verified experience</h2>
+        <p>More than four years delivering frontend and full-stack product work.</p>
+      </TrustColumn>
+      <TrustColumn>
+        <h3>Current role</h3>
+        <p>Full-Stack Developer at Compumetrics Solutions Ltd, since December 2022.</p>
+      </TrustColumn>
+      <TrustColumn>
+        <Metric>20%</Metric>
+        <p>Page-load reduction achieved through asset optimization and lazy loading.</p>
+      </TrustColumn>
+      <TrustColumn>
+        <h3>Verify the work</h3>
+        <TrustLinks>
+          <a
+            href="https://drive.google.com/file/d/1GG_Q7PrssF2dtY8D5zc4ThWdwDBXun5H/view?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FileText size={17} /> Resume
+          </a>
+          <a href="https://github.com/meetbeddy" target="_blank" rel="noopener noreferrer">
+            <Github size={17} /> GitHub
+          </a>
+          <a href="https://linkedin.com/in/obed-okpala" target="_blank" rel="noopener noreferrer">
+            <Linkedin size={17} /> LinkedIn
+          </a>
+        </TrustLinks>
+      </TrustColumn>
+    </TrustSection>
   </HomeShell>
 );
 
