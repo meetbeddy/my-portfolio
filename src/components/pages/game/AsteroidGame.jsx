@@ -368,6 +368,33 @@ const OptionButton = styled.button`
   letter-spacing:1.5px;cursor:pointer;transition:background .18s,border-color .18s,color .18s,transform .18s;
   &:hover{transform:translateY(-1px);border-color:rgba(224,72,72,.65);color:#fff;}
 `;
+const SettingsPanel = styled.div`
+  width:min(440px,90vw);display:flex;flex-direction:column;gap:.8rem;padding:1rem;
+  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:8px;
+`;
+const SettingRow = styled.label`
+  display:grid;grid-template-columns:90px 1fr 42px;align-items:center;gap:.75rem;
+  color:rgba(255,255,255,.62);font-size:.65rem;letter-spacing:1px;
+`;
+const VolumeSlider = styled.input`
+  width:100%;accent-color:#e04848;cursor:pointer;
+`;
+const PauseActions = styled.div`
+  display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;
+`;
+const PauseLink = styled(Link)`
+  display:inline-flex;align-items:center;justify-content:center;padding:.62rem 1rem;
+  border:1px solid rgba(255,255,255,.18);border-radius:5px;color:rgba(255,255,255,.72);
+  background:rgba(255,255,255,.06);font-size:.68rem;letter-spacing:2px;text-decoration:none;
+  &:hover{color:#fff;background:rgba(255,255,255,.12);}
+`;
+const PauseButton = styled.button`
+  padding:.62rem 1rem;border:1px solid ${p => p.$primary ? '#e04848' : 'rgba(255,255,255,.18)'};
+  border-radius:5px;color:${p => p.$primary ? '#fff' : 'rgba(255,255,255,.72)'};
+  background:${p => p.$primary ? 'rgba(224,72,72,.22)' : 'rgba(255,255,255,.06)'};
+  font-family:inherit;font-size:.68rem;letter-spacing:2px;cursor:pointer;
+  &:hover{color:#fff;background:${p => p.$primary ? 'rgba(224,72,72,.34)' : 'rgba(255,255,255,.12)'};}
+`;
 const LaunchBtn = styled.button`
   background:linear-gradient(135deg,#e04848,#b02020);color:#fff;
   border:none;padding:.65rem 2.2rem;border-radius:2rem;font-size:.9rem;
@@ -482,6 +509,7 @@ const SectorVignette = styled.div`
 const MAX_HP = 100;
 const HIGH_SCORE_KEY = 'asteroidFieldHighScore';
 const TUTORIAL_KEY = 'asteroidFieldTutorialComplete';
+const AUDIO_SETTINGS_KEY = 'asteroidFieldAudioSettings';
 const DIFFICULTIES = {
   chill: { label: 'CHILL', desc: 'shielded start', rule: 'Slower heat · +30 hull per sector · more drops', spawnBase: 2600, damage: 0.75, scoreMult: 0.9, speed: 0.85, heatMult: 0.82, overheatLock: 2000, sectorRepair: 30, startShield: true, powerupInterval: 0.78, projectileSpeed: 0.9 },
   arcade: { label: 'ARCADE', desc: 'balanced', rule: 'Standard rules · +20 hull per sector', spawnBase: 2200, damage: 1, scoreMult: 1, speed: 1, heatMult: 1, overheatLock: 2500, sectorRepair: 20, startShield: false, powerupInterval: 1, projectileSpeed: 1 },
@@ -498,6 +526,19 @@ const TUTORIAL_STEPS = [
 const hasCompletedTutorial = () => {
   try { return localStorage.getItem(TUTORIAL_KEY) === 'true'; }
   catch { return false; }
+};
+
+const readAudioSettings = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem(AUDIO_SETTINGS_KEY) || '{}');
+    return {
+      enabled: stored.enabled ?? true,
+      sfxVolume: Number.isFinite(stored.sfxVolume) ? stored.sfxVolume : 0.8,
+      musicVolume: Number.isFinite(stored.musicVolume) ? stored.musicVolume : 0.55,
+    };
+  } catch {
+    return { enabled: true, sfxVolume: 0.8, musicVolume: 0.55 };
+  }
 };
 
 const SECTOR_UPGRADES = [
@@ -664,7 +705,7 @@ const playTone = (ctx, { freq = 440, type = 'sine', gain = 0.18, dur = 0.12, dec
     osc.type = type;
     osc.frequency.setValueAtTime(freq, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(freq * 0.5, ctx.currentTime + dur);
-    vol.gain.setValueAtTime(gain, ctx.currentTime);
+    vol.gain.setValueAtTime(gain * (ctx.__sfxVolume ?? 1), ctx.currentTime);
     vol.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur + decay);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + dur + decay + 0.01);
@@ -705,7 +746,7 @@ const startSynthwave = (ctx) => {
       osc.type = 'sawtooth';
       osc.frequency.value = notes[step % notes.length];
       const t = ctx.currentTime;
-      gain.gain.setValueAtTime(0.06, t);
+      gain.gain.setValueAtTime(0.06 * (ctx.__musicVolume ?? 1), t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + stepDur * 0.85);
       osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
       osc.start(t); osc.stop(t + stepDur);
@@ -750,7 +791,9 @@ const AsteroidGame = () => {
   const [sectorFlash, setSectorFlash] = useState({ color: '#ffffff', opacity: 0 });
   const [sectorVignette, setSectorVignette] = useState('#0a0a1a');
   const [difficulty, setDifficulty] = useState('arcade');
-  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(() => readAudioSettings().enabled);
+  const [sfxVolume, setSfxVolume] = useState(() => readAudioSettings().sfxVolume);
+  const [musicVolume, setMusicVolume] = useState(() => readAudioSettings().musicVolume);
   const [hint, setHint] = useState(null);
   const [upgrades, setUpgrades] = useState(emptyUpgrades);
   const [upgradeChoices, setUpgradeChoices] = useState(null);
@@ -767,7 +810,8 @@ const AsteroidGame = () => {
   const statsRef = useRef({ grazesTotal: 0, enemiesDestroyed: 0, maxCombo: 0, bossesKilled: 0 });
   const synthIntervalRef = useRef(null);
   const lastSectorScore = useRef(0);
-  const audioEnabledRef = useRef(true);
+  const audioEnabledRef = useRef(readAudioSettings().enabled);
+  const audioSettingsRef = useRef(readAudioSettings());
   const pausedRef = useRef(false);
   const hintTimer = useRef(null);
   const shownHints = useRef(new Set());
@@ -779,16 +823,28 @@ const AsteroidGame = () => {
   const unlockAudio = useCallback(() => {
     if (!audioEnabledRef.current) return;
     if (!audioCtxRef.current) audioCtxRef.current = createAudio();
+    if (audioCtxRef.current) {
+      audioCtxRef.current.__sfxVolume = audioSettingsRef.current.sfxVolume;
+      audioCtxRef.current.__musicVolume = audioSettingsRef.current.musicVolume;
+    }
     if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume().catch(() => { });
   }, []);
 
   useEffect(() => {
     audioEnabledRef.current = audioEnabled;
-    if (!audioEnabled && synthIntervalRef.current) {
+    audioSettingsRef.current = { enabled: audioEnabled, sfxVolume, musicVolume };
+    if (audioCtxRef.current) {
+      audioCtxRef.current.__sfxVolume = audioEnabled ? sfxVolume : 0;
+      audioCtxRef.current.__musicVolume = audioEnabled ? musicVolume : 0;
+    }
+    try { localStorage.setItem(AUDIO_SETTINGS_KEY, JSON.stringify(audioSettingsRef.current)); } catch { }
+    if ((!audioEnabled || musicVolume === 0 || phase !== 'playing') && synthIntervalRef.current) {
       clearInterval(synthIntervalRef.current);
       synthIntervalRef.current = null;
+    } else if (audioEnabled && musicVolume > 0 && phase === 'playing' && audioCtxRef.current && !synthIntervalRef.current) {
+      synthIntervalRef.current = startSynthwave(audioCtxRef.current);
     }
-  }, [audioEnabled]);
+  }, [audioEnabled, sfxVolume, musicVolume, phase]);
 
   useEffect(() => {
     const modeBest = readHighScore(difficulty);
@@ -799,6 +855,11 @@ const AsteroidGame = () => {
   useEffect(() => () => {
     clearTimeout(hintTimer.current);
     clearTimeout(hitMarkerTimer.current);
+    clearInterval(synthIntervalRef.current);
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close().catch(() => { });
+      audioCtxRef.current = null;
+    }
   }, []);
 
   const showHint = useCallback((key, text, dur = 3400) => {
@@ -834,6 +895,17 @@ const AsteroidGame = () => {
     audioEnabledRef.current = next;
     setAudioEnabled(next);
     if (next) unlockAudio();
+  };
+
+  const updateAudioLevel = (channel, value) => {
+    const nextValue = Number(value);
+    if (channel === 'sfx') setSfxVolume(nextValue);
+    else setMusicVolume(nextValue);
+    if (nextValue > 0 && !audioEnabledRef.current) {
+      audioEnabledRef.current = true;
+      setAudioEnabled(true);
+      unlockAudio();
+    }
   };
 
   const chooseUpgrade = upgrade => {
@@ -886,10 +958,7 @@ const AsteroidGame = () => {
     setNewHighScore(false);
     setGameStats({ grazesTotal: 0, enemiesDestroyed: 0, timeSurvived: 0, maxCombo: 0, bossesKilled: 0 });
 
-    if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
-    if (audioEnabledRef.current) {
-      setTimeout(() => { synthIntervalRef.current = startSynthwave(audioCtxRef.current); }, 500);
-    }
+    if (synthIntervalRef.current) { clearInterval(synthIntervalRef.current); synthIntervalRef.current = null; }
     if (withWarp) { setPhase('warp'); setTimeout(() => setPhase('playing'), 1800); }
     else setPhase('playing');
   };
@@ -1340,7 +1409,7 @@ const AsteroidGame = () => {
     };
 
     // ── Input ─────────────────────────────────────────────────────────────
-    const onKeyDown = e => { gs.keys[e.code] = true; unlockAudio(); if (e.code === 'Escape') togglePause(); };
+    const onKeyDown = e => { gs.keys[e.code] = true; unlockAudio(); if (e.code === 'Escape' && !e.repeat) togglePause(); };
     const onKeyUp = e => { gs.keys[e.code] = false; };
     const onMouseMove = e => {
       const w = screenToWorld(e.clientX, e.clientY);
@@ -2120,7 +2189,6 @@ const AsteroidGame = () => {
       [ambientLight, sun, shipLight, shieldLight].forEach(l => scene.remove(l));
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
-      if (audioCtxRef.current) { audioCtxRef.current.close().catch(() => { }); audioCtxRef.current = null; }
     };
   }, [phase, triggerShake, showGraze, showDamage, showHitMarker, unlockAudio, togglePause, triggerFlash, difficulty, showHint, advanceTutorial]);
 
@@ -2367,7 +2435,27 @@ const AsteroidGame = () => {
       {paused && phase === 'playing' && (
         <Overlay style={{ background: 'rgba(6,6,18,0.7)' }}>
           <GameTitle style={{ fontSize: '2rem', letterSpacing: '8px' }}>PAUSED</GameTitle>
-          <LaunchBtn onClick={togglePause} style={{ marginTop: '2rem' }}>RESUME ▶</LaunchBtn>
+          <SettingsPanel>
+            <SettingRow>
+              <span>SFX</span>
+              <VolumeSlider type="range" min="0" max="1" step="0.05" value={sfxVolume} onChange={event => updateAudioLevel('sfx', event.target.value)} />
+              <span>{Math.round(sfxVolume * 100)}%</span>
+            </SettingRow>
+            <SettingRow>
+              <span>MUSIC</span>
+              <VolumeSlider type="range" min="0" max="1" step="0.05" value={musicVolume} onChange={event => updateAudioLevel('music', event.target.value)} />
+              <span>{Math.round(musicVolume * 100)}%</span>
+            </SettingRow>
+            <OptionButton type="button" $active={audioEnabled} onClick={toggleAudio}>
+              MASTER AUDIO {audioEnabled ? 'ON' : 'OFF'}
+            </OptionButton>
+          </SettingsPanel>
+          <CtrlRow>MOVE: WASD / ARROWS / MOUSE · FIRE: SPACE / ENTER / CLICK · PAUSE: ESC</CtrlRow>
+          <PauseActions>
+            <PauseButton type="button" $primary onClick={togglePause}>RESUME</PauseButton>
+            <PauseButton type="button" onClick={() => startGame(true)}>RESTART</PauseButton>
+            <PauseLink to="/">PORTFOLIO</PauseLink>
+          </PauseActions>
         </Overlay>
       )}
     </Wrapper>
