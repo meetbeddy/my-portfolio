@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { motion } from "framer-motion";
+import { circleMove } from "../animations";
 
 export const ContentContainer = styled(motion.div)`
   max-width: ${props => props.$maxWidth || "1120px"};
@@ -29,10 +30,40 @@ export const PageHeader = styled.header`
     letter-spacing: 0;
   }
 
-  h1 {
+  .title-stage {
+    --title-circle-radius: 72px;
+    position: relative;
+    height: 112px;
+    overflow: hidden;
     margin-bottom: ${props => props.theme.spacing.sm};
-    color: ${props => props.theme.colors.text};
+  }
+
+  .bottom,
+  .top {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .bottom {
+    color: ${props => props.theme.colors.primary};
+  }
+
+  .top {
+    z-index: 1;
+    color: #080808;
+    background: #ffffff;
+    animation: ${circleMove} 10s ease-in-out infinite;
+  }
+
+  h1,
+  .title-copy {
+    margin: 0;
+    color: inherit;
     font-size: ${props => props.theme.typography.fontSizes['3xl']};
+    font-weight: ${props => props.theme.typography.fontWeight.bold};
+    line-height: 1;
     letter-spacing: 0;
   }
 
@@ -45,7 +76,13 @@ export const PageHeader = styled.header`
   }
   
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    h1 {
+    .title-stage {
+      --title-circle-radius: 54px;
+      height: 84px;
+    }
+
+    h1,
+    .title-copy {
       font-size: ${props => props.theme.typography.fontSizes['2xl']};
     }
   }

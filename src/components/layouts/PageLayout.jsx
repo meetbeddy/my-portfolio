@@ -26,7 +26,14 @@ const PageLayout = ({ title, subtitle, children, maxWidth }) => (
     <ContentContainer $maxWidth={maxWidth}>
       <PageHeader>
         <p className="eyebrow">Obed Okpala / Portfolio</p>
-        <h1>{title}</h1>
+        <div className="title-stage">
+          <div className="bottom">
+            <h1>{title}</h1>
+          </div>
+          <div className="top" aria-hidden="true">
+            <span className="title-copy">{title}</span>
+          </div>
+        </div>
         {subtitle && <p className="subtitle">{subtitle}</p>}
       </PageHeader>
       {children}

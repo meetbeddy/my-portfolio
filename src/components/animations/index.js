@@ -1,3 +1,14 @@
+import { keyframes } from "styled-components";
+
+export const circleMove = keyframes`
+    0%, 100% {
+        clip-path: circle(var(--title-circle-radius, 72px) at 78% 50%);
+    }
+    50% {
+        clip-path: circle(var(--title-circle-radius, 72px) at 8% 50%);
+    }
+`;
+
 export const ContainerVariants = {
     initial: { opacity: 0 },
     visible: {
