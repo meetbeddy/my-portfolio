@@ -31,26 +31,32 @@ export const PageHeader = styled.header`
   }
 
   .title-stage {
-    --title-circle-radius: 72px;
+    --title-circle-radius: 68px;
     position: relative;
-    height: 112px;
+    width: max-content;
+    max-width: 100%;
+    height: 152px;
+    padding-right: calc(var(--title-circle-radius) * 2);
+    box-sizing: border-box;
     overflow: hidden;
     margin-bottom: ${props => props.theme.spacing.sm};
   }
 
   .bottom,
   .top {
-    position: absolute;
-    inset: 0;
     display: flex;
     align-items: center;
   }
 
   .bottom {
+    position: relative;
+    height: 100%;
     color: ${props => props.theme.colors.primary};
   }
 
   .top {
+    position: absolute;
+    inset: 0;
     z-index: 1;
     color: #080808;
     background: #ffffff;
@@ -77,8 +83,10 @@ export const PageHeader = styled.header`
   
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     .title-stage {
-      --title-circle-radius: 54px;
-      height: 84px;
+      --title-circle-radius: 48px;
+      width: 100%;
+      height: 112px;
+      padding-right: 0;
     }
 
     h1,
