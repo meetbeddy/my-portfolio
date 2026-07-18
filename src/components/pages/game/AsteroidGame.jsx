@@ -388,6 +388,32 @@ const HintBanner = styled.div`
   box-shadow:0 0 24px rgba(255,183,77,.12);
   animation:${slideIn} .25s ease;
 `;
+const TutorialCoach = styled.div`
+  position:absolute;left:50%;bottom:4.8rem;transform:translateX(-50%);z-index:19;
+  width:min(560px,90vw);padding:.8rem .9rem;background:rgba(4,4,14,.86);
+  border:1px solid rgba(122,174,255,.35);border-radius:6px;backdrop-filter:blur(10px);
+  box-shadow:0 10px 30px rgba(0,0,0,.28);animation:${slideIn} .25s ease;
+`;
+const TutorialTop = styled.div`
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.38rem;
+`;
+const TutorialTitle = styled.div`
+  color:#7aaeff;font-size:.65rem;font-weight:800;letter-spacing:2px;
+`;
+const TutorialProgress = styled.div`
+  color:rgba(255,255,255,.35);font-size:.55rem;letter-spacing:2px;white-space:nowrap;
+`;
+const TutorialText = styled.div`
+  color:rgba(255,255,255,.76);font-size:.72rem;line-height:1.5;padding-right:5.5rem;
+  @media(max-width:520px){padding-right:0;}
+`;
+const TutorialSkip = styled.button`
+  position:absolute;right:.9rem;bottom:.8rem;border:0;border-bottom:1px solid rgba(255,255,255,.28);
+  padding:.18rem 0;background:transparent;color:rgba(255,255,255,.45);font-family:inherit;
+  font-size:.55rem;letter-spacing:1px;cursor:pointer;
+  &:hover,&:focus-visible{color:#fff;border-color:#fff;outline:none;}
+  @media(max-width:520px){position:static;margin-top:.65rem;}
+`;
 const UpgradeOverlay = styled.div`
   position:absolute;inset:0;z-index:70;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:1rem;padding:1.25rem;
@@ -455,12 +481,24 @@ const SectorVignette = styled.div`
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MAX_HP = 100;
 const HIGH_SCORE_KEY = 'asteroidFieldHighScore';
+const TUTORIAL_KEY = 'asteroidFieldTutorialComplete';
 const DIFFICULTIES = {
   chill: { label: 'CHILL', desc: 'slower start', spawnBase: 2600, damage: 0.75, scoreMult: 0.9, speed: 0.85 },
   arcade: { label: 'ARCADE', desc: 'balanced', spawnBase: 2200, damage: 1, scoreMult: 1, speed: 1 },
   insane: { label: 'INSANE', desc: 'fast chaos', spawnBase: 1750, damage: 1.25, scoreMult: 1.2, speed: 1.18 },
 };
 const DIFFICULTY_OPTIONS = Object.keys(DIFFICULTIES);
+const TUTORIAL_STEPS = [
+  { title: 'FLIGHT CONTROL', text: 'Move with the mouse, touch, WASD, or arrow keys.' },
+  { title: 'WEAPONS ONLINE', text: 'Hold Space, press Enter, click, or tap to fire.' },
+  { title: 'HEAT DISCIPLINE', text: 'Build weapon heat above 30%, then stop firing and let it cool below 15%.' },
+  { title: 'RISK AND REWARD', text: 'Enter the dashed center zone for bonus points, then keep moving to survive.' },
+];
+
+const hasCompletedTutorial = () => {
+  try { return localStorage.getItem(TUTORIAL_KEY) === 'true'; }
+  catch { return false; }
+};
 
 const SECTOR_UPGRADES = [
   { id: 'fireRate', label: 'PULSE ACCELERATOR', short: 'FIRE', description: 'Fire 12% faster. Stacks reduce the delay between every shot.', color: '#ff7a66', max: 3 },
@@ -716,6 +754,7 @@ const AsteroidGame = () => {
   const [upgradeChoices, setUpgradeChoices] = useState(null);
   const [bossAttack, setBossAttack] = useState(null);
   const [hitMarker, setHitMarker] = useState(null);
+  const [tutorialStep, setTutorialStep] = useState(null);
 
   const finalScore = useRef(0);
   const highScore = useRef(readHighScore());
@@ -731,6 +770,7 @@ const AsteroidGame = () => {
   const upgradesRef = useRef(emptyUpgrades());
   const upgradeSelectionRef = useRef(null);
   const hitMarkerTimer = useRef(null);
+  const tutorialRef = useRef({ active: false, step: null, startedAt: 0, heatSeen: false });
 
   const unlockAudio = useCallback(() => {
     if (!audioEnabledRef.current) return;
@@ -752,12 +792,32 @@ const AsteroidGame = () => {
   }, []);
 
   const showHint = useCallback((key, text, dur = 3400) => {
+    if (tutorialRef.current.active) return;
     if (shownHints.current.has(key)) return;
     shownHints.current.add(key);
     clearTimeout(hintTimer.current);
     setHint(text);
     hintTimer.current = setTimeout(() => setHint(null), dur);
   }, []);
+
+  const finishTutorial = useCallback((skipped = false) => {
+    tutorialRef.current = { active: false, step: null, startedAt: 0, heatSeen: false };
+    setTutorialStep(null);
+    try { localStorage.setItem(TUTORIAL_KEY, 'true'); } catch { }
+    if (!skipped) showHint('training-complete', 'Flight training complete. Clear 1,000 points to reach the next sector.', 4200);
+  }, [showHint]);
+
+  const advanceTutorial = useCallback((expectedStep) => {
+    const tutorial = tutorialRef.current;
+    if (!tutorial.active || tutorial.step !== expectedStep) return;
+    const nextStep = expectedStep + 1;
+    if (nextStep >= TUTORIAL_STEPS.length) {
+      finishTutorial(false);
+      return;
+    }
+    tutorialRef.current = { ...tutorial, step: nextStep, startedAt: performance.now(), heatSeen: false };
+    setTutorialStep(nextStep);
+  }, [finishTutorial]);
 
   const toggleAudio = () => {
     const next = !audioEnabled;
@@ -802,6 +862,8 @@ const AsteroidGame = () => {
     statsRef.current = { grazesTotal: 0, enemiesDestroyed: 0, maxCombo: 0, bossesKilled: 0 };
     lastSectorScore.current = 0;
     shownHints.current = new Set();
+    const tutorialEnabled = !hasCompletedTutorial();
+    tutorialRef.current = { active: tutorialEnabled, step: tutorialEnabled ? 0 : null, startedAt: performance.now(), heatSeen: false };
     upgradesRef.current = emptyUpgrades();
     upgradeSelectionRef.current = null;
     setScore(0); setHp(MAX_HP); setActivePUps({}); setSector(1);
@@ -810,15 +872,13 @@ const AsteroidGame = () => {
     setPaused(false); setSectorClearAnim(null); setHeat(0); setOverheated(false);
     setBossHP(null); setBossWarningVisible(false); setDangerZoneBonus(false);
     setHint(null); setUpgradeChoices(null); setUpgrades(upgradesRef.current);
-    setBossAttack(null); setHitMarker(null);
+    setBossAttack(null); setHitMarker(null); setTutorialStep(tutorialEnabled ? 0 : null);
     setGameStats({ grazesTotal: 0, enemiesDestroyed: 0, timeSurvived: 0, maxCombo: 0, bossesKilled: 0 });
 
     if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
     if (audioEnabledRef.current) {
       setTimeout(() => { synthIntervalRef.current = startSynthwave(audioCtxRef.current); }, 500);
     }
-    setTimeout(() => showHint('opening', 'Move with mouse, touch, WASD, or arrows. Hold SPACE, click, or tap to fire.'), 900);
-
     if (withWarp) { setPhase('warp'); setTimeout(() => setPhase('playing'), 1800); }
     else setPhase('playing');
   };
@@ -970,6 +1030,7 @@ const AsteroidGame = () => {
       dangerZoneFrames: 0,
       // Local sector tracking
       localSector: sector,
+      tutorialStart: { x: 0, y: -B.y + 2 },
     };
     let localScore = scoreRef.current, localHP = MAX_HP;
 
@@ -1036,6 +1097,7 @@ const AsteroidGame = () => {
     const shoot = () => {
       const now = performance.now();
       if (gs.overheated || now < gs.overheatLockEnd) return;
+      if (phase === 'playing') advanceTutorial(1);
 
       SFX.shoot(audioCtxRef.current);
       const angles = [0];
@@ -1409,6 +1471,18 @@ const AsteroidGame = () => {
         }
       }
 
+      const tutorial = tutorialRef.current;
+      if (tutorial.active && tutorial.step === 0) {
+        const moved = Math.hypot(
+          shipGroup.position.x - gs.tutorialStart.x,
+          shipGroup.position.y - gs.tutorialStart.y,
+        );
+        if (moved > 0.7 || now - tutorial.startedAt > 7000) advanceTutorial(0);
+      } else if (tutorial.active && tutorial.step === 2) {
+        if (gs.heat >= 30) tutorialRef.current.heatSeen = true;
+        if ((tutorialRef.current.heatSeen && gs.heat <= 15) || now - tutorial.startedAt > 12000) advanceTutorial(2);
+      }
+
       shipLight.position.copy(shipGroup.position); shipLight.position.z = 3;
       engineMesh.material.color.setHex(gs.overheated
         ? (Math.random() > .5 ? 0xff0000 : 0xff4400)
@@ -1429,6 +1503,10 @@ const AsteroidGame = () => {
       // ── Danger zone bonus ─────────────────────────────────────────────
       const shipDist = Math.hypot(shipGroup.position.x, shipGroup.position.y);
       const inDangerZone = shipDist < DANGER_ZONE_R;
+      if (tutorialRef.current.active && tutorialRef.current.step === 3) {
+        const riskStepElapsed = now - tutorialRef.current.startedAt;
+        if (inDangerZone || riskStepElapsed > 9000) advanceTutorial(3);
+      }
       if (inDangerZone) {
         gs.dangerZoneFrames++;
         if (gs.dangerZoneFrames % 120 === 0) {
@@ -2027,7 +2105,7 @@ const AsteroidGame = () => {
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
       if (audioCtxRef.current) { audioCtxRef.current.close().catch(() => { }); audioCtxRef.current = null; }
     };
-  }, [phase, triggerShake, showGraze, showDamage, showHitMarker, unlockAudio, togglePause, triggerFlash, difficulty, showHint]);
+  }, [phase, triggerShake, showGraze, showDamage, showHitMarker, unlockAudio, togglePause, triggerFlash, difficulty, showHint, advanceTutorial]);
 
   const hpPct = (hp / MAX_HP) * 100;
   const heatPct = heat;
@@ -2063,6 +2141,16 @@ const AsteroidGame = () => {
       {damageMsg && <DamagePopup key={damageMsg.id} $color={damageMsg.color}>-{damageMsg.dmg} HP</DamagePopup>}
       {hitMarker && <HitMarker key={hitMarker.id} $color={hitMarker.color} />}
       {hint && phase === 'playing' && <HintBanner>{hint}</HintBanner>}
+      {tutorialStep !== null && phase === 'playing' && (
+        <TutorialCoach key={tutorialStep} role="status" aria-live="polite">
+          <TutorialTop>
+            <TutorialTitle>{TUTORIAL_STEPS[tutorialStep].title}</TutorialTitle>
+            <TutorialProgress>{tutorialStep + 1} / {TUTORIAL_STEPS.length}</TutorialProgress>
+          </TutorialTop>
+          <TutorialText>{TUTORIAL_STEPS[tutorialStep].text}</TutorialText>
+          <TutorialSkip type="button" onClick={() => finishTutorial(true)}>SKIP TRAINING</TutorialSkip>
+        </TutorialCoach>
+      )}
 
       {/* Boss warning */}
       {bossWarningVisible && <BossWarningBanner>⚠ BOSS INCOMING ⚠</BossWarningBanner>}
