@@ -77,6 +77,7 @@ const MobileNav = () => {
 
   return (
     <NavWrapper
+      aria-label="Primary navigation"
       initial={{ y: 100, x: "-50%", opacity: 0 }}
       animate={{ y: 0, x: "-50%", opacity: 1 }}
       transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 20 }}
@@ -88,6 +89,7 @@ const MobileNav = () => {
             key={item.path} 
             to={item.path} 
             active={isActive ? 1 : 0}
+            aria-current={isActive ? "page" : undefined}
           >
             <AnimatePresence>
               {isActive && (
@@ -99,7 +101,7 @@ const MobileNav = () => {
                 />
               )}
             </AnimatePresence>
-            <i className={item.icon} />
+            <i className={item.icon} aria-hidden="true" />
             <span>{item.name}</span>
           </NavItem>
         );

@@ -30,15 +30,6 @@ export const GlobalStyles = createGlobalStyle`
     font-weight: ${props => props.theme.typography.fontWeight.regular};
     font-size: ${props => props.theme.typography.fontSizes.base};
 
-    @media (hover: hover) and (pointer: fine) {
-      cursor: none;
-    }
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    a, button, input, textarea, select, label, [role="button"] {
-      cursor: none;
-    }
   }
 
   /* Scrollbar styling */
@@ -77,8 +68,23 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   :focus-visible {
-    outline: ${props => props.theme.borders.width.thin} solid ${props => props.theme.colors.borderFocus};
-    outline-offset: 2px;
+    outline: 2px solid ${props => props.theme.colors.primaryLight};
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
   /* Code blocks */

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Code, ExternalLink, Github, Layers, Wrench, Star, ArrowUpRight, UserRoundCheck, CircleCheckBig } from "lucide-react";
+import { Code, ExternalLink, Github, Layers, Wrench, Star, ArrowUpRight, UserRoundCheck, CircleCheckBig, X } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import { StyledButton } from "../../shared/StyledComponents";
 import styled from "styled-components";
@@ -716,6 +716,46 @@ const workExperience = [
 // Component for project details modal
 const ProjectDetails = ({ project, onClose }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    const previousActiveElement = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const focusFrame = requestAnimationFrame(() => contentRef.current?.focus());
+    const handleKeyDown = event => {
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !contentRef.current) return;
+
+      const focusable = contentRef.current.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousActiveElement?.focus();
+    };
+  }, [onClose]);
 
   // Animation variants
   const modalVariants = {
@@ -730,6 +770,7 @@ const ProjectDetails = ({ project, onClose }) => {
 
   return (
     <Modal
+      role="presentation"
       variants={modalVariants}
       initial="hidden"
       animate="visible"
@@ -737,12 +778,19 @@ const ProjectDetails = ({ project, onClose }) => {
       onClick={onClose}
     >
       <ModalContent
+        ref={contentRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`project-dialog-title-${project.id}`}
+        tabIndex={-1}
         variants={contentVariants}
         onClick={e => e.stopPropagation()}
       >
         <ModalHeader>
-          <h2>{project.title}</h2>
-          <ModalCloseButton onClick={onClose}>Ã—</ModalCloseButton>
+          <h2 id={`project-dialog-title-${project.id}`}>{project.title}</h2>
+          <ModalCloseButton type="button" onClick={onClose} aria-label="Close project details">
+            <X size={22} />
+          </ModalCloseButton>
         </ModalHeader>
 
         <ModalBody>
@@ -770,6 +818,8 @@ const ProjectDetails = ({ project, onClose }) => {
                     key={index}
                     active={currentSlide === index}
                     onClick={() => setCurrentSlide(index)}
+                    aria-label={`Show project image ${index + 1}`}
+                    aria-pressed={currentSlide === index}
                   />
                 ))}
               </CarouselNav>
@@ -939,7 +989,7 @@ const Projects = () => {
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
           >
             <ProjectImageContainer>
-              <ProjectImage style={{ backgroundImage: `url(${project.thumbnail})` }} />
+              <ProjectImage aria-hidden="true" style={{ backgroundImage: `url(${project.thumbnail})` }} />
             </ProjectImageContainer>
 
             <ProjectContent>

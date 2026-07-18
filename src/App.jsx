@@ -5,7 +5,6 @@ import MobileNav from "./components/layouts/MobileNav";
 import HomePage from "./components/pages/home/HomePage";
 import { AnimatePresence } from "framer-motion";
 import styled from "styled-components";
-import CursorGlow from "./components/shared/CursorGlow";
 
 const About = lazy(() => import("./components/pages/about/Index"));
 const Contact = lazy(() => import("./components/pages/contact/Contact"));
@@ -63,7 +62,6 @@ function App() {
   return (
     <Router>
       <PageTitleHandler />
-      <CursorGlow />
 
       <div className="App">
         <SideNav />

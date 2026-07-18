@@ -94,15 +94,18 @@ const NavItem = ({ active, icon, path, name, variants }) => {
       <Link
         to={path}
         aria-label={name}
+        aria-current={active ? "page" : undefined}
         style={{ display: "block", textDecoration: "none" }}
         onMouseEnter={() => setShowLabel(true)}
         onMouseLeave={() => setShowLabel(false)}
+        onFocus={() => setShowLabel(true)}
+        onBlur={() => setShowLabel(false)}
       >
         <IconContainer
           $active={active}
           whileTap={{ scale: 0.9 }}
         >
-          <i className={icon} />
+          <i className={icon} aria-hidden="true" />
         </IconContainer>
       </Link>
 
@@ -110,6 +113,7 @@ const NavItem = ({ active, icon, path, name, variants }) => {
         {active && (
           <ActiveDot
             key="dot"
+            aria-hidden="true"
             variants={dotVariants}
             initial="hidden"
             animate="visible"
@@ -121,6 +125,7 @@ const NavItem = ({ active, icon, path, name, variants }) => {
       <AnimatePresence>
         {showLabel && (
           <NavLabel
+            role="tooltip"
             variants={labelVariantsDesktop}
             initial="hidden"
             animate="visible"

@@ -144,68 +144,82 @@ const ContactForm = () => {
       <form id="contact-form" onSubmit={handleSubmit} noValidate>
         <div className="form-grid">
           <div className="form-field">
+            <label htmlFor="contact-name">Name</label>
             <input
+              id="contact-name"
               type="text"
               name="name"
               value={formData.name}
               className={`form-input ${formErrors.name.length > 0 ? "error" : ""}`}
               onChange={handleChange}
-              placeholder="Name"
-              noValidate
+              autoComplete="name"
+              aria-invalid={formErrors.name.length > 0}
+              aria-describedby={formErrors.name.length > 0 ? "contact-name-error" : undefined}
+              required
             />
             {formErrors.name.length > 0 && (
-              <span className="error-message">{formErrors.name}</span>
+              <span id="contact-name-error" className="error-message" role="alert">{formErrors.name}</span>
             )}
           </div>
 
           <div className="form-field">
+            <label htmlFor="contact-email">Email</label>
             <input
+              id="contact-email"
               type="email"
               name="email"
               value={formData.email}
               className={`form-input ${formErrors.email.length > 0 ? "error" : ""}`}
               onChange={handleChange}
-              placeholder="Email"
-              noValidate
+              autoComplete="email"
+              aria-invalid={formErrors.email.length > 0}
+              aria-describedby={formErrors.email.length > 0 ? "contact-email-error" : undefined}
+              required
             />
             {formErrors.email.length > 0 && (
-              <span className="error-message">{formErrors.email}</span>
+              <span id="contact-email-error" className="error-message" role="alert">{formErrors.email}</span>
             )}
           </div>
         </div>
 
         <div className="form-grid">
           <div className="form-field">
+            <label htmlFor="contact-subject">Subject</label>
             <input
+              id="contact-subject"
               type="text"
               name="subject"
               value={formData.subject}
               className={`form-input ${formErrors.subject.length > 0 ? "error" : ""}`}
               onChange={handleChange}
-              placeholder="Subject"
-              noValidate
+              aria-invalid={formErrors.subject.length > 0}
+              aria-describedby={formErrors.subject.length > 0 ? "contact-subject-error" : undefined}
+              required
             />
             {formErrors.subject.length > 0 && (
-              <span className="error-message">{formErrors.subject}</span>
+              <span id="contact-subject-error" className="error-message" role="alert">{formErrors.subject}</span>
             )}
           </div>
 
           <div className="form-field">
+            <label htmlFor="contact-message">Message</label>
             <textarea
+              id="contact-message"
               rows="5"
               name="message"
               value={formData.message}
               className={`form-input ${formErrors.message.length > 0 ? "error" : ""}`}
               onChange={handleChange}
-              placeholder="Message"
-              noValidate
+              aria-invalid={formErrors.message.length > 0}
+              aria-describedby={formErrors.message.length > 0 ? "contact-message-error" : undefined}
+              required
             />
             {formErrors.message.length > 0 && (
-              <span className="error-message">{formErrors.message}</span>
+              <span id="contact-message-error" className="error-message" role="alert">{formErrors.message}</span>
             )}
           </div>
         </div>
-        <StyledButton onClick={handleSubmit}>Submit</StyledButton>
+        <StyledButton type="submit">Submit</StyledButton>
         <ToastContainer />
       </form>
     </div>

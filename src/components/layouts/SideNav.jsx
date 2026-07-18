@@ -140,17 +140,19 @@ const SideNav = () => {
   ];
 
   const socialLinks = [
-    { icon: "fab fa-github", url: "https://github.com/meetbeddy", key: 1 },
-    { icon: "fab fa-linkedin", url: "https://linkedin.com/in/obed-okpala", key: 2 },
+    { icon: "fab fa-github", name: "GitHub", url: "https://github.com/meetbeddy", key: 1 },
+    { icon: "fab fa-linkedin", name: "LinkedIn", url: "https://linkedin.com/in/obed-okpala", key: 2 },
   ];
 
   return (
     <StyledSideNav
+      aria-label="Primary navigation"
       variants={desktopVariants}
       initial="hidden"
       animate="visible"
     >
       <Logo
+        aria-hidden="true"
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, duration: 0.4, type: "spring" }}
@@ -183,9 +185,10 @@ const SideNav = () => {
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={link.name}
             key={link.key}
           >
-            <i className={link.icon} />
+            <i className={link.icon} aria-hidden="true" />
           </a>
         ))}
       </SocialContainer>
