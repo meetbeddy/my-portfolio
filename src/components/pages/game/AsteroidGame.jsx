@@ -483,9 +483,9 @@ const MAX_HP = 100;
 const HIGH_SCORE_KEY = 'asteroidFieldHighScore';
 const TUTORIAL_KEY = 'asteroidFieldTutorialComplete';
 const DIFFICULTIES = {
-  chill: { label: 'CHILL', desc: 'slower start', spawnBase: 2600, damage: 0.75, scoreMult: 0.9, speed: 0.85 },
-  arcade: { label: 'ARCADE', desc: 'balanced', spawnBase: 2200, damage: 1, scoreMult: 1, speed: 1 },
-  insane: { label: 'INSANE', desc: 'fast chaos', spawnBase: 1750, damage: 1.25, scoreMult: 1.2, speed: 1.18 },
+  chill: { label: 'CHILL', desc: 'shielded start', rule: 'Slower heat · +30 hull per sector · more drops', spawnBase: 2600, damage: 0.75, scoreMult: 0.9, speed: 0.85, heatMult: 0.82, overheatLock: 2000, sectorRepair: 30, startShield: true, powerupInterval: 0.78, projectileSpeed: 0.9 },
+  arcade: { label: 'ARCADE', desc: 'balanced', rule: 'Standard rules · +20 hull per sector', spawnBase: 2200, damage: 1, scoreMult: 1, speed: 1, heatMult: 1, overheatLock: 2500, sectorRepair: 20, startShield: false, powerupInterval: 1, projectileSpeed: 1 },
+  insane: { label: 'INSANE', desc: 'high-risk score', rule: 'Hot weapons · +8 hull per sector · dense bosses', spawnBase: 1750, damage: 1.25, scoreMult: 1.2, speed: 1.18, heatMult: 1.15, overheatLock: 3200, sectorRepair: 8, startShield: false, powerupInterval: 1.3, projectileSpeed: 1.15 },
 };
 const DIFFICULTY_OPTIONS = Object.keys(DIFFICULTIES);
 const TUTORIAL_STEPS = [
@@ -517,9 +517,11 @@ const drawUpgradeChoices = levels => {
   return [...available].sort(() => Math.random() - 0.5).slice(0, 3);
 };
 
-const readHighScore = () => {
+const highScoreKey = mode => `${HIGH_SCORE_KEY}:${mode}`;
+const readHighScore = (mode = 'arcade') => {
   try {
-    const stored = Number(localStorage.getItem(HIGH_SCORE_KEY) || sessionStorage.getItem('hs') || 0);
+    const legacyScore = mode === 'arcade' ? localStorage.getItem(HIGH_SCORE_KEY) || sessionStorage.getItem('hs') : null;
+    const stored = Number(localStorage.getItem(highScoreKey(mode)) || legacyScore || 0);
     return Number.isFinite(stored) ? stored : 0;
   } catch {
     return 0;
@@ -755,9 +757,11 @@ const AsteroidGame = () => {
   const [bossAttack, setBossAttack] = useState(null);
   const [hitMarker, setHitMarker] = useState(null);
   const [tutorialStep, setTutorialStep] = useState(null);
+  const [bestScore, setBestScore] = useState(() => readHighScore('arcade'));
+  const [newHighScore, setNewHighScore] = useState(false);
 
   const finalScore = useRef(0);
-  const highScore = useRef(readHighScore());
+  const highScore = useRef(readHighScore('arcade'));
   const popupId = useRef(0);
   const gameStartTime = useRef(0);
   const statsRef = useRef({ grazesTotal: 0, enemiesDestroyed: 0, maxCombo: 0, bossesKilled: 0 });
@@ -785,6 +789,12 @@ const AsteroidGame = () => {
       synthIntervalRef.current = null;
     }
   }, [audioEnabled]);
+
+  useEffect(() => {
+    const modeBest = readHighScore(difficulty);
+    highScore.current = modeBest;
+    setBestScore(modeBest);
+  }, [difficulty]);
 
   useEffect(() => () => {
     clearTimeout(hintTimer.current);
@@ -873,6 +883,7 @@ const AsteroidGame = () => {
     setBossHP(null); setBossWarningVisible(false); setDangerZoneBonus(false);
     setHint(null); setUpgradeChoices(null); setUpgrades(upgradesRef.current);
     setBossAttack(null); setHitMarker(null); setTutorialStep(tutorialEnabled ? 0 : null);
+    setNewHighScore(false);
     setGameStats({ grazesTotal: 0, enemiesDestroyed: 0, timeSurvived: 0, maxCombo: 0, bossesKilled: 0 });
 
     if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
@@ -1013,7 +1024,7 @@ const AsteroidGame = () => {
       lastShot: 0, lastSpawn: 0, lastPowerUp: 0, lastUfoSpawn: 0,
       waveTimer: 0,
       spawnInterval: difficultyCfg.spawnBase, diffMult: difficultyCfg.speed,
-      shield: false, shieldExpires: 0,
+      shield: difficultyCfg.startShield, shieldExpires: difficultyCfg.startShield ? Infinity : 0,
       rapid: false, rapidExpires: 0,
       bigbullet: false, bigbulletExpires: 0,
       spread: false, spreadExpires: 0,
@@ -1107,23 +1118,23 @@ const AsteroidGame = () => {
 
       // Heat build-up
       const baseHeat = gs.rapid ? 12 : gs.spread ? 15 : gs.laser ? 18 : 8;
-      const heatIncrease = Math.max(3, baseHeat * (1 - upgradesRef.current.cooling * 0.15));
+      const heatIncrease = Math.max(3, baseHeat * difficultyCfg.heatMult * (1 - upgradesRef.current.cooling * 0.15));
       gs.heat = Math.min(100, gs.heat + heatIncrease);
       setHeat(gs.heat);
 
       if (gs.heat >= 100 && !gs.overheated) {
         gs.overheated = true;
-        gs.overheatLockEnd = now + 2500;
+        gs.overheatLockEnd = now + difficultyCfg.overheatLock;
         setOverheated(true);
         SFX.overheat(audioCtxRef.current);
-        setTimeout(() => { gs.overheated = false; gs.heat = 0; setOverheated(false); setHeat(0); }, 2500);
+        setTimeout(() => { gs.overheated = false; gs.heat = 0; setOverheated(false); setHeat(0); }, difficultyCfg.overheatLock);
       }
     };
 
     const makeEnemyBullet = (x, y, angleOffset = 0, options = {}) => {
       const geo = new THREE.SphereGeometry(0.18, 8, 8);
       const color = options.color || 0xcc22ff;
-      const speed = options.speed || 0.22;
+      const speed = (options.speed || 0.22) * difficultyCfg.projectileSpeed;
       const mat = new THREE.MeshBasicMaterial({ color });
       const mesh = trackMesh(new THREE.Mesh(geo, mat));
       const bLight = new THREE.PointLight(color, 2, 4);
@@ -1389,9 +1400,12 @@ const AsteroidGame = () => {
       if (localHP <= 0 && wasHP > 0) {
         gs.running = false;
         finalScore.current = localScore;
-        if (localScore > highScore.current) {
+        const earnedNewHighScore = localScore > highScore.current;
+        setNewHighScore(earnedNewHighScore);
+        if (earnedNewHighScore) {
           highScore.current = localScore;
-          try { localStorage.setItem(HIGH_SCORE_KEY, String(localScore)); } catch { }
+          setBestScore(localScore);
+          try { localStorage.setItem(highScoreKey(difficulty), String(localScore)); } catch { }
         }
         clearInterval(synthIntervalRef.current);
         const timeSurvived = Math.floor((Date.now() - gameStartTime.current) / 1000);
@@ -1615,12 +1629,11 @@ const AsteroidGame = () => {
           setSector(newSector);
           triggerShake();
           triggerFlash();
-          // Heal 20 HP on sector clear
-          localHP = Math.min(MAX_HP, localHP + 20);
+          localHP = Math.min(MAX_HP, localHP + difficultyCfg.sectorRepair);
           gs.hpLeft = localHP;
           setHp(localHP);
           const sp = worldToScreen(0, 0);
-          addPopup(sp.x, sp.y, 'HULL REPAIRED +20 HP', '#48e080', true);
+          addPopup(sp.x, sp.y, `HULL REPAIRED +${difficultyCfg.sectorRepair} HP`, '#48e080', true);
           setSectorClearAnim(prev => prev ? { ...prev, phase: 'out' } : null);
           setTimeout(() => setSectorClearAnim(null), 600);
           gs.awaitingUpgrade = true;
@@ -1689,7 +1702,10 @@ const AsteroidGame = () => {
             const dx = boss.lockTarget.x - boss.mesh.position.x;
             const dy = boss.lockTarget.y - boss.mesh.position.y;
             const deg = THREE.MathUtils.radToDeg(Math.atan2(dx, -dy));
-            const pattern = boss.phase === 1 ? [0] : boss.phase === 2 ? [-16, 0, 16] : [-28, -14, 0, 14, 28];
+            let pattern = boss.phase === 1 ? [0] : boss.phase === 2 ? [-16, 0, 16] : [-28, -14, 0, 14, 28];
+            if (difficulty === 'insane') {
+              pattern = boss.phase === 1 ? [-8, 8] : boss.phase === 2 ? [-24, -12, 0, 12, 24] : [-36, -24, -12, 0, 12, 24, 36];
+            }
             pattern.forEach(offset => makeEnemyBullet(boss.mesh.position.x, boss.mesh.position.y - 0.5, deg + offset));
             boss.attackClock = 0;
             boss.charging = false;
@@ -1710,6 +1726,7 @@ const AsteroidGame = () => {
       if (!gs.sectorClearing) {
         let pDropChance = 11000 + Math.random() * 8000;
         if (localHP < 40) pDropChance *= 0.55;
+        pDropChance *= difficultyCfg.powerupInterval;
         if (gs.lastPowerUp === 0 || t - gs.lastPowerUp > pDropChance) { makePowerUp(); gs.lastPowerUp = t; }
       }
       if (!gs.sectorClearing && !gs.boss && (gs.lastUfoSpawn === 0 || t - gs.lastUfoSpawn > 20000 + Math.random() * 15000)) {
@@ -2187,7 +2204,7 @@ const AsteroidGame = () => {
           <ScanLine $dur="1.2" $delay="0.5" />
           <SectorClearTitle>SECTOR CLEAR</SectorClearTitle>
           <SectorClearSub>SECTOR {sectorClearAnim.sector - 1} COMPLETE · JUMPING TO {sectorClearAnim.sector}</SectorClearSub>
-          <SectorClearScore $exit={sectorClearAnim.phase === 'out'}>+20 HP · WARP DRIVE CHARGED</SectorClearScore>
+          <SectorClearScore $exit={sectorClearAnim.phase === 'out'}>+{DIFFICULTIES[difficulty].sectorRepair} HP · WARP DRIVE CHARGED</SectorClearScore>
         </SectorClearOverlay>
       )}
 
@@ -2217,7 +2234,7 @@ const AsteroidGame = () => {
                 </div>
               )}
               <HudLabel style={{ textAlign: 'center', letterSpacing: '1px', marginTop: '.1rem' }}>
-                SEC {sector} · LVL {Math.max(1, Math.floor(score / 300) + 1)}
+                {DIFFICULTIES[difficulty].label} · SEC {sector} · LVL {Math.max(1, Math.floor(score / 300) + 1)}
               </HudLabel>
             </HudCenter>
 
@@ -2316,10 +2333,11 @@ const AsteroidGame = () => {
               AUDIO {audioEnabled ? 'ON' : 'OFF'}
             </OptionButton>
           </OptionRow>
+          <CtrlRow style={{ color: 'rgba(255,255,255,.55)' }}>{DIFFICULTIES[difficulty].rule}</CtrlRow>
           <CtrlRow>
             BUILT WITH THREE.JS, REACT, PROCEDURAL AUDIO, AND CUSTOM GAME LOGIC
           </CtrlRow>
-          {highScore.current > 0 && <HighScore>BEST: {String(highScore.current).padStart(6, '0')}</HighScore>}
+          {bestScore > 0 && <HighScore>{DIFFICULTIES[difficulty].label} BEST: {String(bestScore).padStart(6, '0')}</HighScore>}
           <LaunchBtn onClick={() => startGame(true)}>LAUNCH ▶</LaunchBtn>
         </Overlay>
       )}
@@ -2331,15 +2349,16 @@ const AsteroidGame = () => {
           <FinalScore>SCORE: {String(finalScore.current).padStart(6, '0')}</FinalScore>
           <ObjBox style={{ marginTop: '.5rem', marginBottom: '.5rem' }}>
             <ObjTitle>PERFORMANCE STATS</ObjTitle>
+            <ObjRow $vc="#7aaeff"><span>Mode</span>                    <span className="v">{DIFFICULTIES[difficulty].label}</span></ObjRow>
             <ObjRow $vc="#a0c0ff"><span>Enemies Destroyed</span>  <span className="v">{gameStats.enemiesDestroyed}</span></ObjRow>
             <ObjRow $vc="#ff8800"><span>Bosses Killed</span>       <span className="v">{gameStats.bossesKilled}</span></ObjRow>
             <ObjRow $vc="#ffb74d"><span>Max Combo</span>           <span className="v">{gameStats.maxCombo}×</span></ObjRow>
             <ObjRow $vc="#e04848"><span>Time Survived</span>       <span className="v">{gameStats.timeSurvived}s</span></ObjRow>
             <ObjRow $vc="#48e080"><span>Danger Grazes</span>       <span className="v">{gameStats.grazesTotal}</span></ObjRow>
           </ObjBox>
-          {finalScore.current >= highScore.current && finalScore.current > 0 &&
+          {newHighScore &&
             <Sub style={{ color: '#ffb74d', opacity: 1, marginBottom: '.5rem' }}>★ NEW HIGH SCORE ★</Sub>}
-          {highScore.current > 0 && <HighScore>BEST: {String(highScore.current).padStart(6, '0')}</HighScore>}
+          {bestScore > 0 && <HighScore>{DIFFICULTIES[difficulty].label} BEST: {String(bestScore).padStart(6, '0')}</HighScore>}
           <LaunchBtn onClick={() => startGame(true)}>PLAY AGAIN ▶</LaunchBtn>
         </Overlay>
       )}
