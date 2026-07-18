@@ -330,9 +330,6 @@ const projects = [
     description: 'A browser arcade game built as an interactive engineering piece for this portfolio. It combines a real-time Three.js scene with adaptive spawning, distinct enemy AI, sector upgrades, boss phases, procedural audio, persistent difficulty records, and responsive pointer, keyboard, and touch input.',
     shortDescription: 'Three.js arcade game with adaptive combat, enemy AI, and procedural audio',
     thumbnail: '/image/projects/asteroid-field-cover.webp',
-    featured: true,
-    status: 'completed',
-    category: 'other',
     technologies: ['React', 'Three.js', 'Web Audio API', 'Styled Components'],
     role: 'Game Developer',
     duration: 'Iterative build',
@@ -378,9 +375,6 @@ const projects = [
     description: 'A comprehensive platform for cooperative society management, enabling members to create accounts, perform cooperative tasks, request loans, view balances and transaction histories, and utilise a mini marketplace for item selection and checkout.',
     shortDescription: 'Full-stack cooperative management system with marketplace and loan features',
     thumbnail: '/image/projects/cooperative-platform-cover.webp',
-    featured: true,
-    status: 'completed',
-    category: 'web',
     technologies: ['ReactJS', 'Redux Toolkit', 'ExpressJS', 'MongoDB'],
     role: 'Full-Stack Developer',
     duration: '4 months',
@@ -426,9 +420,6 @@ const projects = [
     description: 'A secure election platform for an ICAN body, enabling authenticated members to cast votes with real-time results, audit logs, election management, and user management. Demo available on request.',
     shortDescription: 'Secure real-time election system with admin panel and audit trails',
     thumbnail: '/image/projects/ican-election-cover.webp',
-    featured: true,
-    status: 'completed',
-    category: 'web',
     technologies: ['React', 'TypeScript', 'Redux Toolkit', 'ExpressJS', 'MongoDB'],
     role: 'Full-Stack Developer',
     duration: '3 months',
@@ -474,9 +465,6 @@ const projects = [
     description: 'A multi-tenant vehicle license registration and renewal system, streamlining vehicle licensing for authorities and owners in Nigeria. Supports registration, renewal, change of ownership, revalidation, and direct levy. Demo available on request.',
     shortDescription: 'Multi-tenant vehicle licensing management system for Nigerian authorities',
     thumbnail: '/image/projects/fenix-vms-cover.webp',
-    featured: true,
-    status: 'completed',
-    category: 'web',
     technologies: ['Angular', 'NestJS'],
     role: 'Full-Stack Developer',
     duration: '6 months',
@@ -522,9 +510,6 @@ const projects = [
     description: 'A WebGL-powered, React-based playground for generating procedural textures and animated gradients in real time. Built for designers, developers, and the perpetually curious.',
     shortDescription: 'WebGL procedural texture & animated gradient generator',
     thumbnail: '/image/projects/texflow-cover.webp',
-    featured: true,
-    status: 'completed',
-    category: 'web',
     technologies: ['React', 'WebGL', 'Vite', 'GLSL'],
     role: 'Frontend Developer',
     duration: '2 months',
@@ -568,9 +553,6 @@ const projects = [
     description: 'A high-fidelity, unified staff portal designed to automate public service delivery and revenue governance across multiple government agencies (MDAs) in Imo State.',
     shortDescription: 'Massive enterprise government portal powered by the NestJS Sovereign Engine',
     thumbnail: '/image/projects/multi-mda-cover.webp',
-    featured: true,
-    status: 'completed',
-    category: 'web',
     technologies: ['React', 'TypeScript', 'NestJS', 'MongoDB', 'Tailwind'],
     role: 'Full-Stack Architect',
     duration: '8 months',
@@ -614,9 +596,6 @@ const projects = [
     description: 'A mobile application connecting farmers directly to consumers and markets. Built to provide a seamless cross-platform experience with geographic awareness.',
     shortDescription: 'Cross-platform React Native mobile app for agricultural networking',
     thumbnail: '/image/projects/farmconnect-cover.webp',
-    featured: true,
-    status: 'completed',
-    category: 'mobile',
     technologies: ['React Native', 'Expo', 'Redux', 'Socket.io'],
     role: 'Mobile Developer',
     duration: '3 months',
@@ -655,62 +634,6 @@ const projects = [
     ]
   }
 
-];
-
-// Work experience â€” real roles from CV
-const workExperience = [
-  {
-    id: 'job1',
-    company: 'Compumetrics Solutions Ltd',
-    position: 'Full-Stack Developer',
-    period: 'Dec 2022 â€“ Present',
-    description: 'Collaborating with a team of software developers to conceptualise and execute applications using React, Angular, and TypeScript for enterprise clients.',
-    achievements: [
-      'Achieved a 20% reduction in page load times through asset optimisation and lazy loading',
-      'Redesigned user role system from role-based to granular permission-based, improving security at scale',
-      'Contributed to code reviews and best practice adherence, enhancing overall code quality'
-    ],
-    technologies: ['React', 'Angular', 'TypeScript', 'Node.js', 'Redux']
-  },
-  {
-    id: 'job2',
-    company: 'Hero Technology Ltd (EagleApp)',
-    position: 'Full-Stack Developer',
-    period: 'Aug 2022 â€“ Dec 2022',
-    description: 'Led an Agile team in designing and implementing applications in React, Node.js, and Express with a Microservices architecture under the Scrum framework.',
-    achievements: [
-      'Led microservices-based application design and implementation',
-      'Mentored junior developers in software best practices',
-      'Participated in code reviews, maintaining high team code quality'
-    ],
-    technologies: ['React', 'Node.js', 'Express.js', 'Microservices', 'Scrum']
-  },
-  {
-    id: 'job3',
-    company: '3reen Ltd',
-    position: 'Frontend Developer',
-    period: 'Nov 2020 â€“ Mar 2021',
-    description: 'Collaborated with designers and developers to build an e-commerce startup store with complex layouts and state management.',
-    achievements: [
-      'Built complex React layouts with styled-components for an e-commerce startup',
-      'Engineered state management with Redux and React hooks',
-      'Converted Figma prototypes directly into production-ready code'
-    ],
-    technologies: ['React', 'styled-components', 'Redux', 'Figma', 'CSS3']
-  },
-  {
-    id: 'job4',
-    company: 'Freelance',
-    position: 'Web Developer',
-    period: 'Aug 2019',
-    description: 'Worked independently and in teams to build and optimise websites for clients, improving performance and collaborating with designers and stakeholders.',
-    achievements: [
-      'Optimised web performance, decreasing page load times for client sites',
-      'Developed and maintained multiple client websites',
-      'Collaborated with designers, programmers, and clients directly'
-    ],
-    technologies: ['JavaScript', 'HTML5', 'CSS3', 'React', 'Node.js']
-  }
 ];
 
 // Component for project details modal
@@ -930,19 +853,6 @@ const ProjectDetails = ({ project, onClose }) => {
             </StyledButton>
           </div>
 
-          {/* Testimonial */}
-          {project.testimonial && (
-            <div style={{
-              margin: '32px 0',
-              padding: '24px',
-              backgroundColor: 'rgba(255,255,255,0.05)',
-              borderRadius: '12px',
-              fontStyle: 'italic'
-            }}>
-              <p style={{ fontSize: '1.1rem', marginBottom: '12px' }}>"{project.testimonial.quote}"</p>
-              <p style={{ textAlign: 'right', fontWeight: '500' }}>â€” {project.testimonial.author}</p>
-            </div>
-          )}
         </ModalBody>
       </ModalContent>
     </Modal>

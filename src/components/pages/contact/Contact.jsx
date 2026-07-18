@@ -1,19 +1,12 @@
 import React from "react";
 import ContactForm from "./ContactForm";
 import PageLayout from "../../layouts/PageLayout";
-import { LeftColumn, PageParagraph, RightColumn, TwoColumnLayout } from "../../shared/StyledComponents";
-import { RightBoxVariants, TextAreaVariants } from "../../animations";
+import { LeftColumn, PageParagraph, TwoColumnLayout } from "../../shared/StyledComponents";
+import { TextAreaVariants } from "../../animations";
 
 
 
 export default function Contact() {
-  const location = {
-    address: "Lugbe, FCT, Abuja.",
-    phone: "+234 7064492675",
-    lat: 8.9868,
-    lng: 7.3626,
-  };
-
   return (
     <PageLayout title="Let's get in touch" maxWidth="800px">
       <TwoColumnLayout>
@@ -29,15 +22,6 @@ export default function Contact() {
           </PageParagraph>
           <ContactForm />
         </LeftColumn>
-
-        {/* <RightColumn variants={RightBoxVariants}>
-          <Card location={location} />
-          
-          <div style={{ marginTop: "20px", borderRadius: "8px", overflow: "hidden" }}>
-            <Map location={location} zoomLevel={17} />
-          </div>
-         
-        </RightColumn> */}
       </TwoColumnLayout>
     </PageLayout>)
 }

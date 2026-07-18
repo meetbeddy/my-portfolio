@@ -3,7 +3,6 @@ import NavItem from "./NavItem";
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import useIsMobile from "../../hook/useIsMobile";
 
 // ─── Animation variants (fast fade/slide — no sluggish springs) ──────────────
 const desktopVariants = {
@@ -14,23 +13,9 @@ const desktopVariants = {
   },
 };
 
-const mobileVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1, y: 0,
-    transition: { duration: 0.22, ease: "easeOut", staggerChildren: 0.05, delayChildren: 0.05 }
-  },
-};
-
 const itemVariants = {
   hidden: { opacity: 0, x: -16 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.2, ease: "easeOut" } },
-  hover: { scale: 1.15, transition: { duration: 0.15 } },
-};
-
-const mobileItemVariants = {
-  hidden: { opacity: 0, y: 14 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
   hover: { scale: 1.15, transition: { duration: 0.15 } },
 };
 
