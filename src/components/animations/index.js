@@ -2,10 +2,10 @@ import { keyframes } from "styled-components";
 
 export const circleMove = keyframes`
     0%, 100% {
-        clip-path: circle(var(--title-circle-radius, 68px) at calc(100% - var(--title-circle-radius, 68px)) 50%);
+        clip-path: circle(var(--title-circle-radius, 60px) at calc(100% - var(--title-circle-radius, 60px)) 50%);
     }
     50% {
-        clip-path: circle(var(--title-circle-radius, 68px) at var(--title-circle-radius, 68px) 50%);
+        clip-path: circle(var(--title-circle-radius, 60px) at var(--title-circle-radius, 60px) 50%);
     }
 `;
 

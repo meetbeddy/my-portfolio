@@ -31,11 +31,11 @@ export const PageHeader = styled.header`
   }
 
   .title-stage {
-    --title-circle-radius: 68px;
+    --title-circle-radius: 60px;
     position: relative;
     width: max-content;
     max-width: 100%;
-    height: 152px;
+    height: 136px;
     padding-right: calc(var(--title-circle-radius) * 2);
     box-sizing: border-box;
     overflow: hidden;
@@ -83,9 +83,9 @@ export const PageHeader = styled.header`
   
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     .title-stage {
-      --title-circle-radius: 48px;
+      --title-circle-radius: 42px;
       width: 100%;
-      height: 112px;
+      height: 100px;
       padding-right: 0;
     }
 
