@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import styled, { keyframes, css } from 'styled-components';
 import { Link } from 'react-router-dom';
+import { Crosshair } from 'lucide-react';
 
 // ─── Keyframes ───────────────────────────────────────────────────────────────
 const pulse = keyframes`0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.95)}`;
@@ -282,6 +283,7 @@ const PowerBar = styled.div`
   position:absolute;bottom:1.4rem;left:50%;transform:translateX(-50%);
   display:flex;gap:.6rem;pointer-events:none;z-index:10;flex-wrap:wrap;justify-content:center;
   max-width:90vw;
+  @media(max-width:767px){bottom:6.8rem;}
 `;
 const Pill = styled.div`
   display:flex;align-items:center;gap:.35rem;
@@ -303,7 +305,7 @@ const BackBtn = styled(Link)`
 `;
 const GameControls = styled.div`
   position:absolute;right:1.4rem;top:3.2rem;z-index:30;display:flex;gap:.45rem;
-  @media(max-width:640px){top:auto;right:.8rem;bottom:.8rem;}
+  @media(max-width:640px){top:3.4rem;right:.8rem;bottom:auto;}
 `;
 const IconControl = styled.button`
   background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
@@ -311,6 +313,29 @@ const IconControl = styled.button`
   display:grid;place-items:center;font-family:inherit;font-size:.78rem;cursor:pointer;
   backdrop-filter:blur(8px);transition:background .2s,color .2s,transform .18s;
   &:hover{background:rgba(255,255,255,.14);color:#fff;transform:translateY(-1px);}
+`;
+const TouchControls = styled.div`
+  display:none;
+  @media(max-width:767px){display:block;position:absolute;inset:0;z-index:17;pointer-events:none;}
+`;
+const JoystickPad = styled.div`
+  position:absolute;left:max(1rem,env(safe-area-inset-left));bottom:max(1rem,env(safe-area-inset-bottom));
+  width:92px;height:92px;border-radius:50%;pointer-events:auto;touch-action:none;
+  border:1px solid rgba(122,174,255,.38);background:rgba(4,4,14,.48);backdrop-filter:blur(5px);
+  box-shadow:inset 0 0 24px rgba(122,174,255,.08);
+`;
+const JoystickKnob = styled.div`
+  position:absolute;left:50%;top:50%;width:38px;height:38px;border-radius:50%;
+  transform:translate(calc(-50% + ${p => p.$x * 25}px),calc(-50% + ${p => p.$y * 25}px));
+  background:rgba(122,174,255,.28);border:1px solid rgba(122,174,255,.72);
+  box-shadow:0 0 16px rgba(122,174,255,.3);pointer-events:none;
+`;
+const TouchFire = styled.button`
+  position:absolute;right:max(1rem,env(safe-area-inset-right));bottom:max(1rem,env(safe-area-inset-bottom));
+  width:74px;height:74px;border-radius:50%;pointer-events:auto;touch-action:none;
+  display:grid;place-items:center;border:1px solid rgba(224,72,72,.72);color:#ff8c8c;
+  background:rgba(80,12,20,.52);box-shadow:0 0 22px rgba(224,72,72,.22);cursor:pointer;
+  &:active{background:rgba(224,72,72,.3);transform:scale(.96);}
 `;
 const Overlay = styled.div`
   position:absolute;inset:0;display:flex;flex-direction:column;
@@ -420,6 +445,7 @@ const TutorialCoach = styled.div`
   width:min(560px,90vw);padding:.8rem .9rem;background:rgba(4,4,14,.86);
   border:1px solid rgba(122,174,255,.35);border-radius:6px;backdrop-filter:blur(10px);
   box-shadow:0 10px 30px rgba(0,0,0,.28);animation:${slideIn} .25s ease;
+  @media(max-width:767px){bottom:7.2rem;}
 `;
 const TutorialTop = styled.div`
   display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.38rem;
@@ -475,7 +501,7 @@ const UpgradeLevel = styled.div`
 const UpgradeSummary = styled.div`
   position:absolute;left:1.4rem;bottom:1.25rem;z-index:10;display:flex;gap:.35rem;flex-wrap:wrap;
   max-width:min(430px,70vw);pointer-events:none;
-  @media(max-width:640px){left:.8rem;bottom:.8rem;max-width:65vw;}
+  @media(max-width:767px){left:.8rem;bottom:6.8rem;max-width:65vw;}
 `;
 const UpgradeChip = styled.div`
   padding:.22rem .45rem;border:1px solid ${p => p.$color}55;border-radius:4px;
@@ -802,6 +828,7 @@ const AsteroidGame = () => {
   const [tutorialStep, setTutorialStep] = useState(null);
   const [bestScore, setBestScore] = useState(() => readHighScore('arcade'));
   const [newHighScore, setNewHighScore] = useState(false);
+  const [touchStick, setTouchStick] = useState({ x: 0, y: 0 });
 
   const finalScore = useRef(0);
   const highScore = useRef(readHighScore('arcade'));
@@ -819,6 +846,7 @@ const AsteroidGame = () => {
   const upgradeSelectionRef = useRef(null);
   const hitMarkerTimer = useRef(null);
   const tutorialRef = useRef({ active: false, step: null, startedAt: 0, heatSeen: false });
+  const touchInputRef = useRef({ x: 0, y: 0, active: false, firing: false, pointerId: null });
 
   const unlockAudio = useCallback(() => {
     if (!audioEnabledRef.current) return;
@@ -908,6 +936,48 @@ const AsteroidGame = () => {
     }
   };
 
+  const updateJoystick = (event) => {
+    const input = touchInputRef.current;
+    if (!input.active || input.pointerId !== event.pointerId) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    let x = (event.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
+    let y = (event.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
+    const magnitude = Math.hypot(x, y);
+    if (magnitude > 1) { x /= magnitude; y /= magnitude; }
+    touchInputRef.current = { ...input, x, y };
+    setTouchStick({ x, y });
+  };
+
+  const startJoystick = (event) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    touchInputRef.current = { ...touchInputRef.current, active: true, pointerId: event.pointerId };
+    unlockAudio();
+    updateJoystick(event);
+  };
+
+  const stopJoystick = (event) => {
+    if (touchInputRef.current.pointerId !== event.pointerId) return;
+    touchInputRef.current = { ...touchInputRef.current, x: 0, y: 0, active: false, pointerId: null };
+    setTouchStick({ x: 0, y: 0 });
+  };
+
+  const setTouchFiring = (firing) => {
+    touchInputRef.current = { ...touchInputRef.current, firing };
+    if (firing) unlockAudio();
+  };
+
+  const startTouchFire = (event) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setTouchFiring(true);
+  };
+
+  const stopTouchFire = (event) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    setTouchFiring(false);
+  };
+
   const chooseUpgrade = upgrade => {
     if (upgrade.id === SALVAGE_UPGRADE.id) {
       upgradeSelectionRef.current = upgrade.id;
@@ -956,6 +1026,8 @@ const AsteroidGame = () => {
     setHint(null); setUpgradeChoices(null); setUpgrades(upgradesRef.current);
     setBossAttack(null); setHitMarker(null); setTutorialStep(tutorialEnabled ? 0 : null);
     setNewHighScore(false);
+    touchInputRef.current = { x: 0, y: 0, active: false, firing: false, pointerId: null };
+    setTouchStick({ x: 0, y: 0 });
     setGameStats({ grazesTotal: 0, enemiesDestroyed: 0, timeSurvived: 0, maxCombo: 0, bossesKilled: 0 });
 
     if (synthIntervalRef.current) { clearInterval(synthIntervalRef.current); synthIntervalRef.current = null; }
@@ -1435,7 +1507,7 @@ const AsteroidGame = () => {
       e.preventDefault(); lastTouchTime = Date.now(); unlockAudio();
       const t = e.touches[0];
       touchOrigin = { clientX: t.clientX, clientY: t.clientY, shipX: shipGroup.position.x, shipY: shipGroup.position.y };
-      gs.touchActive = true; if (gs.running) shoot();
+      gs.touchActive = true;
     };
     const onTouchEnd = () => { touchOrigin = null; };
     const onResize = () => {
@@ -1540,13 +1612,22 @@ const AsteroidGame = () => {
         gs.keys['ArrowUp'] || gs.keys['ArrowDown'] ||
         gs.keys['KeyA'] || gs.keys['KeyD'] ||
         gs.keys['KeyW'] || gs.keys['KeyS'];
+      const touchControl = touchInputRef.current;
+      const usingJoystick = touchControl.active && Math.hypot(touchControl.x, touchControl.y) > 0.06;
 
       if (!gs.sectorClearing) {
-        if (gs.keys['ArrowLeft'] || gs.keys['KeyA']) shipGroup.position.x = Math.max(-B.x + .5, shipGroup.position.x - spd);
-        if (gs.keys['ArrowRight'] || gs.keys['KeyD']) shipGroup.position.x = Math.min(B.x - .5, shipGroup.position.x + spd);
-        if (gs.keys['ArrowUp'] || gs.keys['KeyW']) shipGroup.position.y = Math.min(B.y - .5, shipGroup.position.y + spd * .8);
-        if (gs.keys['ArrowDown'] || gs.keys['KeyS']) shipGroup.position.y = Math.max(-B.y + .5, shipGroup.position.y - spd * .8);
-        if (!usingKeyboard) {
+        if (usingJoystick) {
+          shipGroup.position.x = THREE.MathUtils.clamp(shipGroup.position.x + touchControl.x * spd, -B.x + .5, B.x - .5);
+          shipGroup.position.y = THREE.MathUtils.clamp(shipGroup.position.y - touchControl.y * spd * .8, -B.y + .5, B.y - .5);
+          gs.mouse.x = shipGroup.position.x;
+          gs.mouse.y = shipGroup.position.y;
+        } else {
+          if (gs.keys['ArrowLeft'] || gs.keys['KeyA']) shipGroup.position.x = Math.max(-B.x + .5, shipGroup.position.x - spd);
+          if (gs.keys['ArrowRight'] || gs.keys['KeyD']) shipGroup.position.x = Math.min(B.x - .5, shipGroup.position.x + spd);
+          if (gs.keys['ArrowUp'] || gs.keys['KeyW']) shipGroup.position.y = Math.min(B.y - .5, shipGroup.position.y + spd * .8);
+          if (gs.keys['ArrowDown'] || gs.keys['KeyS']) shipGroup.position.y = Math.max(-B.y + .5, shipGroup.position.y - spd * .8);
+        }
+        if (!usingKeyboard && !usingJoystick) {
           shipGroup.position.x += (gs.mouse.x - shipGroup.position.x) * .09;
           shipGroup.position.y += (gs.mouse.y - shipGroup.position.y) * .06;
           shipGroup.position.x = THREE.MathUtils.clamp(shipGroup.position.x, -B.x + .5, B.x - .5);
@@ -1619,7 +1700,7 @@ const AsteroidGame = () => {
 
       // Auto-fire while space held
       const cooldown = Math.max(65, (gs.rapid ? 80 : 190) * (1 - upgradesRef.current.fireRate * 0.12));
-      if (!gs.sectorClearing && (gs.keys['Space'] || gs.keys['Enter']) && t - gs.lastShot > cooldown) {
+      if (!gs.sectorClearing && (gs.keys['Space'] || gs.keys['Enter'] || touchInputRef.current.firing) && t - gs.lastShot > cooldown) {
         shoot(); gs.lastShot = t;
       }
 
@@ -2207,6 +2288,30 @@ const AsteroidGame = () => {
             {audioEnabled ? 'ON' : 'OFF'}
           </IconControl>
         </GameControls>
+      )}
+      {phase === 'playing' && !paused && !upgradeChoices && (
+        <TouchControls aria-label="Touch controls">
+          <JoystickPad
+            role="application"
+            aria-label="Movement joystick"
+            onPointerDown={startJoystick}
+            onPointerMove={updateJoystick}
+            onPointerUp={stopJoystick}
+            onPointerCancel={stopJoystick}
+          >
+            <JoystickKnob $x={touchStick.x} $y={touchStick.y} />
+          </JoystickPad>
+          <TouchFire
+            type="button"
+            aria-label="Fire"
+            title="Fire"
+            onPointerDown={startTouchFire}
+            onPointerUp={stopTouchFire}
+            onPointerCancel={stopTouchFire}
+          >
+            <Crosshair size={28} strokeWidth={1.8} />
+          </TouchFire>
+        </TouchControls>
       )}
       <CanvasMount ref={mountRef} />
 
