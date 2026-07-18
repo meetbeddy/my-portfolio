@@ -373,6 +373,20 @@ const QuickBrief = styled.div`
   display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;width:min(620px,92vw);
   @media(max-width:640px){grid-template-columns:1fr;}
 `;
+const EngineeringNote = styled.div`
+  width:min(560px,90vw);padding:.8rem 1rem;border-left:2px solid #7aaeff;
+  background:rgba(122,174,255,.055);color:rgba(255,255,255,.58);
+  font-size:.66rem;line-height:1.55;text-align:left;
+`;
+const EngineeringTitle = styled.div`
+  color:#7aaeff;font-size:.6rem;font-weight:800;letter-spacing:2px;margin-bottom:.35rem;
+`;
+const EngineeringSystems = styled.div`
+  display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.55rem;
+`;
+const EngineeringSystem = styled.span`
+  color:rgba(255,255,255,.68);font-size:.52rem;letter-spacing:1px;
+`;
 const BriefCard = styled.div`
   background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);
   border-radius:.6rem;padding:.75rem .9rem;text-align:left;
@@ -2529,9 +2543,21 @@ const AsteroidGame = () => {
             <ObjRow $vc="#e04848"><span>Time Survived</span>       <span className="v">{gameStats.timeSurvived}s</span></ObjRow>
             <ObjRow $vc="#48e080"><span>Danger Grazes</span>       <span className="v">{gameStats.grazesTotal}</span></ObjRow>
           </ObjBox>
+          <EngineeringNote>
+            <EngineeringTitle>ENGINEERING UNDER THE RUN</EngineeringTitle>
+            This result came from a real-time simulation that keeps frame-critical game state outside React while synchronizing score, health, upgrades, audio, and overlays back into the interface.
+            <EngineeringSystems>
+              <EngineeringSystem>THREE.JS RENDER LOOP</EngineeringSystem>
+              <EngineeringSystem>CUSTOM COLLISION</EngineeringSystem>
+              <EngineeringSystem>ENEMY STATE MACHINES</EngineeringSystem>
+              <EngineeringSystem>PROCEDURAL AUDIO</EngineeringSystem>
+              <EngineeringSystem>PERSISTENT SETTINGS</EngineeringSystem>
+            </EngineeringSystems>
+          </EngineeringNote>
           {newHighScore &&
             <Sub style={{ color: '#ffb74d', opacity: 1, marginBottom: '.5rem' }}>★ NEW HIGH SCORE ★</Sub>}
           {bestScore > 0 && <HighScore>{DIFFICULTIES[difficulty].label} BEST: {String(bestScore).padStart(6, '0')}</HighScore>}
+          <PauseLink to="/projects">VIEW PROJECT CASE STUDY</PauseLink>
           <LaunchBtn onClick={() => startGame(true)}>PLAY AGAIN ▶</LaunchBtn>
         </Overlay>
       )}

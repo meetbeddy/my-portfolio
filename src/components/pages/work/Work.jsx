@@ -407,6 +407,41 @@ const TimelineDate = styled.div`
 // Project data â€” real projects from CV
 const projects = [
   {
+    id: 'asteroid-field',
+    title: 'Asteroid Field',
+    description: 'A browser arcade game built as an interactive engineering piece for this portfolio. It combines a real-time Three.js scene with adaptive spawning, distinct enemy AI, sector upgrades, boss phases, procedural audio, persistent difficulty records, and responsive pointer, keyboard, and touch input.',
+    shortDescription: 'Three.js arcade game with adaptive combat, enemy AI, and procedural audio',
+    thumbnail: '/image/my_portfolio.png',
+    featured: true,
+    status: 'completed',
+    category: 'other',
+    technologies: ['React', 'Three.js', 'Web Audio API', 'Styled Components'],
+    role: 'Game Developer',
+    duration: 'Iterative build',
+    year: '2026',
+    demoLink: '/play',
+    githubLink: 'https://github.com/meetbeddy',
+    carouselImages: ['/image/my_portfolio.png'],
+    challenges: [
+      'Keeping a real-time Three.js simulation responsive inside a React application',
+      'Making keyboard, pointer, and touch input feel consistent without resetting run state',
+      'Balancing escalating enemy behavior, boss patterns, heat, upgrades, and difficulty modes'
+    ],
+    solutions: [
+      'Separated frame-critical mutable state from React-rendered interface state',
+      'Built dedicated input paths that feed one shared movement and firing model',
+      'Used data-driven enemy, upgrade, and difficulty definitions for predictable tuning'
+    ],
+    keyFeatures: [
+      'Three.js rendering with custom collision and particle systems',
+      'Weaving, tracking, splitting, predictive, and orbiting enemy behaviors',
+      'Sector upgrade drafts and multi-phase telegraphed bosses',
+      'Procedural Web Audio soundtrack and sound effects',
+      'Independent difficulty records and persistent player settings',
+      'Responsive keyboard, pointer, and dedicated mobile controls'
+    ]
+  },
+  {
     id: 'coop-platform',
     title: 'Cooperative Society Platform',
     description: 'A comprehensive platform for cooperative society management, enabling members to create accounts, perform cooperative tasks, request loans, view balances and transaction histories, and utilise a mini marketplace for item selection and checkout.',
