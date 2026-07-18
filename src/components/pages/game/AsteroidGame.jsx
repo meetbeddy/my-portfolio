@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import styled, { keyframes, css } from 'styled-components';
 import { Link } from 'react-router-dom';
-import { Crosshair } from 'lucide-react';
+import { ArrowLeft, Crosshair, Flame, Play, Star, TriangleAlert, Trophy } from 'lucide-react';
 import {
   AUDIO_SETTINGS_KEY, DIFFICULTIES, DIFFICULTY_OPTIONS, MAX_HP,
   PUPS, SALVAGE_UPGRADE, SECTOR_PALETTES, SECTOR_UPGRADES, TUTORIAL_KEY,
@@ -188,6 +188,7 @@ const BossLabel = styled.div`
   font-size:.65rem;letter-spacing:4px;color:#ff2200;
   text-shadow:0 0 12px #ff220099;
   animation:${pulse} .8s ease-in-out infinite;
+  display:flex;align-items:center;gap:.45rem;
 `;
 const BossBarTrack = styled.div`
   width:min(300px,60vw);height:10px;
@@ -208,6 +209,7 @@ const BossWarningBanner = styled.div`
   color:#ff2200;white-space:nowrap;pointer-events:none;z-index:20;
   text-shadow:0 0 30px #ff2200,0 0 60px #ff000066;
   animation:${bossWarning} .5s ease-in-out infinite,${bossEntrance} .6s ease-out both;
+  display:flex;align-items:center;gap:.65rem;
 `;
 const BossAttackBanner = styled.div`
   position:absolute;top:23%;left:50%;transform:translateX(-50%);
@@ -309,6 +311,7 @@ const BackBtn = styled(Link)`
   font-size:.72rem;font-family:inherit;letter-spacing:1px;
   text-decoration:none;z-index:30;backdrop-filter:blur(8px);
   transition:background .2s,color .2s;
+  display:inline-flex;align-items:center;gap:.35rem;
   &:hover{background:rgba(255,255,255,.14);color:#fff;}
 `;
 const GameControls = styled.div`
@@ -448,6 +451,7 @@ const LaunchBtn = styled.button`
   font-family:inherit;font-weight:700;letter-spacing:4px;cursor:pointer;
   box-shadow:0 4px 20px rgba(224,72,72,.5);transition:transform .18s,box-shadow .18s;
   margin-top:.2rem;
+  display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
   &:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 8px 28px rgba(224,72,72,.7);}
   &:active{transform:scale(.97);}
 `;
@@ -1822,7 +1826,7 @@ const AsteroidGame = () => {
               const sp = worldToScreen(a.mesh.position.x, a.mesh.position.y);
               const popColor = a.type.labelColor;
               const label = (multiplier > 1 || dzMult > 1)
-                ? `+${earned}${multiplier > 1 ? ` ×${multiplier}` : ''}${dzMult > 1 ? ' 🔥' : ''}`
+                ? `+${earned}${multiplier > 1 ? ` ×${multiplier}` : ''}${dzMult > 1 ? ' DANGER' : ''}`
                 : `+${earned}`;
               addPopup(sp.x, sp.y, label, popColor, multiplier > 1);
             } else {
@@ -2118,7 +2122,7 @@ const AsteroidGame = () => {
     <Wrapper $shake={shaking}>
       {flash && <div style={{ position: 'absolute', inset: 0, background: '#fff', zIndex: 100, opacity: 0.4, pointerEvents: 'none' }} />}
 
-      <BackBtn to="/">← PORTFOLIO</BackBtn>
+      <BackBtn to="/"><ArrowLeft size={14} aria-hidden="true" /> PORTFOLIO</BackBtn>
       {phase === 'playing' && (
         <GameControls>
           <IconControl onClick={togglePause} title="Pause">II</IconControl>
@@ -2181,7 +2185,13 @@ const AsteroidGame = () => {
       )}
 
       {/* Boss warning */}
-      {bossWarningVisible && <BossWarningBanner>⚠ BOSS INCOMING ⚠</BossWarningBanner>}
+      {bossWarningVisible && (
+        <BossWarningBanner>
+          <TriangleAlert size="1em" aria-hidden="true" />
+          BOSS INCOMING
+          <TriangleAlert size="1em" aria-hidden="true" />
+        </BossWarningBanner>
+      )}
       {bossAttack && <BossAttackBanner>PHASE {bossAttack.phase} · TARGET LOCK {bossAttack.progress}%</BossAttackBanner>}
 
       {upgradeChoices && (
@@ -2240,8 +2250,8 @@ const AsteroidGame = () => {
             <HudCenter>
               {combo >= 3 && <ComboText>COMBO ×{combo}</ComboText>}
               {dangerZoneBonus && (
-                <div style={{ fontSize: '.6rem', color: '#ffe082', letterSpacing: '2px', animation: 'none', opacity: 0.9 }}>
-                  🔥 DANGER ZONE
+                <div style={{ fontSize: '.6rem', color: '#ffe082', letterSpacing: '2px', animation: 'none', opacity: 0.9, display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                  <Flame size={12} aria-hidden="true" /> DANGER ZONE
                 </div>
               )}
               <HudLabel style={{ textAlign: 'center', letterSpacing: '1px', marginTop: '.1rem' }}>
@@ -2267,7 +2277,11 @@ const AsteroidGame = () => {
           {/* Boss HP bar */}
           {bossHP !== null && (
             <BossBarWrap>
-              <BossLabel>★ SECTOR BOSS · PHASE {bossAttack?.phase || (bossHP / bossMaxHP > .66 ? 1 : bossHP / bossMaxHP > .33 ? 2 : 3)} ★</BossLabel>
+              <BossLabel>
+                <Star size={13} fill="currentColor" aria-hidden="true" />
+                SECTOR BOSS · PHASE {bossAttack?.phase || (bossHP / bossMaxHP > .66 ? 1 : bossHP / bossMaxHP > .33 ? 2 : 3)}
+                <Star size={13} fill="currentColor" aria-hidden="true" />
+              </BossLabel>
               <BossBarTrack>
                 <BossBarFill $pct={(bossHP / bossMaxHP) * 100} />
               </BossBarTrack>
@@ -2349,7 +2363,7 @@ const AsteroidGame = () => {
             BUILT WITH THREE.JS, REACT, PROCEDURAL AUDIO, AND CUSTOM GAME LOGIC
           </CtrlRow>
           {bestScore > 0 && <HighScore>{DIFFICULTIES[difficulty].label} BEST: {String(bestScore).padStart(6, '0')}</HighScore>}
-          <LaunchBtn onClick={() => startGame(true)}>LAUNCH ▶</LaunchBtn>
+          <LaunchBtn onClick={() => startGame(true)}>LAUNCH <Play size={17} fill="currentColor" aria-hidden="true" /></LaunchBtn>
         </Overlay>
       )}
 
@@ -2379,10 +2393,12 @@ const AsteroidGame = () => {
             </EngineeringSystems>
           </EngineeringNote>
           {newHighScore &&
-            <Sub style={{ color: '#ffb74d', opacity: 1, marginBottom: '.5rem' }}>★ NEW HIGH SCORE ★</Sub>}
+            <Sub style={{ color: '#ffb74d', opacity: 1, marginBottom: '.5rem', display: 'flex', alignItems: 'center', gap: '.45rem' }}>
+              <Trophy size={14} aria-hidden="true" /> NEW HIGH SCORE
+            </Sub>}
           {bestScore > 0 && <HighScore>{DIFFICULTIES[difficulty].label} BEST: {String(bestScore).padStart(6, '0')}</HighScore>}
           <PauseLink to="/projects">VIEW PROJECT CASE STUDY</PauseLink>
-          <LaunchBtn onClick={() => startGame(true)}>PLAY AGAIN ▶</LaunchBtn>
+          <LaunchBtn onClick={() => startGame(true)}>PLAY AGAIN <Play size={17} fill="currentColor" aria-hidden="true" /></LaunchBtn>
         </Overlay>
       )}
 

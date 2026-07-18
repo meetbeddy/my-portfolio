@@ -1,6 +1,15 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Coffee } from "lucide-react";
+import {
+  BrainCircuit,
+  Coffee,
+  Eye,
+  GlassWater,
+  Rocket,
+  Sun,
+  Target,
+  Zap,
+} from "lucide-react";
 import styled from "styled-components";
 
 const InterestCard = styled(motion.div)`
@@ -37,16 +46,17 @@ const CoffeeInterestCard = ({ bgColor }) => {
 
   const messages = [
     null,
-    "First cup. Engines warming... ☀️",
-    "Getting into the zone 🎯",
-    "Peak flow state achieved 🚀",
-    "Fingers flying across the keyboard!",
-    "Reaching optimal velocity...",
+    { text: "First cup. Engines warming...", icon: Sun },
+    { text: "Getting into the zone", icon: Target },
+    { text: "Peak flow state achieved", icon: Rocket },
+    { text: "Fingers flying across the keyboard!", icon: Zap },
+    { text: "Reaching optimal velocity...", icon: Rocket },
   ];
   const msg = coffeeCount <= 5 ? messages[coffeeCount]
-    : coffeeCount <= 7 ? "Is the code writing itself? 🤔"
-    : coffeeCount <= 10 ? "I can see through the bugs now 👁️"
-    : "Maybe water next time? 😅";
+    : coffeeCount <= 7 ? { text: "Is the code writing itself?", icon: BrainCircuit }
+    : coffeeCount <= 10 ? { text: "I can see through the bugs now", icon: Eye }
+    : { text: "Maybe water next time?", icon: GlassWater };
+  const MessageIcon = msg?.icon;
 
   return (
     <InterestCard bgColor={bgColor}>
@@ -233,11 +243,13 @@ const CoffeeInterestCard = ({ bgColor }) => {
         background: "rgba(0,0,0,0.2)", borderRadius: "8px",
         padding: "7px 12px", fontSize: "0.72rem", marginBottom: "8px",
       }}>
-        <span style={{ color: "rgba(255,255,255,0.5)" }}>
-          ☕ <strong style={{ color: "rgba(255,255,255,0.85)" }}>{coffeeCount}</strong> cups
+        <span style={{ color: "rgba(255,255,255,0.5)", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+          <Coffee size={13} aria-hidden="true" />
+          <strong style={{ color: "rgba(255,255,255,0.85)" }}>{coffeeCount}</strong> cups
         </span>
-        <span style={{ color: "rgba(255,255,255,0.5)" }}>
-          ⚡ <strong style={{ color: coffeeCount > 7 ? "#e04848" : "rgba(255,255,255,0.85)" }}>{coffeeCount * 95}mg</strong>
+        <span style={{ color: "rgba(255,255,255,0.5)", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+          <Zap size={13} aria-hidden="true" />
+          <strong style={{ color: coffeeCount > 7 ? "#e04848" : "rgba(255,255,255,0.85)" }}>{coffeeCount * 95}mg</strong>
         </span>
       </div>
 
@@ -255,7 +267,10 @@ const CoffeeInterestCard = ({ bgColor }) => {
               padding: "6px", background: "rgba(0,0,0,0.15)", borderRadius: "6px",
             }}
           >
-            {msg}
+            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+              {MessageIcon && <MessageIcon size={14} aria-hidden="true" />}
+              {msg.text}
+            </span>
           </motion.div>
         )}
       </AnimatePresence>

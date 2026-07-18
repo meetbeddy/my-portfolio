@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import { Gamepad2, Play } from "lucide-react";
 
 const GamingCard = styled(motion.div)`
   background-color: ${props => props.bgColor};
@@ -53,8 +54,9 @@ const GamingInterestCard = ({ bgColor = "rgba(255,255,255,0.05)" }) => {
   return (
     <GamingCard bgColor={bgColor} whileHover={{ y: -5 }}>
       <div>
-        <div style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: "0.5rem", color: "white" }}>
-          🎮 Interactive Experience
+        <div style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: "0.5rem", color: "white", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <Gamepad2 size={20} color="#e04848" aria-hidden="true" />
+          Interactive Experience
         </div>
         <p style={{ color: "#aaa", fontSize: "0.88rem", lineHeight: "1.6" }}>
           I enjoy push boundaries of the web with immersive, 3D experiences. 
@@ -62,7 +64,8 @@ const GamingInterestCard = ({ bgColor = "rgba(255,255,255,0.05)" }) => {
         </p>
       </div>
       <PlayButton to="/play">
-        <i className="fa fa-gamepad" /> Launch Experience
+        <Play size={17} fill="currentColor" aria-hidden="true" />
+        Launch Experience
       </PlayButton>
     </GamingCard>
   );

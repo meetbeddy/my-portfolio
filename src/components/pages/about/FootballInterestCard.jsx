@@ -1,4 +1,5 @@
 import React from "react";
+import { Goal, Star } from "lucide-react";
 
 const STATS_LEFT = [
   { label: "PAC", value: 90 },
@@ -15,8 +16,9 @@ const STATS_RIGHT = [
 const FootballInterestCard = ({ bgColor = "rgba(255,255,255,0.08)" }) => {
   return (
     <div style={{ backgroundColor: bgColor, padding: "1.5rem", borderRadius: "12px" }}>
-      <div style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: "0.5rem", color: "white" }}>
-        ⚽ Football
+      <div style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: "0.5rem", color: "white", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <Goal size={20} color="#e04848" aria-hidden="true" />
+        Football
       </div>
       <p style={{ color: "#aaa", marginBottom: "1.5rem", fontSize: "0.88rem", lineHeight: "1.6" }}>
         More hustle than bulk — football keeps me sharp when I&apos;m off the keyboard.
@@ -251,8 +253,16 @@ const FootballInterestCard = ({ bgColor = "rgba(255,255,255,0.08)" }) => {
                     <rect x="212" y={y} width="12" height="12" rx="1.5"
                       transform={`rotate(45 218 ${y + 6})`}
                       fill="url(#gold-frame)" stroke="#fff" strokeWidth="0.8" />
-                    <text x="218" y={y + 9} textAnchor="middle"
-                      fontFamily="sans-serif" fontSize="6" fill="#000">★</text>
+                    <Star
+                      x="214.5"
+                      y={y + 2.5}
+                      width="7"
+                      height="7"
+                      color="#000"
+                      fill="#000"
+                      strokeWidth="1.5"
+                      aria-hidden="true"
+                    />
                   </g>
                 ))}
 
